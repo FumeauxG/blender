@@ -3,16 +3,18 @@
 # Author : Fumeaux Gaëtan
 # v1.0
 ###########################
+# Conditions to start :
+# - One object selected
+# - Enter in camera view
+###########################
+
 
 import glob
 import bpy
 
-# Check edit mode activate
-if bpy.context.active_object.mode == 'EDIT':
-    bpy.ops.object.editmode_toggle()
-
-# Delete the existing cube
-bpy.ops.object.delete(use_global=False, confirm=False)
+# Delete the existing cube or support
+object_to_delete = bpy.context.selected_objects[0]
+bpy.data.objects.remove(object_to_delete, do_unlink=True)
 
 # set the camera position
 tx = 0.0
@@ -28,7 +30,7 @@ scene = bpy.data.scenes["Scene"]
 scene.render.resolution_x = 480
 scene.render.resolution_y = 359
 # Set camera fov in degrees
-#scene.camera.data.angle = fov*(pi/180.0)
+scene.camera.data.angle = fov*(pi/180.0)
 # Set camera rotation in euler angles
 scene.camera.rotation_mode = 'XYZ'
 scene.camera.rotation_euler[0] = rx*(pi/180.0)
@@ -38,7 +40,6 @@ scene.camera.rotation_euler[2] = rz*(pi/180.0)
 scene.camera.location.x = tx
 scene.camera.location.y = ty
 scene.camera.location.z = tz
-
 
 # Find the stl files
 txtfiles = []
@@ -61,11 +62,16 @@ print(nameObject[0])
 # Import the stl file
 bpy.ops.import_mesh.stl(filepath=pathIn)
 
+#for obj in bpy.context.selected_objects:
+#    obj.name = nameObject[0]
+bpy.context.selected_objects[0].name = nameObject[0]
+
 # Align the object on the xy plane
 bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_1', align_axis={'Z'})
 
 # Switch in the edit mode
 bpy.ops.object.editmode_toggle()
+
 
 ###########################################################################
 # Select faces visible from camera
@@ -172,7 +178,7 @@ bpy.data.objects[nameObject[0]].select_set(False)
 doStuff()
 
 # Extrude the support
-bpy.ops.mesh.extrude_region_move(MESH_OT_extrude_region={"use_normal_flip":False, "use_dissolve_ortho_edges":False, "mirror":False}, TRANSFORM_OT_translate={"value":(0, 0, -10), "orient_type":'GLOBAL', "orient_matrix":((1, 0, 0), (0, 1, 0), (0, 0, 1)), "orient_matrix_type":'GLOBAL', "constraint_axis":(False, False, True), "mirror":False, "use_proportional_edit":False, "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "use_proportional_connected":False, "use_proportional_projected":False, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "cursor_transform":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False, "use_automerge_and_split":False})
+bpy.ops.mesh.extrude_region_move(MESH_OT_extrude_region={"use_normal_flip":False, "use_dissolve_ortho_edges":False, "mirror":False}, TRANSFORM_OT_translate={"value":(0, 0, -20), "orient_type":'GLOBAL', "orient_matrix":((1, 0, 0), (0, 1, 0), (0, 0, 1)), "orient_matrix_type":'GLOBAL', "constraint_axis":(False, False, True), "mirror":False, "use_proportional_edit":False, "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "use_proportional_connected":False, "use_proportional_projected":False, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "cursor_transform":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False, "use_automerge_and_split":False})
 
 # Select all
 bpy.ops.mesh.select_all(action='SELECT')
@@ -192,5 +198,9 @@ bpy.ops.object.delete(use_global=False, confirm=False)
 
 # Export the stl file
 bpy.ops.export_mesh.stl(filepath=pathOut)
+
+# Select the support
+bpy.context.view_layer.objects.active = bpy.data.objects[nameObject[0] + ".001"]
+bpy.data.objects[nameObject[0] + ".001"].select_set(True)
 
 print("End Script")

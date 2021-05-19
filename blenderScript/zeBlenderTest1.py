@@ -62,8 +62,7 @@ print(nameObject[0])
 # Import the stl file
 bpy.ops.import_mesh.stl(filepath=pathIn)
 
-#for obj in bpy.context.selected_objects:
-#    obj.name = nameObject[0]
+# Rename the base object
 bpy.context.selected_objects[0].name = nameObject[0]
 
 # Align the object on the xy plane

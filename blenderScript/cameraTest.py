@@ -1,5 +1,32 @@
 import bpy
 
+# set the camera position
+tx = 0.0
+ty = 0.0
+tz = -10.0
+rx = 180.0
+ry = 0.0
+rz = 0.0
+fov = 20.4
+pi = 3.14159265
+scene = bpy.data.scenes["Scene"]
+# Set render resolution
+scene.render.resolution_x = 480
+scene.render.resolution_y = 480
+# Set camera fov in degrees
+scene.camera.data.angle = fov*(pi/180.0)
+# Set camera rotation in euler angles
+scene.camera.rotation_mode = 'XYZ'
+scene.camera.rotation_euler[0] = rx*(pi/180.0)
+scene.camera.rotation_euler[1] = ry*(pi/180.0)
+scene.camera.rotation_euler[2] = rz*(pi/180.0)
+# Set camera translation
+scene.camera.location.x = tx
+scene.camera.location.y = ty
+scene.camera.location.z = tz
+
+bpy.ops.view3d.camera_to_view_selected()
+
 #'''
 def view3d_find():
     # returns first 3d view, normally we get from context
@@ -89,6 +116,6 @@ doStuff()
 
 print("now ready for splitting")
 
-bpy.ops.mesh.separate(type='SELECTED')
+#bpy.ops.mesh.separate(type='SELECTED')
 
-bpy.ops.object.mode_set(mode="OBJECT")
+#bpy.ops.object.mode_set(mode="OBJECT")

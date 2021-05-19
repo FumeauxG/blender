@@ -5,7 +5,6 @@
 ###########################
 # Conditions to start :
 # - One object selected
-# - Enter in camera view
 # - Pres ctrl + shift + R to start
 ###########################
 
@@ -26,12 +25,12 @@ def myFunction():
     rx = 180.0
     ry = 0.0
     rz = 0.0
-    fov = 90.0
+    fov = 20.4
     pi = 3.14159265
     scene = bpy.data.scenes["Scene"]
     # Set render resolution
     scene.render.resolution_x = 480
-    scene.render.resolution_y = 359
+    scene.render.resolution_y = 480
     # Set camera fov in degrees
     scene.camera.data.angle = fov*(pi/180.0)
     # Set camera rotation in euler angles
@@ -43,6 +42,7 @@ def myFunction():
     scene.camera.location.x = tx
     scene.camera.location.y = ty
     scene.camera.location.z = tz
+    
 
     # Find the stl files
     txtfiles = []
@@ -70,6 +70,17 @@ def myFunction():
 
     # Align the object on the xy plane
     bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_1', align_axis={'Z'})
+    
+    # Reframe the camera
+    bpy.ops.view3d.camera_to_view_selected()
+
+    # Switch in camera view
+    for area in bpy.context.screen.areas:
+        if area.type == 'VIEW_3D':
+            area.spaces[0].region_3d.view_perspective = 'CAMERA'
+
+    # Update the informations of the scene
+    bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
 
     # Switch in the edit mode
     bpy.ops.object.editmode_toggle()

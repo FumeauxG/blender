@@ -70,7 +70,7 @@ def myFunction():
 
     # Align the object on the xy plane
     bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_1', align_axis={'Z'})
-    
+
     # Reframe the camera
     bpy.ops.view3d.camera_to_view_selected()
 
@@ -78,6 +78,15 @@ def myFunction():
     for area in bpy.context.screen.areas:
         if area.type == 'VIEW_3D':
             area.spaces[0].region_3d.view_perspective = 'CAMERA'
+            
+    # Zoom camera 1:1
+    for window in bpy.context.window_manager.windows:
+        screen = window.screen
+        for area in screen.areas:
+            if area.type == 'VIEW_3D':
+                override = {'window': window, 'screen': screen, 'area': area}
+                bpy.ops.view3d.zoom_camera_1_to_1(override)
+                break
 
     # Update the informations of the scene
     bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
@@ -215,6 +224,11 @@ def myFunction():
     # Select the support
     bpy.context.view_layer.objects.active = bpy.data.objects[nameObject[0] + ".001"]
     bpy.data.objects[nameObject[0] + ".001"].select_set(True)
+
+    # Leave camera view
+    for area in bpy.context.screen.areas:
+        if area.type == 'VIEW_3D':
+            area.spaces[0].region_3d.view_perspective = 'ORTHO'
 
     print("End Script")
     

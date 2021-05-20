@@ -33,8 +33,6 @@ def myFunction():
     nameObject = nameTemp[1].split(".")
     print(nameObject[0])
 
-   # bpy.ops.object.editmode_toggle()
-
     # Separate the selected faces
     bpy.ops.mesh.separate(type='SELECTED')
 

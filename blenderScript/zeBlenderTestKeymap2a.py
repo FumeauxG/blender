@@ -53,7 +53,6 @@ def myFunction():
     bpy.ops.mesh.select_all(action = 'DESELECT')
     bpy.ops.mesh.select_mode(type="FACE")
 
-
     print("Make Selection")
     
 #########################################

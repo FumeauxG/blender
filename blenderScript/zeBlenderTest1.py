@@ -76,12 +76,20 @@ for area in bpy.context.screen.areas:
     if area.type == 'VIEW_3D':
         area.spaces[0].region_3d.view_perspective = 'CAMERA'
 
+# Zoom camera 1:1
+for window in bpy.context.window_manager.windows:
+    screen = window.screen
+    for area in screen.areas:
+        if area.type == 'VIEW_3D':
+            override = {'window': window, 'screen': screen, 'area': area}
+            bpy.ops.view3d.zoom_camera_1_to_1(override)
+            break
+
 # Update the informations of the scene
 bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
 
 # Switch in the edit mode
 bpy.ops.object.editmode_toggle()
-
 
 ###########################################################################
 # Select faces visible from camera

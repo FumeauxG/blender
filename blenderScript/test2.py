@@ -1,5 +1,9 @@
+import datetime
+
 import bpy
 import mathutils
+
+date_1 = datetime.datetime.now()
 
 pi = 3.14159265
 maxAngle = 30
@@ -45,7 +49,17 @@ for poly in obj.data.polygons:
                 poly.select = False
                 break
                 
-            
-   
+
 bpy.ops.object.mode_set(mode = 'EDIT')
 print("Endscript")
+
+date_2 = datetime.date.today()
+
+time_delta = (date_2 - date_1)
+total_seconds = time_delta.total_seconds()
+
+minutes = total_seconds/60
+seconds = total_seconds%60
+
+#print(minutes + "min. "+ seconds + "sec.")
+print(seconds)

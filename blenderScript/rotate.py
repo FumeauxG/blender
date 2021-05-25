@@ -24,7 +24,7 @@ class ROTATION_PT_panel(Panel):
         layout.operator('rot.rot_op', text='Rotation x').action = 'ROTX'
         layout.operator('rot.rot_op', text='Rotation y').action = 'ROTY'
         layout.operator('rot.rot_op', text='Rotation z').action = 'ROTZ'
- 
+
 class ROTATION_OT_rotation_op(Operator):
     bl_idname = 'rot.rot_op'
     bl_label = 'Rotation'

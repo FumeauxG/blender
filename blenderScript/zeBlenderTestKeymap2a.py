@@ -47,7 +47,7 @@ def myFunction():
     bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_1', align_axis={'Z'})
 
     # Switch in the edit mode
-    bpy.ops.object.editmode_toggle()
+    bpy.ops.object.mode_set(mode = 'EDIT')
 
     # Deselect all
     bpy.ops.mesh.select_all(action = 'DESELECT')

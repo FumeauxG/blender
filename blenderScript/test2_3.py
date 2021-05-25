@@ -4,6 +4,7 @@ import bpy
 import mathutils
 
 date_1 = datetime.datetime.now()
+print("Start Script")
 
 pi = 3.14159265
 maxAngle = 89
@@ -16,44 +17,48 @@ bpy.ops.mesh.select_all(action = 'DESELECT')
 bpy.ops.mesh.select_mode(type="FACE")
 bpy.ops.object.mode_set(mode = 'OBJECT')
 
-xLim = obj.dimensions[0]/10
+lim = 10
+xLim = obj.dimensions[0]/lim
 tabArea = []
 tabVertices = []
 for vertex in obj.data.vertices:
     tabVertices.append(obj.matrix_world @ vertex.co) 
-    for i in range(10):
-        if tabVertices[vertex.index] <= ((i*xLim)+xLim):
+    for i in range(lim):
+        if tabVertices[vertex.index].x <= ((i*xLim)+xLim):
             tabArea.append(i)
             break
-        tabArea.append(i)
         
-tabPoly = [[] for _ in range(10)]
+tabPoly = [[] for _ in range(lim)]
 for poly in obj.data.polygons:
     tabPoly[tabArea[poly.vertices[0]]].append(poly)
 
-for poly in obj.data.polygons:
-    angle = mathutils.Vector(poly.normal).angle(mathutils.Vector((0,0,-1)))
-    if angle < maxAngleRad:
-        poly.select = True
+for poly in tabPoly[0]:
+    poly.select = True
+
+#for poly in obj.data.polygons:
+#    angle = mathutils.Vector(poly.normal).angle(mathutils.Vector((0,0,-1)))
+##    if angle < maxAngleRad:
+#        poly.select = True
         #print(poly.index)
         
-        triangleCenter = (tabVertices[poly.vertices[0]]+tabVertices[poly.vertices[1]]+tabVertices[poly.vertices[2]])/3
+#        triangleCenter = (tabVertices[poly.vertices[0]]+tabVertices[poly.vertices[1]]+tabVertices[poly.vertices[2]])/3
+#        for i in range(len(tabPoly[tabArea[poly.vertices[0]]])):
+#            if  (mathutils.geometry.intersect_ray_tri(tabVertices[tabPoly[tabArea[poly.vertices[0]]][i].vertices[0]], tabVertices[tabPoly[tabArea[poly.vertices[0]]][i].vertices[1]], tabVertices[tabPoly[tabArea[poly.vertices[0]]][i].vertices[2]], mathutils.Vector((0,0,-1)), triangleCenter, True)) != None and (poly.index != tabPoly[tabArea[poly.vertices[0]]][i].index):
+#                poly.select = False
+#                break 
+            #tabVertices[tabPoly[tabArea[poly.vertices[1]]][i].vertices[0]]
+       # if tabArea[poly.vertices[0]] != tabArea[poly.vertices[1]]:
+       #     print("+")
+       #     for i in range(len(tabPoly[tabArea[poly.vertices[1]]])):
+       #         if  (mathutils.geometry.intersect_ray_tri(tabVertices[tabPoly[tabArea[poly.vertices[1]]][i].vertices[0]], tabVertices[tabPoly[tabArea[poly.vertices[1]]][i].vertices[1]], tabVertices[tabPoly[tabArea[poly.vertices[1]]][i].vertices[2]], mathutils.Vector((0,0,-1)), triangleCenter, True)) != None and (poly.index != tabPoly[tabArea[poly.vertices[1]]][i].index):
+       #             poly.select = False
+       #             break
+       # if (tabArea[poly.vertices[0]] != tabArea[poly.vertices[2]]) and (tabArea[poly.vertices[1]] != tabArea[poly.vertices[2]]): 
+       #     for i in range(len(tabPoly[tabArea[poly.vertices[2]]])):
+       #         if  (mathutils.geometry.intersect_ray_tri(tabVertices[tabPoly[tabArea[poly.vertices[2]]][i].vertices[0]], tabVertices[tabPoly[tabArea[poly.vertices[2]]][i].vertices[1]], tabVertices[tabPoly[tabArea[poly.vertices[2]]][i].vertices[2]], mathutils.Vector((0,0,-1)), triangleCenter, True)) != None and (poly.index != tabPoly[tabArea[poly.vertices[2]]][i].index):
+       #             poly.select = False
+       #             break
                 
-        #for comparePoly in obj.data.polygons:
-        #if  (mathutils.geometry.intersect_ray_tri(tabVertices[comparePoly.vertices[0]], tabVertices[comparePoly.vertices[1]], tabVertices[comparePoly.vertices[2]], mathutils.Vector((0,0,-1)), triangleCenter, True)) != None and (poly.index != comparePoly.index):
-        #        poly.select = False
-        #        break
-        #print("TEST")
-        #print(tabVertices[tabPoly[tabArea[poly.vertices[0]]][1440].vertices[2]])
-        #print(len(tabPoly[tabArea[poly.vertices[0]]]))
-        #break
-        for i in range(len(tabPoly[tabArea[poly.vertices[0]]])):
-            print(i)
-            print(len(tabPoly[tabArea[poly.vertices[0]]]))
-            if  (mathutils.geometry.intersect_ray_tri(tabVertices[tabPoly[tabArea[poly.vertices[0]]][i].vertices[0]], tabVertices[tabPoly[tabArea[poly.vertices[0]]][i].vertices[1]], tabVertices[tabPoly[tabArea[poly.vertices[0]]][i].vertices[2]], mathutils.Vector((0,0,-1)), triangleCenter, True)) != None and (poly.index != tabPoly[poly.vertices[0]][i].index):
-                poly.select = False
-                break  
-
 bpy.ops.object.mode_set(mode = 'EDIT')
 print("Endscript")
 

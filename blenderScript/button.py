@@ -215,8 +215,8 @@ class ROTATION_OT_rotation_op(Operator):
                      [mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)),mathutils.Vector((1,0,0))], 
                      [mathutils.Vector((0,0,1)), mathutils.Vector((0,1,0)), mathutils.Vector((0,0,-1)),mathutils.Vector((0,-1,0))], 
                      [mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)),mathutils.Vector((-1,0,0))]]
-        vecDir = tabDirVec[int((bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi/90)][int((bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi/90)]
-        
+        vecDir = tabDirVec[int((bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi/90)][int((bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi/90)]
+        print(vecDir)
         for poly in obj.data.polygons:
             angle = mathutils.Vector(poly.normal).angle(vecDir)
             if angle < maxAngleRad:

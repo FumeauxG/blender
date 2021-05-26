@@ -36,7 +36,7 @@ print(nameObject[0])
 bpy.ops.mesh.separate(type='SELECTED')
 
 # Switch in object mode
-bpy.ops.object.editmode_toggle()
+bpy.ops.object.mode_set(mode = 'OBJECT')
 
 # Select the support object
 bpy.data.objects[nameObject[0] + ".001"].select_set(True)

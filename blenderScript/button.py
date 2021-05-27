@@ -15,19 +15,20 @@ from bpy.utils import register_class, unregister_class
 import mathutils
 import datetime
 import bmesh
+
  
-class ROTATION_PT_panel(Panel):
-    bl_idname = 'Rotation_PT_panel'
-    bl_label = 'Rotation Object'
+class BUTTON_PT_panel(Panel):
+    bl_idname = 'BUTTON_PT_panel'
+    bl_label = 'Button Controller'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'Rotation'
+    bl_category = 'Button'
  
     def draw(self, context):
         layout = self.layout
-        layout.operator('rot.rot_op', text='Rotation x').action = 'ROTX'
-        layout.operator('rot.rot_op', text='Rotation y').action = 'ROTY'
-        layout.operator('rot.rot_op', text='Rotation z').action = 'ROTZ'
+        layout.operator('btn.btn_op', text='Rotation x').action = 'ROTX'
+        layout.operator('btn.btn_op', text='Rotation y').action = 'ROTY'
+        layout.operator('btn.btn_op', text='Rotation z').action = 'ROTZ'
         
         layout.separator()
         
@@ -36,9 +37,9 @@ class ROTATION_PT_panel(Panel):
         row = box1.row()
         row.prop(scene, "max_angle")
         
-        layout.operator('rot.rot_op', text='Import object').action = 'IMPORT'
-        layout.operator('rot.rot_op', text='Select faces').action = 'SELECT'
-        layout.operator('rot.rot_op', text='Generate support').action = 'GENERATE'
+        layout.operator('btn.btn_op', text='Import object').action = 'IMPORT'
+        layout.operator('btn.btn_op', text='Select faces').action = 'SELECT'
+        layout.operator('btn.btn_op', text='Generate support').action = 'GENERATE'
         
         layout.separator()
         layout.label(text="Beta area")
@@ -47,16 +48,24 @@ class ROTATION_PT_panel(Panel):
         row = box2.row()
         row.prop(scene, "min_area")
         
-        layout.operator('rot.rot_op', text='Generate support (area)').action = 'GENERATE_AREA'
+        layout.operator('btn.btn_op', text='Generate support (area)').action = 'GENERATE_AREA'
         
-        layout.operator('rot.rot_op', text='Separate faces').action = 'SEPARATE'
-        layout.operator('rot.rot_op', text='Select faces 2').action = 'SELECT2'
-        layout.operator('rot.rot_op', text='Generate support (area2)').action = 'GENERATE_AREA_2'
+        layout.operator('btn.btn_op', text='Separate faces').action = 'SEPARATE'
+        layout.operator('btn.btn_op', text='Select faces 2').action = 'SELECT2'
+        layout.operator('btn.btn_op', text='Generate support (area2)').action = 'GENERATE_AREA_2'
+        
+        layout.separator()
+        layout.label(text="Beta offset")
+        
+        box3 = layout.box()
+        row = box3.row()
+        row.prop(context.object, "offset")
+        layout.operator('btn.btn_op', text='Offset').action = 'OFFSET'
 
-class ROTATION_OT_rotation_op(Operator):
-    bl_idname = 'rot.rot_op'
-    bl_label = 'Rotation'
-    bl_description = 'Rotation'
+class BUTTON_OT_button_op(Operator):
+    bl_idname = 'btn.btn_op'
+    bl_label = 'Button'
+    bl_description = 'Button'
     bl_options = {'REGISTER', 'UNDO'}
  
     action: EnumProperty(
@@ -70,7 +79,8 @@ class ROTATION_OT_rotation_op(Operator):
             ('GENERATE_AREA', 'Generate support (area)', 'Generate support (area)'),
             ('SEPARATE', 'Separate faces', 'Separate faces)'),
             ('SELECT2', 'Select faces 2', 'Select faces 2'),
-            ('GENERATE_AREA_2', 'Generate support (area2)', 'Generate support (area2)')
+            ('GENERATE_AREA_2', 'Generate support (area2)', 'Generate support (area2)'),
+            ('OFFSET', 'Offset', 'Offset')
         ]
     )
  
@@ -94,7 +104,9 @@ class ROTATION_OT_rotation_op(Operator):
         elif self.action == 'SELECT2':   
             self.select_faces_2(context=context) 
         elif self.action == 'GENERATE_AREA_2':   
-            self.generate_support_area_2(context=context)              
+            self.generate_support_area_2(context=context)   
+        elif self.action == 'OFFSET':   
+            self.offset(context=context) 
         return {'FINISHED'}
     
     
@@ -244,6 +256,7 @@ class ROTATION_OT_rotation_op(Operator):
                      [mathutils.Vector((0,0,1)), mathutils.Vector((0,1,0)), mathutils.Vector((0,0,-1)),mathutils.Vector((0,-1,0))], 
                      [mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)),mathutils.Vector((-1,0,0))]]
         vecDir = tabDirVec[int((bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi/90)][int((bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi/90)]
+
         print(vecDir)
         for poly in obj.data.polygons:
             angle = mathutils.Vector(poly.normal).angle(vecDir)
@@ -445,7 +458,6 @@ class ROTATION_OT_rotation_op(Operator):
 
         print("End Script")
 
-
     @staticmethod
     def separate_faces(context):
                 # Find the stl files
@@ -582,21 +594,42 @@ class ROTATION_OT_rotation_op(Operator):
         bpy.ops.export_mesh.stl(filepath=pathOut)
 
         print("End Script")
+ 
+    @staticmethod
+    def offset(context): 
+        obj = bpy.context.active_object
+        bpy.context.active_object.offset
+        
+        # Switch in the object mode
+        bpy.ops.object.mode_set(mode = 'OBJECT')
+    
+        # Align the object on the xy plane
+        bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_1', align_axis={'Z'}) 
+    
+        offsetZ = obj.location[2]
+        
+        obj.location[2] = offsetZ + obj.offset
+        
+        # Switch in the edit mode
+        bpy.ops.object.mode_set(mode = 'EDIT')
     
 def register():
     pi = 3.14159265
-    bpy.types.Scene.max_angle = bpy.props.FloatProperty(name="Max Angle", default = 45, options={'SKIP_SAVE'}, min = 0, max = 90, step = 100)
-    bpy.types.Scene.min_area = bpy.props.FloatProperty(name="Min Area", default = 0.1, options={'SKIP_SAVE'}, min = 0, max = 1, step = 1)
+    bpy.types.Scene.max_angle = bpy.props.FloatProperty(name="Max Angle", default = 45, options={'SKIP_SAVE'}, min = 0, max = 90,soft_min = 0, soft_max = 90, step = 100)
+    bpy.types.Scene.min_area = bpy.props.FloatProperty(name="Min Area", default = 0.1, options={'SKIP_SAVE'}, min = 0, max = 1, soft_min = 0, soft_max = 1, step = 1)
+    bpy.types.Object.offset = bpy.props.FloatProperty(name = "Offset", default = 0, options={'SKIP_SAVE'}, min = 0, max = 10, soft_min = 0, soft_max = 10, step = 100)
         
-    register_class(ROTATION_OT_rotation_op)
-    register_class(ROTATION_PT_panel)
+    register_class(BUTTON_OT_button_op)
+    register_class(BUTTON_PT_panel)
  
  
 def unregister():
     del bpy.types.Scene.max_angle
     del bpy.types.Scene.min_area
-    unregister_class(ROTATION_OT_rotation_op)
-    unregister_class(ROTATION_PT_panel)
+    del bpy.types.Object.offset
+    
+    unregister_class(BUTTON_OT_button_op)
+    unregister_class(BUTTON_PT_panel)
  
  
 if __name__ == '__main__':

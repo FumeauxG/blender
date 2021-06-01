@@ -1,10 +1,12 @@
 import ctypes
 import bpy
+import mathutils
 import datetime
 
 date_1 = datetime.datetime.now()
 print("Start")
 
+pi = 3.14159265
 maxAngle = 89
 
 obj = bpy.context.active_object
@@ -12,6 +14,12 @@ obj = bpy.context.active_object
 tabVertices = []
 for vertex in obj.data.vertices:
    tabVertices.append(obj.matrix_world @ vertex.co)
+   
+tabDirVec = [[mathutils.Vector((0,0,-1)), mathutils.Vector((0,-1,0)), mathutils.Vector((0,0,1)),mathutils.Vector((0,1,0))], 
+             [mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)),mathutils.Vector((1,0,0))], 
+             [mathutils.Vector((0,0,1)), mathutils.Vector((0,1,0)), mathutils.Vector((0,0,-1)),mathutils.Vector((0,-1,0))], 
+             [mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)),mathutils.Vector((-1,0,0))]]
+vecDir = tabDirVec[int((bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi/90)][int((bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi/90)]
 
 
 tabPoly = []
@@ -46,16 +54,14 @@ for poly in obj.data.polygons:
     tabPoint1Z.append(tabVertices[poly.vertices[0]].z)
     tabPoint2Z.append(tabVertices[poly.vertices[1]].z)
     tabPoint3Z.append(tabVertices[poly.vertices[2]].z)
-#print(tabPoly)
-#print(tabNormalZ)
+
 print(len(tabPoly))   
 
 testlib = ctypes.CDLL("C:\\Gaetan\\_Bachelor\\blender\\blenderScript\\TestCtypes\\testlib.dll")
 
 
-#pyarr = [1, 2, 3, 4]
 seq = ctypes.c_int * len(tabPoly)
-arr = seq(*tabPoly)
+arrIndex = seq(*tabPoly)
 
 seq = ctypes.c_float * len(tabNormalX)
 arrNormalX = seq(*tabNormalX)
@@ -86,7 +92,7 @@ arrPoint2Z = seq(*tabPoint2Z)
 seq = ctypes.c_float * len(tabPoint3Z)
 arrPoint3Z = seq(*tabPoint3Z)
 
-testlib.myprint(arr,len(tabPoly),arrNormalX,arrNormalY,arrNormalZ,ctypes.c_float(maxAngle),arrFaces,arrPoint1X,arrPoint1Y,arrPoint2X,arrPoint2Y,arrPoint3X,arrPoint3Y,arrPoint1Z,arrPoint2Z,arrPoint3Z)
+testlib.myprint(arrIndex,len(tabPoly),arrNormalX,arrNormalY,arrNormalZ,ctypes.c_float(maxAngle),ctypes.c_float(vecDir.x),ctypes.c_float(vecDir.y),ctypes.c_float(vecDir.z),arrFaces,arrPoint1X,arrPoint1Y,arrPoint2X,arrPoint2Y,arrPoint3X,arrPoint3Y,arrPoint1Z,arrPoint2Z,arrPoint3Z)
 
 bpy.ops.object.mode_set(mode = 'EDIT')
 bpy.ops.mesh.select_all(action = 'DESELECT')
@@ -94,7 +100,6 @@ bpy.ops.mesh.select_mode(type="FACE")
 bpy.ops.object.mode_set(mode = 'OBJECT')
 
 for i in range(len(arrFaces)):
-    #print(arrFaces[i])
     if arrFaces[i] == 1:
         obj.data.polygons[tabPoly[i]].select = True
 print(len(arrFaces))

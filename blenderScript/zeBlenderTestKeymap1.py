@@ -29,8 +29,8 @@ def myFunction():
     pi = 3.14159265
     scene = bpy.data.scenes["Scene"]
     # Set render resolution
-    scene.render.resolution_x = 480
-    scene.render.resolution_y = 480
+    scene.render.resolution_x = 1920
+    scene.render.resolution_y = 1080
     # Set camera fov in degrees
     scene.camera.data.angle = fov*(pi/180.0)
     # Set camera rotation in euler angles

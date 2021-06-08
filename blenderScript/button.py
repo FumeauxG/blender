@@ -24,6 +24,7 @@ class BUTTON_PT_panel(Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = 'Button'
+    test = "Salut"
  
     def draw(self, context):
         layout = self.layout
@@ -63,6 +64,16 @@ class BUTTON_PT_panel(Panel):
         row = box3.row()
         row.prop(context.object, "offset")
         layout.operator('btn.btn_op', text='Offset').action = 'OFFSET'
+        
+        layout.separator()
+        layout.label(text="Beta resize")
+
+        layout.operator('btn.btn_op', text='Select resize').action = 'SELECT_RESIZE'        
+
+        box4 = layout.box()
+        row = box4.row()
+        row.prop(scene, "resize")  
+        layout.operator('btn.btn_op', text='Resize').action = 'RESIZE'        
 
 class BUTTON_OT_button_op(Operator):
     bl_idname = 'btn.btn_op'
@@ -83,7 +94,9 @@ class BUTTON_OT_button_op(Operator):
             ('SEPARATE', 'Separate faces', 'Separate faces)'),
             ('SELECT2', 'Select faces 2', 'Select faces 2'),
             ('GENERATE_AREA_2', 'Generate support (area2)', 'Generate support (area2)'),
-            ('OFFSET', 'Offset', 'Offset')
+            ('OFFSET', 'Offset', 'Offset'),
+            ('SELECT_RESIZE', 'Select resize', 'Select resize'),
+            ('RESIZE', 'Resize', 'Resize')
         ]
     )
  
@@ -112,6 +125,10 @@ class BUTTON_OT_button_op(Operator):
             self.generate_support_area_2(context=context)   
         elif self.action == 'OFFSET':   
             self.offset(context=context) 
+        elif self.action == 'SELECT_RESIZE':   
+            self.select_resize(context=context) 
+        elif self.action == 'RESIZE':   
+            self.resize(context=context) 
         return {'FINISHED'}
     
     
@@ -727,12 +744,117 @@ class BUTTON_OT_button_op(Operator):
         
         # Switch in the edit mode
         bpy.ops.object.mode_set(mode = 'EDIT')
+
+    sizeX = 0
+    oldResize = 1
+
+    @staticmethod
+    def select_resize(context):
+        date_1 = datetime.datetime.now()
+        print("Start")
+
+        xMax = float('-inf')
+        xMin = float('inf')
+
+        # Switch in object mode 
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+        obj = bpy.context.active_object
+
+        tabSelectedFaces = []
+
+        for poly in obj.data.polygons:
+            if poly.select == True:
+                tabSelectedFaces.append(poly)
+                xMax = max(xMax, obj.data.vertices[poly.vertices[0]].co.x, obj.data.vertices[poly.vertices[1]].co.x, obj.data.vertices[poly.vertices[2]].co.x)
+                xMin = min(xMin, obj.data.vertices[poly.vertices[0]].co.x, obj.data.vertices[poly.vertices[1]].co.x, obj.data.vertices[poly.vertices[2]].co.x)
+
+        # Switch in edit mode 
+        bpy.ops.object.mode_set(mode='EDIT')
+
+        me = bpy.context.edit_object.data
+        bm = bmesh.from_edit_mesh(me)
+
+        k = 0
+        for poly in obj.data.polygons:
+            grow_faces = set(v for v in bm.verts if v.select for v in v.link_faces if (not v.select and not v.hide))
+
+            if grow_faces == set():
+                break;
+
+            for v in grow_faces:
+                if v.normal[2]<0.01 and v.normal[2]>= 0:
+                    v.select = True
+                    xMax = max(xMax, v.verts[0].co.x, v.verts[1].co.x, v.verts[2].co.x)
+                    xMin = min(xMin, v.verts[0].co.x, v.verts[1].co.x, v.verts[2].co.x)
+                else:
+                    v.hide = True
+            k = k+1
+            print(k)
+         
+        print(xMax,xMin,xMax-xMin) 
+        
+        global sizeX
+        sizeX = xMax-xMin
+        global oldResize
+        oldResize = 1
+                        
+        bpy.ops.mesh.reveal(select = False) # unhide all faces
+        bmesh.update_edit_mesh(me)
+
+        print("End Script")
+
+        date_2 = datetime.datetime.now()
+        time_delta = (date_2 - date_1)
+        total_seconds = time_delta.total_seconds()
+        print("Time : ", total_seconds)        
+
+    @staticmethod
+    def resize(context):
+        global sizeX
+        global oldResize
+        print(sizeX)
+        print(oldResize)
+        scaleX = 1/oldResize
+        bpy.ops.transform.resize(value=(scaleX, scaleX, 1), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=0.811, use_proportional_connected=False, use_proportional_projected=False)
+
+        scaleX = 1-(2*bpy.context.scene.resize/sizeX)
+        if scaleX < 0:
+            scaleX = 1
+        print(scaleX)
+        oldResize = scaleX
+        bpy.ops.transform.resize(value=(scaleX, scaleX, 1), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=0.811, use_proportional_connected=False, use_proportional_projected=False)
+
+        
+
+#get, set methods of the floatproperty
+def get_location(self):
+    return self.get("resize", 0.0)
+
+scaleOldX = 1
+    
+def set_location(self, value):
+    sizeX = 0.6
+    global scaleOldX
+    
+    self["resize"] = value
+    scaleX = 1/scaleOldX
+    bpy.ops.transform.resize(value=(scaleX, scaleX, 1), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=0.811, use_proportional_connected=False, use_proportional_projected=False)
+
+    #scaleX = 1 - (2*
+    scaleOldX = value
+    bpy.ops.transform.resize(value=(value, value, 1), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=0.811, use_proportional_connected=False, use_proportional_projected=False)
+
+
+    # Switch in the edit mode
+    bpy.ops.object.mode_set(mode = 'EDIT')  
     
 def register():
     pi = 3.14159265
     bpy.types.Scene.max_angle = bpy.props.FloatProperty(name="Max Angle", default = 45, options={'SKIP_SAVE'}, min = 0, max = 90,soft_min = 0, soft_max = 90, step = 100)
     bpy.types.Scene.min_area = bpy.props.FloatProperty(name="Min Area", default = 0.1, options={'SKIP_SAVE'}, min = 0, max = 1, soft_min = 0, soft_max = 1, step = 1)
     bpy.types.Object.offset = bpy.props.FloatProperty(name = "Offset", default = 0, options={'SKIP_SAVE'}, min = 0, max = 10, soft_min = 0, soft_max = 10, step = 100)
+    bpy.types.Scene.resize = bpy.props.FloatProperty(name = "Resize", default = 0, options={'SKIP_SAVE'}, min = 0, max = 10, soft_min = 0, soft_max = 10, step = 1)#,get=get_location, set=set_location)
         
     register_class(BUTTON_OT_button_op)
     register_class(BUTTON_PT_panel)
@@ -742,6 +864,7 @@ def unregister():
     del bpy.types.Scene.max_angle
     del bpy.types.Scene.min_area
     del bpy.types.Object.offset
+    del bpy.types.Scene.resize
     
     unregister_class(BUTTON_OT_button_op)
     unregister_class(BUTTON_PT_panel)

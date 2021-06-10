@@ -1,6 +1,9 @@
 import bpy
 import bmesh
+import mathutils
 import datetime
+
+pi = 3.14159265
 
 date_1 = datetime.datetime.now()
 print("Start")
@@ -51,14 +54,29 @@ for poly in obj.data.polygons:
     #                grow_faces.append(v)
             
     #bpy.ops.mesh.select_all(action='DESELECT')
+    for v in grow_faces:
+        v.select = True
+        angle = mathutils.Vector(v.normal).angle(mathutils.Vector((0,0,-1)))*180/pi
+        print(angle)
+    break
 
     if grow_faces == set():
     #if grow_faces == []:
         #print("Salut")
         break;
 
+    matrix_new = obj.matrix_world.to_3x3().inverted().transposed()
+
     for v in grow_faces:
-        if v.normal[2]<0.01 and v.normal[2]>= 0:
+        no_world = matrix_new @ v.normal
+        no_world.normalize()
+        print(no_world)
+        if no_world != mathutils.Vector((0,0,0)):
+            angle = mathutils.Vector(no_world).angle(mathutils.Vector((0,0,1)))*180/pi
+        else:
+            angle = 0
+        #if no_world[2]<0.1 and no_world[2]>= 0:
+        if angle<179.9 and angle>= 89.9:
             v.select = True
             xMax = max(xMax, v.verts[0].co.x, v.verts[1].co.x, v.verts[2].co.x)
             xMin = min(xMin, v.verts[0].co.x, v.verts[1].co.x, v.verts[2].co.x)

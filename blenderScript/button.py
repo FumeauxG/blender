@@ -68,10 +68,15 @@ class BUTTON_PT_panel(Panel):
         layout.separator()
         layout.label(text="Beta resize")
 
-        layout.operator('btn.btn_op', text='Select resize').action = 'SELECT_RESIZE'        
-
+        layout.operator('btn.btn_op', text='Select resize').action = 'SELECT_RESIZE'
         box4 = layout.box()
         row = box4.row()
+        row.prop(scene, "min_angle_z")  
+        row.prop(scene, "max_angle_z")  
+        layout.operator('btn.btn_op', text='Select resize all').action = 'SELECT_RESIZE_ALL'        
+
+        box5 = layout.box()
+        row = box5.row()
         row.prop(scene, "resize")  
         layout.operator('btn.btn_op', text='Resize').action = 'RESIZE'        
 
@@ -96,6 +101,7 @@ class BUTTON_OT_button_op(Operator):
             ('GENERATE_AREA_2', 'Generate support (area2)', 'Generate support (area2)'),
             ('OFFSET', 'Offset', 'Offset'),
             ('SELECT_RESIZE', 'Select resize', 'Select resize'),
+            ('SELECT_RESIZE_ALL', 'Select resize all', 'Select resize all'),
             ('RESIZE', 'Resize', 'Resize')
         ]
     )
@@ -127,6 +133,8 @@ class BUTTON_OT_button_op(Operator):
             self.offset(context=context) 
         elif self.action == 'SELECT_RESIZE':   
             self.select_resize(context=context) 
+        elif self.action == 'SELECT_RESIZE_ALL':   
+            self.select_resize_all(context=context) 
         elif self.action == 'RESIZE':   
             self.resize(context=context) 
         return {'FINISHED'}
@@ -456,7 +464,8 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.mesh.select_all(action='SELECT')
 
         # Bissect and delete the element under the xy plane
-        bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=True, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
+        #bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=True, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
+        bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=False, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
 
         # Switch in object mode
         bpy.ops.object.mode_set(mode = 'OBJECT')
@@ -717,7 +726,8 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.mesh.select_all(action='SELECT')
 
         # Bissect and delete the element under the xy plane
-        bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=True, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
+        #bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=True, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
+        bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=False, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
 
         # Switch in object mode 
         bpy.ops.object.mode_set(mode='OBJECT')
@@ -755,11 +765,13 @@ class BUTTON_OT_button_op(Operator):
 
         xMax = float('-inf')
         xMin = float('inf')
+        
+        pi = 3.14159265
+        obj = bpy.context.active_object
+        matrix_new = obj.matrix_world.to_3x3().inverted().transposed()
 
         # Switch in object mode 
         bpy.ops.object.mode_set(mode='OBJECT')
-
-        obj = bpy.context.active_object
 
         tabSelectedFaces = []
 
@@ -783,7 +795,15 @@ class BUTTON_OT_button_op(Operator):
                 break;
 
             for v in grow_faces:
-                if v.normal[2]<0.01 and v.normal[2]>= 0:
+                no_world = matrix_new @ v.normal
+                no_world.normalize()
+                print(no_world)
+                if no_world != mathutils.Vector((0,0,0)):
+                    angle = mathutils.Vector(no_world).angle(mathutils.Vector((0,0,-1)))*180/pi
+                else:
+                    angle = 0
+            
+                if angle < bpy.context.scene.max_angle_z and angle >  bpy.context.scene.min_angle_z:
                     v.select = True
                     xMax = max(xMax, v.verts[0].co.x, v.verts[1].co.x, v.verts[2].co.x)
                     xMin = min(xMin, v.verts[0].co.x, v.verts[1].co.x, v.verts[2].co.x)
@@ -809,6 +829,64 @@ class BUTTON_OT_button_op(Operator):
         total_seconds = time_delta.total_seconds()
         print("Time : ", total_seconds)        
 
+    @staticmethod
+    def select_resize_all(context):
+        date_1 = datetime.datetime.now()
+        print("Start")
+
+        xMax = float('-inf')
+        xMin = float('inf')
+        
+        obj = bpy.context.active_object
+
+        # Switch in object mode 
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+        tabSelectedFaces = []
+
+        for poly in obj.data.polygons:
+            if poly.select == True:
+                tabSelectedFaces.append(poly)
+                xMax = max(xMax, obj.data.vertices[poly.vertices[0]].co.x, obj.data.vertices[poly.vertices[1]].co.x, obj.data.vertices[poly.vertices[2]].co.x)
+                xMin = min(xMin, obj.data.vertices[poly.vertices[0]].co.x, obj.data.vertices[poly.vertices[1]].co.x, obj.data.vertices[poly.vertices[2]].co.x)
+
+        # Switch in edit mode 
+        bpy.ops.object.mode_set(mode='EDIT')
+
+        me = bpy.context.edit_object.data
+        bm = bmesh.from_edit_mesh(me)
+
+        k = 0
+        for poly in obj.data.polygons:
+            grow_faces = set(v for v in bm.verts if v.select for v in v.link_faces if not v.select)
+
+            if grow_faces == set():
+                break;
+
+            for v in grow_faces:
+                v.select = True
+                xMax = max(xMax, v.verts[0].co.x, v.verts[1].co.x, v.verts[2].co.x)
+                xMin = min(xMin, v.verts[0].co.x, v.verts[1].co.x, v.verts[2].co.x)
+                
+            k = k+1
+            print(k)
+         
+        print(xMax,xMin,xMax-xMin) 
+        
+        global sizeX
+        sizeX = xMax-xMin
+        global oldResize
+        oldResize = 1
+                        
+        bmesh.update_edit_mesh(me)
+
+        print("End Script")
+
+        date_2 = datetime.datetime.now()
+        time_delta = (date_2 - date_1)
+        total_seconds = time_delta.total_seconds()
+        print("Time : ", total_seconds)
+        
     @staticmethod
     def resize(context):
         global sizeX
@@ -855,7 +933,9 @@ def register():
     bpy.types.Scene.min_area = bpy.props.FloatProperty(name="Min Area", default = 0.1, options={'SKIP_SAVE'}, min = 0, max = 1, soft_min = 0, soft_max = 1, step = 1)
     bpy.types.Object.offset = bpy.props.FloatProperty(name = "Offset", default = 0, options={'SKIP_SAVE'}, min = 0, max = 10, soft_min = 0, soft_max = 10, step = 100)
     bpy.types.Scene.resize = bpy.props.FloatProperty(name = "Resize", default = 0, options={'SKIP_SAVE'}, min = 0, max = 10, soft_min = 0, soft_max = 10, step = 1)#,get=get_location, set=set_location)
-        
+    bpy.types.Scene.min_angle_z = bpy.props.FloatProperty(name="Min Angle z", default = 90, options={'SKIP_SAVE'}, min = 0, max = 181,soft_min = 0, soft_max = 181, step = 100)
+    bpy.types.Scene.max_angle_z = bpy.props.FloatProperty(name="Max Angle z", default = 90, options={'SKIP_SAVE'}, min = 0, max = 181,soft_min = 0, soft_max = 181, step = 100)
+     
     register_class(BUTTON_OT_button_op)
     register_class(BUTTON_PT_panel)
  
@@ -865,6 +945,8 @@ def unregister():
     del bpy.types.Scene.min_area
     del bpy.types.Object.offset
     del bpy.types.Scene.resize
+    del bpy.types.Scene.min_angle_z
+    del bpy.types.Scene.max_angle_z
     
     unregister_class(BUTTON_OT_button_op)
     unregister_class(BUTTON_PT_panel)

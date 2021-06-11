@@ -781,7 +781,7 @@ class BUTTON_OT_button_op(Operator):
                 xMax = max(xMax, obj.data.vertices[poly.vertices[0]].co.x, obj.data.vertices[poly.vertices[1]].co.x, obj.data.vertices[poly.vertices[2]].co.x)
                 xMin = min(xMin, obj.data.vertices[poly.vertices[0]].co.x, obj.data.vertices[poly.vertices[1]].co.x, obj.data.vertices[poly.vertices[2]].co.x)
 
-        # Switch in edit mode 
+        # Switch in edit mode
         bpy.ops.object.mode_set(mode='EDIT')
 
         me = bpy.context.edit_object.data

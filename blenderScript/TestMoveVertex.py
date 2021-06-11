@@ -17,15 +17,39 @@ for vertex in obj.data.vertices:
 #        obj.data.vertices[poly.vertices[0]].co.z = minValue
 #        obj.data.vertices[poly.vertices[1]].co.z = minValue
 #        obj.data.vertices[poly.vertices[2]].co.z = minValue
+tabPoly = []
+k = 0
 for poly in obj.data.polygons:
+    print(poly.center[2])
     if poly.select == True:
-        print(tabVertices[poly.vertices[0]].co.z,tabVertices[poly.vertices[1]].co.z,tabVertices[poly.vertices[2]].co.z)
-        minValue = min(tabVertices[poly.vertices[0]].co.z,tabVertices[poly.vertices[1]].co.z,tabVertices[poly.vertices[2]].co.z)
-        print(minValue)
-        obj.data.vertices[poly.vertices[0]].co.z = minValue
-        obj.data.vertices[poly.vertices[1]].co.z = minValue
-        obj.data.vertices[poly.vertices[2]].co.z = minValue
-      
+        k = k+1
+        if tabPoly == []:
+            tabPoly.append(poly)
+        else:
+            i = 0
+            for poly2 in tabPoly:
+                if poly.center[2] > poly2.center[2]:
+                    tabPoly.insert(i, poly)
+                    break
+                i = i + 1
+            if i == (len(tabPoly)):
+                tabPoly.append(poly)
+        #print(tabVertices[poly.vertices[0]].co.z,tabVertices[poly.vertices[1]].co.z,tabVertices[poly.vertices[2]].co.z)
+        #minValue = min(tabVertices[poly.vertices[0]].co.z,tabVertices[poly.vertices[1]].co.z,tabVertices[poly.vertices[2]].co.z)
+        #print(minValue)
+        #obj.data.vertices[poly.vertices[0]].co.z = minValue
+        #obj.data.vertices[poly.vertices[1]].co.z = minValue
+        #obj.data.vertices[poly.vertices[2]].co.z = minValue
+    
+for poly in tabPoly: 
+    minValue = min(tabVertices[poly.vertices[0]].co.z,tabVertices[poly.vertices[1]].co.z,tabVertices[poly.vertices[2]].co.z)
+    print(minValue)
+    obj.data.vertices[poly.vertices[0]].co.z = minValue
+    obj.data.vertices[poly.vertices[1]].co.z = minValue
+    obj.data.vertices[poly.vertices[2]].co.z = minValue
+    
+print(k, len(tabPoly))   
+                 
 #for vertex in obj.data.vertices:
 #    if vertex.select == True:
 #        print(vertex.index)

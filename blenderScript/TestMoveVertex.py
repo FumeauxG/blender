@@ -40,6 +40,10 @@ for poly in obj.data.polygons:
         #obj.data.vertices[poly.vertices[0]].co.z = minValue
         #obj.data.vertices[poly.vertices[1]].co.z = minValue
         #obj.data.vertices[poly.vertices[2]].co.z = minValue
+        
+        
+me = bpy.context.edit_object.data
+bm = bmesh.from_edit_mesh(me)
     
 for poly in tabPoly: 
     minValue = min(tabVertices[poly.vertices[0]].co.z,tabVertices[poly.vertices[1]].co.z,tabVertices[poly.vertices[2]].co.z)
@@ -47,7 +51,14 @@ for poly in tabPoly:
     obj.data.vertices[poly.vertices[0]].co.z = minValue
     obj.data.vertices[poly.vertices[1]].co.z = minValue
     obj.data.vertices[poly.vertices[2]].co.z = minValue
-    
+    grow_faces = set(v for v in bm.verts if v.select for v in v.link_faces if (not v.select and not v.hide))
+    for v in grow_faces:
+        print(v)
+        v.hide = True
+  
+bpy.ops.mesh.reveal(select = False) # unhide all faces
+bmesh.update_edit_mesh(me)  
+
 print(k, len(tabPoly))   
                  
 #for vertex in obj.data.vertices:

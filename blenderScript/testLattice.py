@@ -39,13 +39,28 @@ for vertex in obj.data.vertices:
 
 print(obj.matrix_world @ obj.dimensions)
 print(obj.dimensions)
-bpy.data.lattices['Lattice'].points[0].co_deform = mathutils.Vector((xMoins,yMoins,zMoins))
-bpy.data.lattices['Lattice'].points[1].co_deform = mathutils.Vector((xPlus,yMoins,zMoins))
-bpy.data.lattices['Lattice'].points[2].co_deform = mathutils.Vector((xMoins,yPlus,zMoins))
-bpy.data.lattices['Lattice'].points[3].co_deform = mathutils.Vector((xPlus,yPlus,zMoins))
-bpy.data.lattices['Lattice'].points[4].co_deform = mathutils.Vector((xMoins,yMoins,zPlus))
-bpy.data.lattices['Lattice'].points[5].co_deform = mathutils.Vector((xPlus,yMoins,zPlus))
-bpy.data.lattices['Lattice'].points[6].co_deform = mathutils.Vector((xMoins,yPlus,zPlus))
-bpy.data.lattices['Lattice'].points[7].co_deform = mathutils.Vector((xPlus,yPlus,zPlus))
+#bpy.data.lattices['Lattice'].points[0].co_deform = mathutils.Vector((xMoins,yMoins,zMoins))
+#bpy.data.lattices['Lattice'].points[1].co_deform = mathutils.Vector((xPlus,yMoins,zMoins))
+#bpy.data.lattices['Lattice'].points[2].co_deform = mathutils.Vector((xMoins,yPlus,zMoins))
+#bpy.data.lattices['Lattice'].points[3].co_deform = mathutils.Vector((xPlus,yPlus,zMoins))
+#bpy.data.lattices['Lattice'].points[4].co_deform = mathutils.Vector((xMoins,yMoins,zPlus))
+#bpy.data.lattices['Lattice'].points[5].co_deform = mathutils.Vector((xPlus,yMoins,zPlus))
+#bpy.data.lattices['Lattice'].points[6].co_deform = mathutils.Vector((xMoins,yPlus,zPlus))
+#bpy.data.lattices['Lattice'].points[7].co_deform = mathutils.Vector((xPlus,yPlus,zPlus))
+
+collection = bpy.context.collection
+
+lattice = bpy.data.lattices.new("Lattice")
+lattice_ob = bpy.data.objects.new("Lattice", lattice)
+lattice_ob.scale = (obj.dimensions[0], obj.dimensions[1], obj.dimensions[2])
+#lattice_ob.align(align_mode='OPT_1', relative_to='OPT_1', align_axis={'Z'})
+lattice_ob.location = ((xPlus+xMoins)/2, (yPlus+yMoins)/2,(zPlus+zMoins)/2)
+
+for ob in collection.objects:
+    if ob.type == 'MESH':
+        mod = ob.modifiers.new("Lattice", 'LATTICE')
+        mod.object = lattice_ob
+
+collection.objects.link(lattice_ob)
 
 

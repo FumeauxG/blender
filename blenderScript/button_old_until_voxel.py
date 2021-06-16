@@ -1,6 +1,6 @@
 bl_info = {
-    "name": "Button Controller",
-    "description": "Button Controller",
+    "name": "Button",
+    "description": "Button",
     "author": "Fumeaux Gaëtan",
     "version": (1, 0),
     "blender": (2, 92, 0),
@@ -17,43 +17,26 @@ import datetime
 import bmesh
 import ctypes
 
-# For import export
-from bpy_extras.io_utils import ImportHelper
-from bpy_extras.io_utils import ExportHelper
-from bpy.types import Operator
-from bpy.props import StringProperty
-from bpy.utils import register_class
-
-
  
-class BUTTON_PT_rotation(Panel):
-    bl_idname = 'BUTTON_PT_rotation'
-    bl_label = 'Rotation'
+class BUTTON_PT_panel(Panel):
+    bl_idname = 'BUTTON_PT_panel'
+    bl_label = 'Button Controller'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = 'Button'
+    test = "Salut"
  
     def draw(self, context):
         layout = self.layout
-        scene = context.scene
-        
         layout.operator('btn.btn_op', text='Rotation x').action = 'ROTX'
         layout.operator('btn.btn_op', text='Rotation y').action = 'ROTY'
         layout.operator('btn.btn_op', text='Rotation z').action = 'ROTZ'
         
-class BUTTON_PT_generation(Panel):
-    bl_idname = 'BUTTON_PT_generation'
-    bl_label = 'Generation'
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'Button'
- 
-    def draw(self, context): 
-        layout = self.layout    
-        scene = context.scene
+        layout.separator()
         
-        box = layout.box()
-        row = box.row()
+        scene = context.scene
+        box1 = layout.box()
+        row = box1.row()
         row.prop(scene, "max_angle")
         
         layout.operator('btn.btn_op', text='Import object').action = 'IMPORT'
@@ -61,21 +44,12 @@ class BUTTON_PT_generation(Panel):
         layout.operator('btn.btn_op', text='Select faces fast').action = 'SELECTFAST'
         layout.operator('btn.btn_op', text='Generate support').action = 'GENERATE'
         
-class BUTTON_PT_area(Panel):
-    bl_idname = 'BUTTON_PT_area'
-    bl_label = 'Area'
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'Button'
- 
-    def draw(self, context): 
-        layout = self.layout    
-        scene = context.scene
-    
+        #----------------------------
+        layout.separator()
         layout.label(text="Beta area")
         
-        box = layout.box()
-        row = box.row()
+        box2 = layout.box()
+        row = box2.row()
         row.prop(scene, "min_area")
         
         layout.operator('btn.btn_op', text='Generate support (area)').action = 'GENERATE_AREA'
@@ -84,35 +58,17 @@ class BUTTON_PT_area(Panel):
         layout.operator('btn.btn_op', text='Select faces 2').action = 'SELECT2'
         layout.operator('btn.btn_op', text='Generate support (area2)').action = 'GENERATE_AREA_2'
         
-class BUTTON_PT_offset(Panel):
-    bl_idname = 'BUTTON_PT_offset'
-    bl_label = 'Offset'
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'Button'
- 
-    def draw(self, context): 
-        layout = self.layout    
-        scene = context.scene
-    
+        #----------------------------
+        layout.separator()
         layout.label(text="Beta offset")
         
-        box = layout.box()
-        row = box.row()
+        box3 = layout.box()
+        row = box3.row()
         row.prop(context.object, "offset")
         layout.operator('btn.btn_op', text='Offset').action = 'OFFSET'
-
-class BUTTON_PT_resize(Panel):
-    bl_idname = 'BUTTON_PT_resize'
-    bl_label = 'Resize'
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'Button'
- 
-    def draw(self, context): 
-        layout = self.layout 
-        scene = context.scene 
         
+        #----------------------------
+        layout.separator()
         layout.label(text="Beta resize")
 
         layout.operator('btn.btn_op', text='Select resize').action = 'SELECT_RESIZE'
@@ -127,42 +83,14 @@ class BUTTON_PT_resize(Panel):
         row.prop(scene, "resize")  
         layout.operator('btn.btn_op', text='Resize').action = 'RESIZE' 
         
-class BUTTON_PT_voxel(Panel):
-    bl_idname = 'BUTTON_PT_voxel'
-    bl_label = 'Voxel'
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'Button'
- 
-    def draw(self, context):
-        layout = self.layout    
-        scene = context.scene
-        
+        #----------------------------
+        layout.separator()
         layout.label(text="Beta voxel")
         
         layout.operator('btn.btn_op', text='Voxel').action = 'VOXEL'
         layout.operator('btn.btn_op', text='Decimate').action = 'DECIMATE'
         layout.operator('btn.btn_op', text='Manifold').action = 'MANIFOLD'
-        layout.operator('btn.btn_op', text='Volume').action = 'VOLUME'
-        
-        layout.label(text= str(bpy.context.scene.max_angle))
 
-class BUTTON_PT_import_export(Panel):
-    bl_idname = 'BUTTON_PT_import_export'
-    bl_label = 'Import/Export'
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'Button'
- 
-    def draw(self, context):
-        layout = self.layout    
-        scene = context.scene
-        
-        layout.label(text="Beta import/export")
-        
-        layout.operator('btn.btn_op', text='Test import').action = 'TEST_IMPORT'
-        layout.operator('btn.btn_op', text='Test export').action = 'TEST_EXPORT'      
-        
 class BUTTON_OT_button_op(Operator):
     bl_idname = 'btn.btn_op'
     bl_label = 'Button'
@@ -174,30 +102,21 @@ class BUTTON_OT_button_op(Operator):
             ('ROTX', 'rotation x', 'rotation x'),
             ('ROTY', 'rotation y', 'rotation y'),
             ('ROTZ', 'rotation z', 'rotation z'),
-            
             ('IMPORT', 'Import object', 'Import object'),
             ('SELECT', 'Select faces', 'Select faces'),
             ('SELECTFAST', 'Select faces fast', 'Select faces fast'),
             ('GENERATE', 'Generate support', 'Generate support'),
-            
             ('GENERATE_AREA', 'Generate support (area)', 'Generate support (area)'),
             ('SEPARATE', 'Separate faces', 'Separate faces)'),
             ('SELECT2', 'Select faces 2', 'Select faces 2'),
             ('GENERATE_AREA_2', 'Generate support (area2)', 'Generate support (area2)'),
-            
-            ('OFFSET', 'Offset', 'Offset')
-            ,
+            ('OFFSET', 'Offset', 'Offset'),
             ('SELECT_RESIZE', 'Select resize', 'Select resize'),
             ('SELECT_RESIZE_ALL', 'Select resize all', 'Select resize all'),
             ('RESIZE', 'Resize', 'Resize'),
-            
             ('VOXEL', 'Voxel', 'Voxel'),
             ('DECIMATE', 'Decimate', 'Decimate'),
-            ('MANIFOLD', 'Manifold', 'Manifold'),
-            ('VOLUME', 'Volume', 'Volume'),
-            
-            ('TEST_IMPORT', 'Test import', 'Test import'),
-            ('TEST_EXPORT', 'Test export', 'Test export')            
+            ('MANIFOLD', 'Manifold', 'Manifold')
         ]
     )
  
@@ -208,7 +127,6 @@ class BUTTON_OT_button_op(Operator):
             self.rot_y(context=context)
         elif self.action == 'ROTZ':
             self.rot_z(context=context)
-            
         elif self.action == 'IMPORT':
             self.import_object(context=context)
         elif self.action == 'SELECT':   
@@ -217,7 +135,6 @@ class BUTTON_OT_button_op(Operator):
             self.select_faces_fast(context=context) 
         elif self.action == 'GENERATE':   
             self.generate_support(context=context)
-            
         elif self.action == 'GENERATE_AREA':   
             self.generate_support_area(context=context)
         elif self.action == 'SEPARATE':   
@@ -225,33 +142,21 @@ class BUTTON_OT_button_op(Operator):
         elif self.action == 'SELECT2':   
             self.select_faces_2(context=context) 
         elif self.action == 'GENERATE_AREA_2':   
-            self.generate_support_area_2(context=context) 
-            
+            self.generate_support_area_2(context=context)   
         elif self.action == 'OFFSET':   
             self.offset(context=context) 
-            
         elif self.action == 'SELECT_RESIZE':   
             self.select_resize(context=context) 
         elif self.action == 'SELECT_RESIZE_ALL':   
             self.select_resize_all(context=context) 
         elif self.action == 'RESIZE':   
             self.resize(context=context) 
-            
         elif self.action == 'VOXEL':   
             self.voxel(context=context)
         elif self.action == 'DECIMATE':   
             self.decimate(context=context)
         elif self.action == 'MANIFOLD':   
             self.manifold(context=context)
-        elif self.action == 'VOLUME':   
-            self.volume(context=context)
-         
-        elif self.action == 'TEST_IMPORT':   
-            self.test_import(context=context)
-        elif self.action == 'TEST_EXPORT':   
-            self.test_export(context=context)
-            
-            
         return {'FINISHED'}
     
     
@@ -536,7 +441,6 @@ class BUTTON_OT_button_op(Operator):
         time_delta = (date_2 - date_1)
         total_seconds = time_delta.total_seconds()
         print(total_seconds)
-    
     @staticmethod
     def generate_support(context):
         # Find the stl files
@@ -799,7 +703,6 @@ class BUTTON_OT_button_op(Operator):
 
         # Switch in edit mode 
         bpy.ops.object.mode_set(mode='EDIT')
-   
     @staticmethod
     def generate_support_area_2(context): 
         # Find the stl files
@@ -1069,104 +972,6 @@ class BUTTON_OT_button_op(Operator):
         # Switch in object mode 
         bpy.ops.object.mode_set(mode='OBJECT')
 
-    @staticmethod
-    def volume(context):
-        scene = context.scene
-        unit = scene.unit_settings
-        scale = 1.0 if unit.system == 'NONE' else unit.scale_length
-        obj = context.active_object
-
-        #bm = mesh_helpers.bmesh_copy_from_object(obj, apply_modifiers=True)
-        
-        # Switch in object mode 
-        bpy.ops.object.mode_set(mode='EDIT')
-        me = bpy.context.edit_object.data
-        bm = bmesh.from_edit_mesh(me)
-        
-        volume = bm.calc_volume()
-        print(volume)
-        bm.free()
-        
-        # Switch in object mode 
-        bpy.ops.object.mode_set(mode='OBJECT')
-
-        #if unit.system == 'METRIC':
-        #    volume_cm = volume * (scale ** 3.0) / (0.01 ** 3.0)
-        #    volume_fmt = "{} cm".format(clean_float(f"{volume_cm:.4f}"))
-        #elif unit.system == 'IMPERIAL':
-        #    volume_inch = volume * (scale ** 3.0) / (0.0254 ** 3.0)
-        #    volume_fmt = '{} "'.format(clean_float(f"{volume_inch:.4f}"))
-        #else:
-        #    volume_fmt = clean_float(f"{volume:.8f}")
-
-        #report.update((f"Volume: {volume_fmt}³", None))
-        
-    @staticmethod
-    def test_import(context):
-        bpy.ops.stl_file.import_file('INVOKE_DEFAULT')   
-        
-    @staticmethod
-    def test_export(context):
-        bpy.ops.stl_file.export_file('INVOKE_DEFAULT')
-
-# import class
-class STL_FILE_import(Operator, ImportHelper):
-    bl_idname = 'stl_file.import_file'
-    bl_label = 'Import stl object file'
-    bl_options = {'PRESET', 'UNDO'}
- 
-    filename_ext = '.stl'
-    
-    filter_glob: StringProperty(
-        default='*.stl',
-        options={'HIDDEN'}
-    )
- 
-    def invoke(self, context, event):
-        self.filepath = "C://Gaetan//_Bachelor//blender//blenderScript//test//"
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'} 
- 
-    def execute(self, context):
-        print('Imported file: ', self.filepath)
-        
-        # Import the stl file
-        bpy.ops.import_mesh.stl(filepath = self.filepath)
-        
-        return {'FINISHED'}
-  
-# export class 
-class STL_FILE_export(Operator, ExportHelper):
-    bl_idname = 'stl_file.export_file'
-    bl_label = 'Export stl support file'
-    bl_options = {'PRESET', 'UNDO'}
- 
-    filename_ext = '.stl'
-    
-    filter_glob: StringProperty(
-        default='*.stl',
-        options={'HIDDEN'}
-    )
-    
-    def invoke(self, context, event):
-        nameSupport = ""
-        if bpy.context.active_object != None:
-            nameSupport =  bpy.context.active_object.name + "_support"
-        else:
-            nameSupport = "support"
-          
-        self.filepath = "C://Gaetan//_Bachelor//blender//blenderScript//test//" + nameSupport + ".stl"
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
-        
-    def execute(self, context):
-        print('Exported file: ', self.filepath)
-        
-        # Export the stl file
-        bpy.ops.export_mesh.stl(filepath = self.filepath)
-        
-        return {'FINISHED'}
- 
 
 #get, set methods of the floatproperty
 #def get_location(self):
@@ -1182,6 +987,7 @@ class STL_FILE_export(Operator, ExportHelper):
 #    scaleX = 1/scaleOldX
 #    bpy.ops.transform.resize(value=(scaleX, scaleX, 1), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=0.811, use_proportional_connected=False, use_proportional_projected=False)
 
+    #scaleX = 1 - (2*
 #    scaleOldX = value
 #    bpy.ops.transform.resize(value=(value, value, 1), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=0.811, use_proportional_connected=False, use_proportional_projected=False)
 
@@ -1191,32 +997,18 @@ class STL_FILE_export(Operator, ExportHelper):
     
 def register():
     pi = 3.14159265
-    
-    # create personal properties
     bpy.types.Scene.max_angle = bpy.props.FloatProperty(name="Max Angle", default = 45, options={'SKIP_SAVE'}, min = 0, max = 90,soft_min = 0, soft_max = 90, step = 100)
     bpy.types.Scene.min_area = bpy.props.FloatProperty(name="Min Area", default = 0.1, options={'SKIP_SAVE'}, min = 0, max = 1, soft_min = 0, soft_max = 1, step = 1)
     bpy.types.Object.offset = bpy.props.FloatProperty(name = "Offset", default = 0, options={'SKIP_SAVE'}, min = 0, max = 10, soft_min = 0, soft_max = 10, step = 100)
     bpy.types.Scene.resize = bpy.props.FloatProperty(name = "Resize", default = 0, options={'SKIP_SAVE'}, min = 0, max = 10, soft_min = 0, soft_max = 10, step = 1)#,get=get_location, set=set_location)
     bpy.types.Scene.min_angle_z = bpy.props.FloatProperty(name="Min Angle z", default = 90, options={'SKIP_SAVE'}, min = 0, max = 181,soft_min = 0, soft_max = 181, step = 100)
     bpy.types.Scene.max_angle_z = bpy.props.FloatProperty(name="Max Angle z", default = 90, options={'SKIP_SAVE'}, min = 0, max = 181,soft_min = 0, soft_max = 181, step = 100)
-    
-    
-    # register all the classes
-    register_class(STL_FILE_import)
-    register_class(STL_FILE_export)
-   
+     
     register_class(BUTTON_OT_button_op)
-    register_class(BUTTON_PT_rotation)
-    register_class(BUTTON_PT_generation)
-    register_class(BUTTON_PT_area)
-    register_class(BUTTON_PT_offset)
-    register_class(BUTTON_PT_resize)
-    register_class(BUTTON_PT_voxel)
-    register_class(BUTTON_PT_import_export)
+    register_class(BUTTON_PT_panel)
  
  
 def unregister():
-    # delete personal properties
     del bpy.types.Scene.max_angle
     del bpy.types.Scene.min_area
     del bpy.types.Object.offset
@@ -1224,19 +1016,8 @@ def unregister():
     del bpy.types.Scene.min_angle_z
     del bpy.types.Scene.max_angle_z
     
-    
-    # unregister all the classes
-    unregister_class(STL_FILE_import)
-    unregister_class(STL_FILE_export)
-    
     unregister_class(BUTTON_OT_button_op)
-    unregister_class(BUTTON_PT_rotation)
-    unregister_class(BUTTON_PT_generation)
-    unregister_class(BUTTON_PT_area)
-    unregister_class(BUTTON_PT_offset)
-    unregister_class(BUTTON_PT_resize)
-    unregister_class(BUTTON_PT_voxel)
-    unregister_class(BUTTON_PT_import_export)
+    unregister_class(BUTTON_PT_panel)
  
  
 if __name__ == '__main__':

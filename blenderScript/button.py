@@ -144,8 +144,11 @@ class BUTTON_PT_voxel(Panel):
         layout.operator('btn.btn_op', text='Decimate').action = 'DECIMATE'
         layout.operator('btn.btn_op', text='Manifold').action = 'MANIFOLD'
         layout.operator('btn.btn_op', text='Volume').action = 'VOLUME'
+              
+        layout.label(text= ("Volume : " + '{:.2f}'.format(bpy.context.scene.volume) + " mm³"))
         
-        layout.label(text= str(bpy.context.scene.max_angle))
+        layout.operator('btn.btn_op', text='Remesh Blocks').action = 'REMESH_BLOCKS'
+        
 
 class BUTTON_PT_import_export(Panel):
     bl_idname = 'BUTTON_PT_import_export'
@@ -195,6 +198,7 @@ class BUTTON_OT_button_op(Operator):
             ('DECIMATE', 'Decimate', 'Decimate'),
             ('MANIFOLD', 'Manifold', 'Manifold'),
             ('VOLUME', 'Volume', 'Volume'),
+            ('REMESH_BLOCKS', 'Remesh Blocks', 'Remesh Blocks'),
             
             ('TEST_IMPORT', 'Test import', 'Test import'),
             ('TEST_EXPORT', 'Test export', 'Test export')            
@@ -245,6 +249,8 @@ class BUTTON_OT_button_op(Operator):
             self.manifold(context=context)
         elif self.action == 'VOLUME':   
             self.volume(context=context)
+        elif self.action == 'REMESH_BLOCKS':   
+            self.remesh_blocks(context=context)
          
         elif self.action == 'TEST_IMPORT':   
             self.test_import(context=context)
@@ -1071,35 +1077,81 @@ class BUTTON_OT_button_op(Operator):
 
     @staticmethod
     def volume(context):
+        obj = context.active_object
+        
         scene = context.scene
         unit = scene.unit_settings
+        
+        # Set blender unit in mm
+        unit.scale_length = 0.001
+        bpy.context.scene.unit_settings.length_unit = 'MILLIMETERS'       
+        
         scale = 1.0 if unit.system == 'NONE' else unit.scale_length
-        obj = context.active_object
-
-        #bm = mesh_helpers.bmesh_copy_from_object(obj, apply_modifiers=True)
         
         # Switch in object mode 
         bpy.ops.object.mode_set(mode='EDIT')
-        me = bpy.context.edit_object.data
-        bm = bmesh.from_edit_mesh(me)
         
-        volume = bm.calc_volume()
-        print(volume)
+        me = bpy.context.edit_object.data
+        bm_orig = bmesh.from_edit_mesh(me)
+        
+        # Make a copy of the mesh
+        bm = bm_orig.copy()
+
+        # Apply modifier to the copy
+        bm.transform(obj.matrix_world)
+        
+        print(scale)
+        print(bm.calc_volume())
+        
+        # Calcul the volume
+        bpy.types.Scene.volume = bm.calc_volume() * (scale ** 3.0) / (0.001 ** 3.0)
+        print(bpy.types.Scene.volume)
+        
+        # Delete the copy
         bm.free()
         
         # Switch in object mode 
         bpy.ops.object.mode_set(mode='OBJECT')
 
-        #if unit.system == 'METRIC':
-        #    volume_cm = volume * (scale ** 3.0) / (0.01 ** 3.0)
-        #    volume_fmt = "{} cm".format(clean_float(f"{volume_cm:.4f}"))
-        #elif unit.system == 'IMPERIAL':
-        #    volume_inch = volume * (scale ** 3.0) / (0.0254 ** 3.0)
-        #    volume_fmt = '{} "'.format(clean_float(f"{volume_inch:.4f}"))
-        #else:
-        #    volume_fmt = clean_float(f"{volume:.8f}")
+    @staticmethod
+    def remesh_blocks(context):
+        obj = bpy.context.active_object
 
-        #report.update((f"Volume: {volume_fmt}³", None))
+        # Switch in object mode 
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+        # Remove all modifiers from the object
+        obj.modifiers.clear()
+
+        # Make a copy of the object
+        new_obj = obj.copy()
+        new_obj.data = obj.data.copy()
+        new_obj.animation_data_clear()
+        bpy.context.collection.objects.link(new_obj)
+
+        # Rename the copy
+        new_obj.name = "temp_copy"
+
+        # Hide the copy
+        new_obj.hide_viewport = True
+
+
+        # Remesh the faces of the object with blocks
+        bpy.ops.object.modifier_add(type='REMESH')
+        bpy.context.object.modifiers["Remesh"].mode = 'BLOCKS'
+        bpy.context.object.modifiers["Remesh"].octree_depth = 5
+        bpy.context.object.modifiers["Remesh"].scale = 0.99
+        bpy.context.object.modifiers["Remesh"].use_remove_disconnected = False
+        bpy.context.object.modifiers["Remesh"].threshold = 1
+        bpy.context.object.modifiers["Remesh"].use_smooth_shade = False
+
+        # Make intersection between the remesh object and the original
+        bpy.ops.object.modifier_add(type='BOOLEAN')
+        bpy.context.object.modifiers["Boolean"].operation = 'INTERSECT'
+        bpy.context.object.modifiers["Boolean"].operand_type = 'OBJECT'
+        bpy.context.object.modifiers["Boolean"].object = bpy.data.objects["temp_copy"]
+        bpy.context.object.modifiers["Boolean"].solver = 'FAST'
+        bpy.context.object.modifiers["Boolean"].double_threshold = 0
         
     @staticmethod
     def test_import(context):
@@ -1199,6 +1251,7 @@ def register():
     bpy.types.Scene.resize = bpy.props.FloatProperty(name = "Resize", default = 0, options={'SKIP_SAVE'}, min = 0, max = 10, soft_min = 0, soft_max = 10, step = 1)#,get=get_location, set=set_location)
     bpy.types.Scene.min_angle_z = bpy.props.FloatProperty(name="Min Angle z", default = 90, options={'SKIP_SAVE'}, min = 0, max = 181,soft_min = 0, soft_max = 181, step = 100)
     bpy.types.Scene.max_angle_z = bpy.props.FloatProperty(name="Max Angle z", default = 90, options={'SKIP_SAVE'}, min = 0, max = 181,soft_min = 0, soft_max = 181, step = 100)
+    bpy.types.Scene.volume = bpy.props.FloatProperty(name="Volume", default = 0, options={'SKIP_SAVE'}, min = 0, step = 100)
     
     
     # register all the classes
@@ -1223,7 +1276,7 @@ def unregister():
     del bpy.types.Scene.resize
     del bpy.types.Scene.min_angle_z
     del bpy.types.Scene.max_angle_z
-    
+    del bpy.types.Scene.volume
     
     # unregister all the classes
     unregister_class(STL_FILE_import)

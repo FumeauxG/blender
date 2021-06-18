@@ -116,16 +116,18 @@ class BUTTON_PT_resize(Panel):
         layout.label(text="Beta resize")
 
         layout.operator('btn.btn_op', text='Select resize').action = 'SELECT_RESIZE'
-        box4 = layout.box()
-        row = box4.row()
+        box2 = layout.box()
+        row = box2.row()
         row.prop(scene, "min_angle_z")  
         row.prop(scene, "max_angle_z")  
         layout.operator('btn.btn_op', text='Select resize all').action = 'SELECT_RESIZE_ALL'        
 
-        box5 = layout.box()
-        row = box5.row()
+        box2 = layout.box()
+        row = box2.row()
         row.prop(scene, "resize")  
         layout.operator('btn.btn_op', text='Resize').action = 'RESIZE' 
+        
+        layout.operator('btn.btn_op', text='Delete selection').action = 'DELETE_SELECTION' 
         
 class BUTTON_PT_voxel(Panel):
     bl_idname = 'BUTTON_PT_voxel'
@@ -147,9 +149,12 @@ class BUTTON_PT_voxel(Panel):
               
         layout.label(text= ("Volume : " + '{:.2f}'.format(bpy.context.scene.volume) + " mm³"))
         
+        box = layout.box()
+        row = box.row()
+        row.prop(scene, "level_blocks")
         layout.operator('btn.btn_op', text='Remesh Blocks').action = 'REMESH_BLOCKS'
+        layout.operator('btn.btn_op', text='Validate Blocks').action = 'VALIDATE_BLOCKS'
         
-
 class BUTTON_PT_import_export(Panel):
     bl_idname = 'BUTTON_PT_import_export'
     bl_label = 'Import/Export'
@@ -193,12 +198,14 @@ class BUTTON_OT_button_op(Operator):
             ('SELECT_RESIZE', 'Select resize', 'Select resize'),
             ('SELECT_RESIZE_ALL', 'Select resize all', 'Select resize all'),
             ('RESIZE', 'Resize', 'Resize'),
+            ('DELETE_SELECTION', 'Delete selection', 'Delete selection'),
             
             ('VOXEL', 'Voxel', 'Voxel'),
             ('DECIMATE', 'Decimate', 'Decimate'),
             ('MANIFOLD', 'Manifold', 'Manifold'),
             ('VOLUME', 'Volume', 'Volume'),
             ('REMESH_BLOCKS', 'Remesh Blocks', 'Remesh Blocks'),
+            ('VALIDATE_BLOCKS', 'Validate Blocks', 'Validate Blocks'),
             
             ('TEST_IMPORT', 'Test import', 'Test import'),
             ('TEST_EXPORT', 'Test export', 'Test export')            
@@ -240,6 +247,8 @@ class BUTTON_OT_button_op(Operator):
             self.select_resize_all(context=context) 
         elif self.action == 'RESIZE':   
             self.resize(context=context) 
+        elif self.action == 'DELETE_SELECTION':   
+            self.delete_selection(context=context) 
             
         elif self.action == 'VOXEL':   
             self.voxel(context=context)
@@ -251,6 +260,8 @@ class BUTTON_OT_button_op(Operator):
             self.volume(context=context)
         elif self.action == 'REMESH_BLOCKS':   
             self.remesh_blocks(context=context)
+        elif self.action == 'VALIDATE_BLOCKS':   
+            self.validate_blocks(context=context)
          
         elif self.action == 'TEST_IMPORT':   
             self.test_import(context=context)
@@ -545,6 +556,9 @@ class BUTTON_OT_button_op(Operator):
     
     @staticmethod
     def generate_support(context):
+        # Switch in edit mode 
+        bpy.ops.object.mode_set(mode='EDIT')
+    
         # Find the stl files
         txtfiles = []
         for file in glob.glob("C:/Gaetan/_Bachelor/blender/blenderScript/test/*.stl"):
@@ -576,7 +590,7 @@ class BUTTON_OT_button_op(Operator):
         # Switch in edit mode
         bpy.ops.object.mode_set(mode = 'EDIT')
 
-        # Select faces visible from camera
+        # Select all the faces
         bpy.ops.mesh.select_all(action='SELECT')
 
         # Extrude the support
@@ -1027,6 +1041,27 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.transform.resize(value=(scaleX, scaleX, 1), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=0.811, use_proportional_connected=False, use_proportional_projected=False)
 
     @staticmethod
+    def delete_selection(context):
+        print("START")
+
+        # Separate the selected faces
+        bpy.ops.mesh.separate(type='SELECTED')
+
+        # Switch in object mode
+        bpy.ops.object.mode_set(mode = 'OBJECT')
+
+        for obj in bpy.context.selected_objects:
+            if obj.name != bpy.context.view_layer.objects.active.name:
+                # Delete the existing copy
+                object_to_delete = obj
+                bpy.data.objects.remove(object_to_delete, do_unlink=True) 
+
+        # Switch in edit mode
+        bpy.ops.object.mode_set(mode = 'EDIT')
+                
+        print("End Script")
+
+    @staticmethod
     def voxel(context):
         # Switch in object mode 
         bpy.ops.object.mode_set(mode='OBJECT')
@@ -1116,6 +1151,8 @@ class BUTTON_OT_button_op(Operator):
     @staticmethod
     def remesh_blocks(context):
         obj = bpy.context.active_object
+        
+        nameCopy = "temp_copy"
 
         # Switch in object mode 
         bpy.ops.object.mode_set(mode='OBJECT')
@@ -1123,6 +1160,13 @@ class BUTTON_OT_button_op(Operator):
         # Remove all modifiers from the object
         obj.modifiers.clear()
 
+        for o in bpy.data.objects:
+            if o.type == 'MESH' and o.name == nameCopy:
+                # Delete the existing copy
+                object_to_delete = bpy.data.objects[nameCopy]
+                bpy.data.objects.remove(object_to_delete, do_unlink=True) 
+                
+            
         # Make a copy of the object
         new_obj = obj.copy()
         new_obj.data = obj.data.copy()
@@ -1130,16 +1174,15 @@ class BUTTON_OT_button_op(Operator):
         bpy.context.collection.objects.link(new_obj)
 
         # Rename the copy
-        new_obj.name = "temp_copy"
+        new_obj.name = nameCopy
 
         # Hide the copy
         new_obj.hide_viewport = True
 
-
         # Remesh the faces of the object with blocks
         bpy.ops.object.modifier_add(type='REMESH')
         bpy.context.object.modifiers["Remesh"].mode = 'BLOCKS'
-        bpy.context.object.modifiers["Remesh"].octree_depth = 5
+        bpy.context.object.modifiers["Remesh"].octree_depth = bpy.context.scene.level_blocks
         bpy.context.object.modifiers["Remesh"].scale = 0.99
         bpy.context.object.modifiers["Remesh"].use_remove_disconnected = False
         bpy.context.object.modifiers["Remesh"].threshold = 1
@@ -1149,10 +1192,140 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.object.modifier_add(type='BOOLEAN')
         bpy.context.object.modifiers["Boolean"].operation = 'INTERSECT'
         bpy.context.object.modifiers["Boolean"].operand_type = 'OBJECT'
-        bpy.context.object.modifiers["Boolean"].object = bpy.data.objects["temp_copy"]
+        bpy.context.object.modifiers["Boolean"].object = bpy.data.objects[nameCopy]
         bpy.context.object.modifiers["Boolean"].solver = 'FAST'
         bpy.context.object.modifiers["Boolean"].double_threshold = 0
+
+    @staticmethod
+    def validate_blocks(context):
+        # Validate the remesh blocks modifiers
+        bpy.ops.object.apply_all_modifiers()
         
+        # Select faces where normals point down
+        date_1 = datetime.datetime.now()
+        print("Start")
+
+        pi = 3.14159265
+        maxAngle = 1
+
+        obj = bpy.context.active_object
+
+        tabVertices = []
+        for vertex in obj.data.vertices:
+           tabVertices.append(obj.matrix_world @ vertex.co)
+           
+        tabDirVec = [[mathutils.Vector((0,0,-1)), mathutils.Vector((0,-1,0)), mathutils.Vector((0,0,1)),mathutils.Vector((0,1,0))], 
+                     [mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)),mathutils.Vector((1,0,0))], 
+                     [mathutils.Vector((0,0,1)), mathutils.Vector((0,1,0)), mathutils.Vector((0,0,-1)),mathutils.Vector((0,-1,0))], 
+                     [mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)),mathutils.Vector((-1,0,0))]]
+        vecDir = tabDirVec[int((bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi/90)][int((bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi/90)]
+
+        tabPoly = []
+        tabNormalX = []
+        tabNormalY = []
+        tabNormalZ = []
+        tabFaces = []
+
+        tabPoint1X = []
+        tabPoint1Y = []
+        tabPoint2X = []
+        tabPoint2Y = []
+        tabPoint3X = []
+        tabPoint3Y = []
+        tabPoint1Z = []
+        tabPoint2Z = []
+        tabPoint3Z = []
+
+        for poly in obj.data.polygons:
+            tabPoly.append(poly.index)
+            tabNormalX.append(poly.normal[0])
+            tabNormalY.append(poly.normal[1])
+            tabNormalZ.append(poly.normal[2])
+            tabFaces.append(0)
+            
+            tabPoint1X.append(tabVertices[poly.vertices[0]].x)
+            tabPoint1Y.append(tabVertices[poly.vertices[0]].y)
+            tabPoint2X.append(tabVertices[poly.vertices[1]].x)
+            tabPoint2Y.append(tabVertices[poly.vertices[1]].y)
+            tabPoint3X.append(tabVertices[poly.vertices[2]].x)
+            tabPoint3Y.append(tabVertices[poly.vertices[2]].y)
+            tabPoint1Z.append(tabVertices[poly.vertices[0]].z)
+            tabPoint2Z.append(tabVertices[poly.vertices[1]].z)
+            tabPoint3Z.append(tabVertices[poly.vertices[2]].z)
+
+        print(len(tabPoly))   
+
+        functionC = ctypes.CDLL("C:\\Gaetan\\_Bachelor\\blender\\blenderScript\\function.dll")
+
+
+        seq = ctypes.c_int * len(tabPoly)
+        arrIndex = seq(*tabPoly)
+
+        seq = ctypes.c_float * len(tabNormalX)
+        arrNormalX = seq(*tabNormalX)
+        seq = ctypes.c_float * len(tabNormalY)
+        arrNormalY = seq(*tabNormalY)
+        seq = ctypes.c_float * len(tabNormalZ)
+        arrNormalZ = seq(*tabNormalZ)
+
+        seq = ctypes.c_int * len(tabFaces)
+        arrFaces = seq(*tabFaces)
+
+        seq = ctypes.c_float * len(tabPoint1X)
+        arrPoint1X = seq(*tabPoint1X)
+        seq = ctypes.c_float * len(tabPoint1Y)
+        arrPoint1Y = seq(*tabPoint1Y)
+        seq = ctypes.c_float * len(tabPoint2X)
+        arrPoint2X = seq(*tabPoint2X)
+        seq = ctypes.c_float * len(tabPoint2Y)
+        arrPoint2Y = seq(*tabPoint2Y)
+        seq = ctypes.c_float * len(tabPoint3X)
+        arrPoint3X = seq(*tabPoint3X)
+        seq = ctypes.c_float * len(tabPoint3Y)
+        arrPoint3Y = seq(*tabPoint3Y)
+        seq = ctypes.c_float * len(tabPoint1Z)
+        arrPoint1Z = seq(*tabPoint1Z)
+        seq = ctypes.c_float * len(tabPoint2Z)
+        arrPoint2Z = seq(*tabPoint2Z)
+        seq = ctypes.c_float * len(tabPoint3Z)
+        arrPoint3Z = seq(*tabPoint3Z)
+
+        functionC.select_faces(arrIndex,len(tabPoly),arrNormalX,arrNormalY,arrNormalZ,ctypes.c_float(maxAngle),ctypes.c_float(vecDir.x),ctypes.c_float(vecDir.y),ctypes.c_float(vecDir.z),arrFaces,arrPoint1X,arrPoint1Y,arrPoint2X,arrPoint2Y,arrPoint3X,arrPoint3Y,arrPoint1Z,arrPoint2Z,arrPoint3Z)
+
+        bpy.ops.object.mode_set(mode = 'EDIT')
+        bpy.ops.mesh.select_all(action = 'DESELECT')
+        bpy.ops.mesh.select_mode(type="FACE")
+        bpy.ops.object.mode_set(mode = 'OBJECT')
+
+        for i in range(len(arrFaces)):
+            if arrFaces[i] == 1:
+                obj.data.polygons[tabPoly[i]].select = True
+        print(len(arrFaces))
+        bpy.ops.object.mode_set(mode = 'EDIT')
+        print("End")
+
+        date_2 = datetime.datetime.now()
+        time_delta = (date_2 - date_1)
+        total_seconds = time_delta.total_seconds()
+        print(total_seconds)
+        
+        # Extrude the support
+        bpy.ops.mesh.extrude_region_move(MESH_OT_extrude_region={"use_normal_flip":False, "use_dissolve_ortho_edges":False, "mirror":False}, TRANSFORM_OT_translate={"value":(0, 0, -20), "orient_type":'GLOBAL', "orient_matrix":((1, 0, 0), (0, 1, 0), (0, 0, 1)), "orient_matrix_type":'GLOBAL', "constraint_axis":(False, False, True), "mirror":False, "use_proportional_edit":False, "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "use_proportional_connected":False, "use_proportional_projected":False, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "cursor_transform":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False, "use_automerge_and_split":False})
+
+        # Select all
+        bpy.ops.mesh.select_all(action='SELECT')
+
+        # Bissect and delete the element under the xy plane
+        bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=True, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
+        #bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=False, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False) 
+                
+        # Delete the copy
+        object_to_delete = bpy.data.objects["temp_copy"]
+        bpy.data.objects.remove(object_to_delete, do_unlink=True) 
+        
+        # Switch in object mode 
+        bpy.ops.object.mode_set(mode='OBJECT')
+            
     @staticmethod
     def test_import(context):
         bpy.ops.stl_file.import_file('INVOKE_DEFAULT')   
@@ -1252,7 +1425,7 @@ def register():
     bpy.types.Scene.min_angle_z = bpy.props.FloatProperty(name="Min Angle z", default = 90, options={'SKIP_SAVE'}, min = 0, max = 181,soft_min = 0, soft_max = 181, step = 100)
     bpy.types.Scene.max_angle_z = bpy.props.FloatProperty(name="Max Angle z", default = 90, options={'SKIP_SAVE'}, min = 0, max = 181,soft_min = 0, soft_max = 181, step = 100)
     bpy.types.Scene.volume = bpy.props.FloatProperty(name="Volume", default = 0, options={'SKIP_SAVE'}, min = 0, step = 100)
-    
+    bpy.types.Scene.level_blocks = bpy.props.IntProperty(name="Level Blocks", default = 5, options={'SKIP_SAVE'}, min = 1, max = 9,soft_min = 1, soft_max = 9, step = 1)
     
     # register all the classes
     register_class(STL_FILE_import)
@@ -1277,6 +1450,7 @@ def unregister():
     del bpy.types.Scene.min_angle_z
     del bpy.types.Scene.max_angle_z
     del bpy.types.Scene.volume
+    del bpy.types.Scene.level_blocks
     
     # unregister all the classes
     unregister_class(STL_FILE_import)

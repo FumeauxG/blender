@@ -127,7 +127,10 @@ class BUTTON_PT_resize(Panel):
         row.prop(scene, "resize")  
         layout.operator('btn.btn_op', text='Resize').action = 'RESIZE' 
         
+        layout.separator()
+        
         layout.operator('btn.btn_op', text='Delete selection').action = 'DELETE_SELECTION' 
+        layout.operator('btn.btn_op', text='Fill').action = 'FILL' 
         
 class BUTTON_PT_voxel(Panel):
     bl_idname = 'BUTTON_PT_voxel'
@@ -142,15 +145,27 @@ class BUTTON_PT_voxel(Panel):
         
         layout.label(text="Beta voxel")
         
-        layout.operator('btn.btn_op', text='Voxel').action = 'VOXEL'
-        layout.operator('btn.btn_op', text='Decimate').action = 'DECIMATE'
+        box1 = layout.box()
+        row = box1.row()
+        row.prop(scene, "voxel_size")
+        layout.operator('btn.btn_op', text='Add Voxel').action = 'VOXEL'
+        layout.operator('btn.btn_op', text='Validate').action = 'VALIDATE'
+        
+        box2 = layout.box()
+        row = box2.row()
+        row.prop(scene, "decimate_ratio")
+        layout.operator('btn.btn_op', text='Add Decimate').action = 'DECIMATE'
+        layout.operator('btn.btn_op', text='Validate').action = 'VALIDATE'
+        
+        layout.separator()
+        
         layout.operator('btn.btn_op', text='Manifold').action = 'MANIFOLD'
         layout.operator('btn.btn_op', text='Volume').action = 'VOLUME'
               
         layout.label(text= ("Volume : " + '{:.2f}'.format(bpy.context.scene.volume) + " mm³"))
         
-        box = layout.box()
-        row = box.row()
+        box3 = layout.box()
+        row = box3.row()
         row.prop(scene, "level_blocks")
         layout.operator('btn.btn_op', text='Remesh Blocks').action = 'REMESH_BLOCKS'
         layout.operator('btn.btn_op', text='Validate Blocks').action = 'VALIDATE_BLOCKS'
@@ -199,9 +214,11 @@ class BUTTON_OT_button_op(Operator):
             ('SELECT_RESIZE_ALL', 'Select resize all', 'Select resize all'),
             ('RESIZE', 'Resize', 'Resize'),
             ('DELETE_SELECTION', 'Delete selection', 'Delete selection'),
+            ('FILL', 'Fill', 'Fill'),
             
             ('VOXEL', 'Voxel', 'Voxel'),
             ('DECIMATE', 'Decimate', 'Decimate'),
+            ('VALIDATE', 'Validate', 'Validate'),
             ('MANIFOLD', 'Manifold', 'Manifold'),
             ('VOLUME', 'Volume', 'Volume'),
             ('REMESH_BLOCKS', 'Remesh Blocks', 'Remesh Blocks'),
@@ -249,11 +266,15 @@ class BUTTON_OT_button_op(Operator):
             self.resize(context=context) 
         elif self.action == 'DELETE_SELECTION':   
             self.delete_selection(context=context) 
+        elif self.action == 'FILL':   
+            self.fill(context=context) 
             
         elif self.action == 'VOXEL':   
             self.voxel(context=context)
         elif self.action == 'DECIMATE':   
             self.decimate(context=context)
+        elif self.action == 'VALIDATE':   
+            self.validate(context=context)
         elif self.action == 'MANIFOLD':   
             self.manifold(context=context)
         elif self.action == 'VOLUME':   
@@ -606,7 +627,7 @@ class BUTTON_OT_button_op(Operator):
         # Switch in object mode
         bpy.ops.object.mode_set(mode = 'OBJECT')
 
-        # Select the support object
+        # Select the base object
         bpy.data.objects[nameObject[0] + ".001"].select_set(False)
         bpy.data.objects[nameObject[0]].select_set(True)
 
@@ -1033,7 +1054,7 @@ class BUTTON_OT_button_op(Operator):
         scaleX = 1/oldResize
         bpy.ops.transform.resize(value=(scaleX, scaleX, 1), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=0.811, use_proportional_connected=False, use_proportional_projected=False)
 
-        scaleX = 1-(2*bpy.context.scene.resize/sizeX)
+        scaleX = 1+(2*bpy.context.scene.resize/sizeX)
         if scaleX < 0:
             scaleX = 1
         print(scaleX)
@@ -1062,29 +1083,45 @@ class BUTTON_OT_button_op(Operator):
         print("End Script")
 
     @staticmethod
+    def fill(context):
+        bpy.ops.mesh.fill()  
+
+    @staticmethod
     def voxel(context):
+        obj = bpy.context.active_object
+    
         # Switch in object mode 
         bpy.ops.object.mode_set(mode='OBJECT')
+        
+        # Remove all modifiers from the object
+        obj.modifiers.clear()
 
         # Remesh the object with voxels
         bpy.ops.object.modifier_add(type='REMESH')
         bpy.context.object.modifiers["Remesh"].mode = 'VOXEL'
-        bpy.context.object.modifiers["Remesh"].voxel_size = 0.01
+        bpy.context.object.modifiers["Remesh"].voxel_size = bpy.context.scene.voxel_size
         bpy.context.object.modifiers["Remesh"].adaptivity = 0
         bpy.context.object.modifiers["Remesh"].use_smooth_shade = False
-        bpy.ops.object.apply_all_modifiers()
         
     @staticmethod
     def decimate(context):
+        obj = bpy.context.active_object
+        
         # Switch in object mode 
         bpy.ops.object.mode_set(mode='OBJECT')
+        
+        # Remove all modifiers from the object
+        obj.modifiers.clear()
 
         # Decimate the faces of the object
         bpy.ops.object.modifier_add(type='DECIMATE')
         bpy.context.object.modifiers["Decimate"].decimate_type = 'COLLAPSE'
-        bpy.context.object.modifiers["Decimate"].ratio = 0.01
+        bpy.context.object.modifiers["Decimate"].ratio = bpy.context.scene.decimate_ratio
         bpy.context.object.modifiers["Decimate"].use_symmetry = False
         bpy.context.object.modifiers["Decimate"].use_collapse_triangulate = False
+
+    @staticmethod
+    def validate(context):
         bpy.ops.object.apply_all_modifiers()
 
     @staticmethod
@@ -1206,7 +1243,7 @@ class BUTTON_OT_button_op(Operator):
         print("Start")
 
         pi = 3.14159265
-        maxAngle = 1
+        maxAngle = 10
 
         obj = bpy.context.active_object
 
@@ -1316,9 +1353,30 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.mesh.select_all(action='SELECT')
 
         # Bissect and delete the element under the xy plane
-        bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=True, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
-        #bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=False, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False) 
-                
+        #bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=True, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
+        bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=False, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False) 
+
+        # Switch in edit mode 
+        bpy.ops.object.mode_set(mode='EDIT')
+
+        # Unselect everything
+        bpy.ops.mesh.select_all(action="DESELECT")
+
+        # Pass in vertices selection
+        bpy.ops.mesh.select_mode(type="VERT")
+
+        # Select non manifold vertices
+        bpy.ops.mesh.select_non_manifold()
+
+        # Add an edge or face to selected
+        bpy.ops.mesh.edge_face_add()
+
+        # Pass in faces selection
+        bpy.ops.mesh.select_mode(type="FACE")
+
+        # Switch in object mode 
+        bpy.ops.object.mode_set(mode='OBJECT')
+      
         # Delete the copy
         object_to_delete = bpy.data.objects["temp_copy"]
         bpy.data.objects.remove(object_to_delete, do_unlink=True) 
@@ -1421,9 +1479,11 @@ def register():
     bpy.types.Scene.max_angle = bpy.props.FloatProperty(name="Max Angle", default = 45, options={'SKIP_SAVE'}, min = 0, max = 90,soft_min = 0, soft_max = 90, step = 100)
     bpy.types.Scene.min_area = bpy.props.FloatProperty(name="Min Area", default = 0.1, options={'SKIP_SAVE'}, min = 0, max = 1, soft_min = 0, soft_max = 1, step = 1)
     bpy.types.Object.offset = bpy.props.FloatProperty(name = "Offset", default = 0, options={'SKIP_SAVE'}, min = 0, max = 10, soft_min = 0, soft_max = 10, step = 100)
-    bpy.types.Scene.resize = bpy.props.FloatProperty(name = "Resize", default = 0, options={'SKIP_SAVE'}, min = 0, max = 10, soft_min = 0, soft_max = 10, step = 1)#,get=get_location, set=set_location)
+    bpy.types.Scene.resize = bpy.props.FloatProperty(name = "Resize", default = 0, options={'SKIP_SAVE'}, min = -10, max = 10, soft_min = -10, soft_max = 10, step = 1)#,get=get_location, set=set_location)
     bpy.types.Scene.min_angle_z = bpy.props.FloatProperty(name="Min Angle z", default = 90, options={'SKIP_SAVE'}, min = 0, max = 181,soft_min = 0, soft_max = 181, step = 100)
     bpy.types.Scene.max_angle_z = bpy.props.FloatProperty(name="Max Angle z", default = 90, options={'SKIP_SAVE'}, min = 0, max = 181,soft_min = 0, soft_max = 181, step = 100)
+    bpy.types.Scene.voxel_size = bpy.props.FloatProperty(name="Voxel Size", default = 0.01, options={'SKIP_SAVE'}, min = 0.01, max = 0.1,soft_min = 0.01, soft_max = 0.1, step = 1)
+    bpy.types.Scene.decimate_ratio = bpy.props.FloatProperty(name="Decimate Ratio", default = 0.01, options={'SKIP_SAVE'}, min = 0, max = 1,soft_min = 0, soft_max = 1, step = 1)
     bpy.types.Scene.volume = bpy.props.FloatProperty(name="Volume", default = 0, options={'SKIP_SAVE'}, min = 0, step = 100)
     bpy.types.Scene.level_blocks = bpy.props.IntProperty(name="Level Blocks", default = 5, options={'SKIP_SAVE'}, min = 1, max = 9,soft_min = 1, soft_max = 9, step = 1)
     
@@ -1449,6 +1509,8 @@ def unregister():
     del bpy.types.Scene.resize
     del bpy.types.Scene.min_angle_z
     del bpy.types.Scene.max_angle_z
+    del bpy.types.Scene.voxel_size
+    del bpy.types.Scene.decimate_ratio
     del bpy.types.Scene.volume
     del bpy.types.Scene.level_blocks
     

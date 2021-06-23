@@ -1,6 +1,8 @@
 import bpy
 import glob
 
+print("Start")
+
 obj = bpy.context.active_object
         
 nameCopy = "diff_copy"
@@ -17,8 +19,9 @@ bpy.context.collection.objects.link(new_obj)
 # Rename the copy
 new_obj.name = nameCopy
 
-# Hide the copy
+# Show the copy
 new_obj.hide_viewport = True
+new_obj.hide_viewport = False
 
 # Find the stl files
 txtfiles = []
@@ -74,13 +77,63 @@ bpy.data.objects[nameObject[0]].select_set(True)
 # Delete the base object
 bpy.ops.object.delete(use_global=False, confirm=False)
 
-# Export the stl file
-#bpy.ops.export_mesh.stl(filepath=pathOut)
-
 # Select the support
 bpy.context.view_layer.objects.active = bpy.data.objects[nameObject[0] + ".001"]
 bpy.data.objects[nameObject[0] + ".001"].select_set(True)
 
+# Add the mold
+bpy.ops.mesh.primitive_cube_add(size=2, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(bpy.data.objects[nameCopy].dimensions[0], bpy.data.objects[nameCopy].dimensions[1], 2))
 
+# Align the mold in Z
+bpy.ops.object.align(align_mode='OPT_3', relative_to='OPT_1', align_axis={'Z'})
+
+# Select the copy
+bpy.context.view_layer.objects.active = bpy.data.objects[nameCopy]
+bpy.data.objects[nameCopy].select_set(True)
+
+# Align the mold in x and y
+bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_4', align_axis={'X'})
+bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_4', align_axis={'Y'})
+
+# Select the mold
+bpy.context.view_layer.objects.active = bpy.data.objects["Cube"]
+bpy.data.objects[nameCopy].select_set(False)
+
+# Margins x and y
+bpy.data.objects["Cube"].dimensions = [bpy.data.objects["Cube"].dimensions[0] + 0.5, bpy.data.objects["Cube"].dimensions[1] + 0.5, bpy.data.objects["Cube"].dimensions[2] ]
+
+# Delete the object to the mold
+bpy.ops.object.modifier_add(type='BOOLEAN')
+bpy.context.object.modifiers["Boolean"].operation = 'DIFFERENCE'
+bpy.context.object.modifiers["Boolean"].operand_type = 'OBJECT'
+bpy.context.object.modifiers["Boolean"].object = bpy.data.objects[nameCopy]
+bpy.context.object.modifiers["Boolean"].solver = 'FAST'
+bpy.context.object.modifiers["Boolean"].double_threshold = 0
+bpy.ops.object.apply_all_modifiers()
+
+# Delete the copy
+object_to_delete = bpy.data.objects[nameCopy]
+bpy.data.objects.remove(object_to_delete, do_unlink=True) 
+
+# Select the support
+bpy.context.view_layer.objects.active = bpy.data.objects[nameObject[0] + ".001"]
+bpy.data.objects[nameObject[0] + ".001"].select_set(True)
+bpy.data.objects["Cube"].select_set(False)
+
+# Merge the mold to the support
+bpy.ops.object.modifier_add(type='BOOLEAN')
+bpy.context.object.modifiers["Boolean"].operation = 'UNION'
+bpy.context.object.modifiers["Boolean"].operand_type = 'OBJECT'
+bpy.context.object.modifiers["Boolean"].object = bpy.data.objects["Cube"]
+bpy.context.object.modifiers["Boolean"].solver = 'FAST'
+bpy.context.object.modifiers["Boolean"].double_threshold = 0
+bpy.ops.object.apply_all_modifiers()
+
+# Delete the mold
+object_to_delete = bpy.data.objects["Cube"]
+bpy.data.objects.remove(object_to_delete, do_unlink=True)
+
+# Export the stl file
+bpy.ops.export_mesh.stl(filepath=pathOut)
 
 print("End Script")

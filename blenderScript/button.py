@@ -386,7 +386,7 @@ class BUTTON_OT_button_op(Operator):
  
         # Switch in the edit mode
         bpy.ops.object.mode_set(mode = 'EDIT')
- 
+        
     @staticmethod
     def import_object(context):
         # Delete the existing cube or support
@@ -1093,16 +1093,16 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.mesh.extrude_region_move(MESH_OT_extrude_region={"use_normal_flip":False, "use_dissolve_ortho_edges":False, "mirror":False}, TRANSFORM_OT_translate={"value":(0, 0, 10), "orient_type":'GLOBAL', "orient_matrix":((1, 0, 0), (0, 1, 0), (0, 0, 1)), "orient_matrix_type":'GLOBAL', "constraint_axis":(True, True, True), "mirror":False, "use_proportional_edit":False, "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "use_proportional_connected":False, "use_proportional_projected":False, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "cursor_transform":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False, "use_automerge_and_split":False})
 
         # Select all
-        bpy.ops.mesh.select_all(action='SELECT')
+        #bpy.ops.mesh.select_all(action='SELECT')
 
         # Get the outline at the level of the plane xy
-        bpy.ops.mesh.bisect(plane_co=(0, 0, 0), plane_no=(0, 0, 1), clear_inner=True, clear_outer=True, xstart=201, xend=793, ystart=341, yend=409, flip=False)
+        #bpy.ops.mesh.bisect(plane_co=(0, 0, 0), plane_no=(0, 0, 1), clear_inner=True, clear_outer=True, xstart=201, xend=793, ystart=341, yend=409, flip=False)
 
         # Switch in object mode 
         bpy.ops.object.mode_set(mode='OBJECT')
 
         # Add the mold
-        bpy.ops.mesh.primitive_plane_add(size=1, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))#, rotation=(3.14159, 0, 0), scale=(1, 1, 1))
+        bpy.ops.mesh.primitive_plane_add(size=1, enter_editmode=False, align='WORLD', location=(0, 0, 0),rotation=(3.14159, 0, 0), scale=(1, 1, 1))
 
         # Margins x and y
         bpy.data.objects["Plane"].dimensions = [bpy.data.objects[nameObject].dimensions[0], bpy.data.objects[nameObject].dimensions[1], 0]
@@ -1138,15 +1138,14 @@ class BUTTON_OT_button_op(Operator):
         # Select all the faces
         bpy.ops.mesh.select_all(action='SELECT')
 
-        # Fill the mold
-        bpy.ops.mesh.fill()
-        #bpy.ops.mesh.edge_face_add()
+        # Cut the intersected faces
+        bpy.ops.mesh.intersect(mode='SELECT', separate_mode='NONE')
 
         # Select all the faces
         bpy.ops.mesh.select_all(action='SELECT')
 
-        # Cut the intersected faces
-        bpy.ops.mesh.intersect(mode='SELECT', separate_mode='NONE', solver='FAST')
+        # Only keep the faces on the plane xy
+        bpy.ops.mesh.bisect(plane_co=(0, 0, 0), plane_no=(0, 0, 1), clear_inner=True, clear_outer=True, xstart=1273, xend=2086, ystart=286, yend=287, flip=False)
 
         # Select all the faces
         bpy.ops.mesh.select_all(action='SELECT')
@@ -1154,17 +1153,18 @@ class BUTTON_OT_button_op(Operator):
         # Triangulate all the faces
         bpy.ops.mesh.quads_convert_to_tris(quad_method='BEAUTY', ngon_method='BEAUTY')
 
-        # Switch in object mode 
-        bpy.ops.object.mode_set(mode='OBJECT')
-
         # Select the object and the mold
         bpy.data.objects[nameObject].select_set(True)
-        bpy.context.view_layer.objects.active = bpy.data.objects[nameObject]
+        #bpy.context.view_layer.objects.active = bpy.data.objects[nameObject]
+
+        # Switch in object mode 
+        bpy.ops.object.mode_set(mode='OBJECT')
 
         # Join the object and the mold
         bpy.ops.object.join()
 
-        
+        # Recover the name
+        obj.name = nameObject
         
         # Select faces
         ########################
@@ -1203,26 +1203,36 @@ class BUTTON_OT_button_op(Operator):
         tabPoint1Z = []
         tabPoint2Z = []
         tabPoint3Z = []
-
-        for poly in obj.data.polygons:
-            if poly.select:
-                tabPoly.append(poly.index)
-                tabNormalX.append(poly.normal[0])
-                tabNormalY.append(poly.normal[1])
-                tabNormalZ.append(poly.normal[2])
-                tabFaces.append(0)
-                
-                tabPoint1X.append(tabVertices[poly.vertices[0]].x)
-                tabPoint1Y.append(tabVertices[poly.vertices[0]].y)
-                tabPoint2X.append(tabVertices[poly.vertices[1]].x)
-                tabPoint2Y.append(tabVertices[poly.vertices[1]].y)
-                tabPoint3X.append(tabVertices[poly.vertices[2]].x)
-                tabPoint3Y.append(tabVertices[poly.vertices[2]].y)
-                tabPoint1Z.append(tabVertices[poly.vertices[0]].z)
-                tabPoint2Z.append(tabVertices[poly.vertices[1]].z)
-                tabPoint3Z.append(tabVertices[poly.vertices[2]].z)
-
+        
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_all(action='DESELECT')
+        bpy.ops.object.mode_set(mode='OBJECT')        
+        
         print(len(tabPoly))   
+
+        bpy.ops.object.mode_set(mode = 'EDIT')
+        bpy.ops.mesh.select_all(action='DESELECT')
+        bpy.ops.object.mode_set(mode = 'OBJECT')
+        
+        for poly in obj.data.polygons:
+            #if poly.center[2] == 0:
+                #poly.select = True
+            #else:
+            tabPoly.append(poly.index)
+            tabNormalX.append(poly.normal[0])
+            tabNormalY.append(poly.normal[1])
+            tabNormalZ.append(poly.normal[2])
+            tabFaces.append(0)
+            
+            tabPoint1X.append(tabVertices[poly.vertices[0]].x)
+            tabPoint1Y.append(tabVertices[poly.vertices[0]].y)
+            tabPoint2X.append(tabVertices[poly.vertices[1]].x)
+            tabPoint2Y.append(tabVertices[poly.vertices[1]].y)
+            tabPoint3X.append(tabVertices[poly.vertices[2]].x)
+            tabPoint3Y.append(tabVertices[poly.vertices[2]].y)
+            tabPoint1Z.append(tabVertices[poly.vertices[0]].z)
+            tabPoint2Z.append(tabVertices[poly.vertices[1]].z)
+            tabPoint3Z.append(tabVertices[poly.vertices[2]].z)
 
         functionC = ctypes.CDLL("C:\\Gaetan\\_Bachelor\\blender\\blenderScript\\function.dll")
 
@@ -1278,28 +1288,157 @@ class BUTTON_OT_button_op(Operator):
         print(total_seconds)
         ########################
         
+        tabPlane = []
+        for poly in obj.data.polygons:
+            if poly.select:
+                tabPlane.append(poly)  
+                
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_all(action='DESELECT')
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+        for poly in tabPlane:
+            poly.select = True
         
+        # Second turn
+        ########################
+        date_1 = datetime.datetime.now()
+        print("Start")
+
+        pi = 3.14159265
+        maxAngle = bpy.context.scene.max_angle
+        print(maxAngle)
+
+        obj = bpy.context.active_object
+
+        tabVertices = []
+        for vertex in obj.data.vertices:
+           tabVertices.append(obj.matrix_world @ vertex.co)
+           
+        tabDirVec = [[mathutils.Vector((0,0,-1)), mathutils.Vector((0,-1,0)), mathutils.Vector((0,0,1)),mathutils.Vector((0,1,0))], 
+                     [mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)),mathutils.Vector((1,0,0))], 
+                     [mathutils.Vector((0,0,1)), mathutils.Vector((0,1,0)), mathutils.Vector((0,0,-1)),mathutils.Vector((0,-1,0))], 
+                     [mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)),mathutils.Vector((-1,0,0))]]
+        vecDir = tabDirVec[int((bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi/90)][int((bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi/90)]
+
+
+        tabPoly = []
+        tabNormalX = []
+        tabNormalY = []
+        tabNormalZ = []
+        tabFaces = []
+
+        tabPoint1X = []
+        tabPoint1Y = []
+        tabPoint2X = []
+        tabPoint2Y = []
+        tabPoint3X = []
+        tabPoint3Y = []
+        tabPoint1Z = []
+        tabPoint2Z = []
+        tabPoint3Z = []
         
+        #bpy.ops.object.mode_set(mode='EDIT')
+        #bpy.ops.mesh.select_all(action='DESELECT')
+        #bpy.ops.object.mode_set(mode='OBJECT')        
+        
+        print(len(tabPoly))   
+
+        #bpy.ops.object.mode_set(mode = 'EDIT')
+        #bpy.ops.mesh.select_all(action='DESELECT')
+        bpy.ops.object.mode_set(mode = 'OBJECT')
+        
+        # Apply rotation
+        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True) 
+        
+        for poly in obj.data.polygons:
+            #if poly.center[2] == 0:
+                #poly.select = True
+            #else:
+            if poly.center[2] > (0-0.01) and poly.center[2] < (0+0.01):
+                poly.select = False
+                print("SALUT",poly.index)
+
+            else:
+                poly.select = False
+                tabPoly.append(poly.index)
+                tabNormalX.append(poly.normal[0])
+                tabNormalY.append(poly.normal[1])
+                tabNormalZ.append(poly.normal[2])
+                tabFaces.append(0)
+                
+                tabPoint1X.append(tabVertices[poly.vertices[0]].x)
+                tabPoint1Y.append(tabVertices[poly.vertices[0]].y)
+                tabPoint2X.append(tabVertices[poly.vertices[1]].x)
+                tabPoint2Y.append(tabVertices[poly.vertices[1]].y)
+                tabPoint3X.append(tabVertices[poly.vertices[2]].x)
+                tabPoint3Y.append(tabVertices[poly.vertices[2]].y)
+                tabPoint1Z.append(tabVertices[poly.vertices[0]].z)
+                tabPoint2Z.append(tabVertices[poly.vertices[1]].z)
+                tabPoint3Z.append(tabVertices[poly.vertices[2]].z)
+        
+        functionC = ctypes.CDLL("C:\\Gaetan\\_Bachelor\\blender\\blenderScript\\function.dll")
+
+        seq = ctypes.c_int * len(tabPoly)
+        arrIndex = seq(*tabPoly)
+
+        seq = ctypes.c_float * len(tabNormalX)
+        arrNormalX = seq(*tabNormalX)
+        seq = ctypes.c_float * len(tabNormalY)
+        arrNormalY = seq(*tabNormalY)
+        seq = ctypes.c_float * len(tabNormalZ)
+        arrNormalZ = seq(*tabNormalZ)
+
+        seq = ctypes.c_int * len(tabFaces)
+        arrFaces = seq(*tabFaces)
+
+        seq = ctypes.c_float * len(tabPoint1X)
+        arrPoint1X = seq(*tabPoint1X)
+        seq = ctypes.c_float * len(tabPoint1Y)
+        arrPoint1Y = seq(*tabPoint1Y)
+        seq = ctypes.c_float * len(tabPoint2X)
+        arrPoint2X = seq(*tabPoint2X)
+        seq = ctypes.c_float * len(tabPoint2Y)
+        arrPoint2Y = seq(*tabPoint2Y)
+        seq = ctypes.c_float * len(tabPoint3X)
+        arrPoint3X = seq(*tabPoint3X)
+        seq = ctypes.c_float * len(tabPoint3Y)
+        arrPoint3Y = seq(*tabPoint3Y)
+        seq = ctypes.c_float * len(tabPoint1Z)
+        arrPoint1Z = seq(*tabPoint1Z)
+        seq = ctypes.c_float * len(tabPoint2Z)
+        arrPoint2Z = seq(*tabPoint2Z)
+        seq = ctypes.c_float * len(tabPoint3Z)
+        arrPoint3Z = seq(*tabPoint3Z)
+
+        functionC.select_faces(arrIndex,len(tabPoly),arrNormalX,arrNormalY,arrNormalZ,ctypes.c_float(maxAngle),ctypes.c_float(vecDir.x),ctypes.c_float(vecDir.y),ctypes.c_float(vecDir.z),arrFaces,arrPoint1X,arrPoint1Y,arrPoint2X,arrPoint2Y,arrPoint3X,arrPoint3Y,arrPoint1Z,arrPoint2Z,arrPoint3Z)
+
+        bpy.ops.object.mode_set(mode = 'EDIT')
+        bpy.ops.mesh.select_all(action = 'DESELECT')
+        bpy.ops.mesh.select_mode(type="FACE")
+        bpy.ops.object.mode_set(mode = 'OBJECT')
+
+        for i in range(len(arrFaces)):
+            if arrFaces[i] == 1:
+                obj.data.polygons[tabPoly[i]].select = True
+        print(len(arrFaces))
+        bpy.ops.object.mode_set(mode = 'EDIT')
+        print("End")
+
+        date_2 = datetime.datetime.now()
+        time_delta = (date_2 - date_1)
+        total_seconds = time_delta.total_seconds()
+        print(total_seconds)
+        ########################
         
         bpy.ops.object.mode_set(mode = 'OBJECT')
-        #tabPlane = []
-        for poly in obj.data.polygons:
-            #if poly.select:
-                #tabPlane[poly.index]
-            if poly.index == tabSelection[0]:
-                poly.select = True
-                print(poly.index)
-                tabSelection.pop(0)
-                if tabSelection == []:
-                    break
-        print(obj)
-
-
-
-
+        for poly in tabPlane:
+            poly.select = True
+            print(poly.index)
+        
         # Switch in edit mode 
         bpy.ops.object.mode_set(mode='EDIT')
-
+        
         # Find the stl files
         txtfiles = []
         for file in glob.glob("C:/Gaetan/_Bachelor/blender/blenderScript/test/*.stl"):
@@ -1378,6 +1517,7 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.object.join()
         
         print("End Script")
+          
 
     sizeX = 0
     oldResize = 1

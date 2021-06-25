@@ -217,6 +217,8 @@ bpy.ops.mesh.select_all(action='SELECT')
 # Triangulate all the faces
 bpy.ops.mesh.quads_convert_to_tris(quad_method='BEAUTY', ngon_method='BEAUTY')
 
+print(len(bpy.context.active_object.data.polygons))
+'''
 # Select the object and the mold
 bpy.data.objects[nameObject].select_set(True)
 #bpy.context.view_layer.objects.active = bpy.data.objects[nameObject]
@@ -423,3 +425,4 @@ bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_4', align_axis={'Y'})
 bpy.ops.object.join()
 
 print("End Script")
+'''

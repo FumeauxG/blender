@@ -1289,16 +1289,22 @@ class BUTTON_OT_button_op(Operator):
         ########################
         
         tabPlane = []
+        tabPlane2 = []
+        #tm
         for poly in obj.data.polygons:
             if poly.select:
-                tabPlane.append(poly)  
+                tabPlane.append(poly)
+                tabPlane2.append(poly.index)
+                print(poly.index)
+                
+        #tm  
                 
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.mesh.select_all(action='DESELECT')
         bpy.ops.object.mode_set(mode='OBJECT')
-
-        for poly in tabPlane:
-            poly.select = True
+        
+        #for poly in tabPlane:
+        #    poly.select = True
         
         # Second turn
         ########################
@@ -1343,7 +1349,7 @@ class BUTTON_OT_button_op(Operator):
         #bpy.ops.object.mode_set(mode='OBJECT')        
         
         print(len(tabPoly))   
-
+        
         #bpy.ops.object.mode_set(mode = 'EDIT')
         #bpy.ops.mesh.select_all(action='DESELECT')
         bpy.ops.object.mode_set(mode = 'OBJECT')
@@ -1356,11 +1362,11 @@ class BUTTON_OT_button_op(Operator):
                 #poly.select = True
             #else:
             if poly.center[2] > (0-0.01) and poly.center[2] < (0+0.01):
-                poly.select = False
+                #poly.select = False
                 print("SALUT",poly.index)
 
             else:
-                poly.select = False
+                #poly.select = False
                 tabPoly.append(poly.index)
                 tabNormalX.append(poly.normal[0])
                 tabNormalY.append(poly.normal[1])
@@ -1423,7 +1429,7 @@ class BUTTON_OT_button_op(Operator):
                 obj.data.polygons[tabPoly[i]].select = True
         print(len(arrFaces))
         bpy.ops.object.mode_set(mode = 'EDIT')
-        print("End")
+        print("End 2")
 
         date_2 = datetime.datetime.now()
         time_delta = (date_2 - date_1)
@@ -1432,10 +1438,16 @@ class BUTTON_OT_button_op(Operator):
         ########################
         
         bpy.ops.object.mode_set(mode = 'OBJECT')
+        #tm
+        obj = bpy.context.active_object
         for poly in tabPlane:
-            poly.select = True
+        #    poly.select = True
             print(poly.index)
-        
+            print(tabPlane2[0])
+            obj.data.polygons[tabPlane2[0]].select = True
+            tabPlane2.pop(0)
+        print("TM")
+        #tm
         # Switch in edit mode 
         bpy.ops.object.mode_set(mode='EDIT')
         
@@ -1517,7 +1529,7 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.object.join()
         
         print("End Script")
-          
+         
 
     sizeX = 0
     oldResize = 1

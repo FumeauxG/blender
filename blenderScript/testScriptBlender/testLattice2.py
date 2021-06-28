@@ -78,14 +78,14 @@ for poly in obj.data.polygons:
 bpy.data.objects["Lattice"].scale = (xPlus-xTemp, obj.dimensions[1], obj.dimensions[2])
 bpy.data.objects["Lattice"].location = ((xPlus+xTemp)/2, (yPlus+yMoins)/2,(zPlus+zMoins)/2)
 
-bpy.data.objects["Lattice"].scale = (obj.dimensions[0], yPlus-yTemp, obj.dimensions[2])
-bpy.data.objects["Lattice"].location = ((xPlus+xMoins)/2, (yPlus+yTemp)/2,(zPlus+zMoins)/2)
+#bpy.data.objects["Lattice"].scale = (obj.dimensions[0], yPlus-yTemp, obj.dimensions[2])
+#bpy.data.objects["Lattice"].location = ((xPlus+xMoins)/2, (yPlus+yTemp)/2,(zPlus+zMoins)/2)
 
-bpy.data.objects["Lattice"].scale = (obj.dimensions[0], obj.dimensions[1], zPlus-zTemp)
-bpy.data.objects["Lattice"].location = ((xPlus+xMoins)/2, (yPlus+yMoins)/2,(zPlus+zTemp)/2)
+#bpy.data.objects["Lattice"].scale = (obj.dimensions[0], obj.dimensions[1], zPlus-zTemp)
+#bpy.data.objects["Lattice"].location = ((xPlus+xMoins)/2, (yPlus+yMoins)/2,(zPlus+zTemp)/2)
 
-bpy.data.objects["Lattice"].scale = (xPlus-xTemp, yPlus-yTemp, zPlus-zTemp)
-bpy.data.objects["Lattice"].location = ((xPlus+xTemp)/2, (yPlus+yTemp)/2,(zPlus+zTemp)/2)
+#bpy.data.objects["Lattice"].scale = (xPlus-xTemp, yPlus-yTemp, zPlus-zTemp)
+#bpy.data.objects["Lattice"].location = ((xPlus+xTemp)/2, (yPlus+yTemp)/2,(zPlus+zTemp)/2)
 
 #bpy.data.objects["Lattice"].scale = (obj.dimensions[0], obj.dimensions[1], obj.dimensions[2])
 #bpy.data.objects["Lattice"].location = ((xPlus+xMoins)/2, (yPlus+yMoins)/2,(zPlus+zMoins)/2)
@@ -96,19 +96,4 @@ bpy.data.objects["Lattice"].location = ((xPlus+xTemp)/2, (yPlus+yTemp)/2,(zPlus+
 #        mod = ob.modifiers.new("Lattice", 'LATTICE')
 #        mod.object = lattice_ob
 
-# Switch in object mode
-bpy.ops.object.mode_set(mode='OBJECT') 
-
-for poly in obj.data.polygons:
-    if (obj.matrix_world @ poly.center)[0]>=(bpy.data.lattices['Lattice'].points[0].co[0]*bpy.data.objects["Lattice"].scale[0]+bpy.data.objects["Lattice"].location[0]) and (obj.matrix_world @ poly.center)[0]<=(bpy.data.lattices['Lattice'].points[1].co[0]*bpy.data.objects["Lattice"].scale[0]+bpy.data.objects["Lattice"].location[0]):
-        if (obj.matrix_world @ poly.center)[1]>=(bpy.data.lattices['Lattice'].points[0].co[1]*bpy.data.objects["Lattice"].scale[1]+bpy.data.objects["Lattice"].location[1]) and (obj.matrix_world @ poly.center)[1]<=(bpy.data.lattices['Lattice'].points[2].co[1]*bpy.data.objects["Lattice"].scale[1]+bpy.data.objects["Lattice"].location[1]):
-            if (obj.matrix_world @ poly.center)[2]>=(bpy.data.lattices['Lattice'].points[0].co[2]*bpy.data.objects["Lattice"].scale[2]+bpy.data.objects["Lattice"].location[2]) and (obj.matrix_world @ poly.center)[2]<=(bpy.data.lattices['Lattice'].points[4].co[2]*bpy.data.objects["Lattice"].scale[2]+bpy.data.objects["Lattice"].location[2]):
-                poly.select = True
-                #print(poly.center[0],bpy.data.lattices['Lattice'].points[0].co[0])
-
-                
-# Switch in edit mode
-bpy.ops.object.mode_set(mode='EDIT')
-        
-print("End Script")
 

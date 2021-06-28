@@ -135,35 +135,6 @@ class BUTTON_PT_resize(Panel):
         
         layout.operator('btn.btn_op', text='Delete selection').action = 'DELETE_SELECTION' 
         layout.operator('btn.btn_op', text='Fill').action = 'FILL' 
-
-class BUTTON_PT_lattice(Panel):
-    bl_idname = 'BUTTON_PT_lattice'
-    bl_label = 'Lattice'
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'Button'
- 
-    def draw(self, context): 
-        layout = self.layout 
-        scene = context.scene 
-        
-        layout.label(text="Beta lattice")
-
-        layout.operator('btn.btn_op', text='Add lattice').action = 'ADD_LATTICE'
-        box1 = layout.box()
-        row = box1.row()
-        row.prop(scene, "lattice_size_x")  
-        row.prop(scene, "lattice_size_y")
-        row.prop(scene, "lattice_size_z")  
-        
-        box2 = layout.box()
-        row = box2.row()
-        row.prop(scene, "lattice_offset_x")  
-        row.prop(scene, "lattice_offset_y")
-        row.prop(scene, "lattice_offset_z") 
-        
-        layout.operator('btn.btn_op', text='Select lattice').action = 'SELECT_LATTICE'
-        layout.operator('btn.btn_op', text='Delete lattice').action = 'DELETE_LATTICE'
         
 class BUTTON_PT_voxel(Panel):
     bl_idname = 'BUTTON_PT_voxel'
@@ -250,10 +221,6 @@ class BUTTON_OT_button_op(Operator):
             ('DELETE_SELECTION', 'Delete selection', 'Delete selection'),
             ('FILL', 'Fill', 'Fill'),
             
-            ('ADD_LATTICE', 'Add lattice', 'Add lattice'),
-            ('SELECT_LATTICE', 'Select lattice', 'Select lattice'),
-            ('DELETE_LATTICE', 'Delete lattice', 'Delete lattice'),
-            
             ('VOXEL', 'Voxel', 'Voxel'),
             ('DECIMATE', 'Decimate', 'Decimate'),
             ('VALIDATE', 'Validate', 'Validate'),
@@ -307,14 +274,7 @@ class BUTTON_OT_button_op(Operator):
         elif self.action == 'DELETE_SELECTION':   
             self.delete_selection(context=context) 
         elif self.action == 'FILL':   
-            self.fill(context=context)
-
-        elif self.action == 'ADD_LATTICE':   
-            self.add_lattice(context=context)  
-        elif self.action == 'SELECT_LATTICE':   
-            self.select_lattice(context=context)   
-        elif self.action == 'DELETE_LATTICE':   
-            self.delete_lattice(context=context)    
+            self.fill(context=context) 
             
         elif self.action == 'VOXEL':   
             self.voxel(context=context)
@@ -490,12 +450,11 @@ class BUTTON_OT_button_op(Operator):
         for vertex in obj.data.vertices:
            tabVertices.append(obj.matrix_world @ vertex.co) 
         
-        #tabDirVec = [[mathutils.Vector((0,0,-1)), mathutils.Vector((0,-1,0)), mathutils.Vector((0,0,1)),mathutils.Vector((0,1,0))], 
-        #             [mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)),mathutils.Vector((1,0,0))], 
-        #             [mathutils.Vector((0,0,1)), mathutils.Vector((0,1,0)), mathutils.Vector((0,0,-1)),mathutils.Vector((0,-1,0))], 
-        #             [mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)),mathutils.Vector((-1,0,0))]]
-        #vecDir = tabDirVec[int((bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi/90)][int((bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi/90)]
-        vecDir = mathutils.Vector((0,0,-1))
+        tabDirVec = [[mathutils.Vector((0,0,-1)), mathutils.Vector((0,-1,0)), mathutils.Vector((0,0,1)),mathutils.Vector((0,1,0))], 
+                     [mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)),mathutils.Vector((1,0,0))], 
+                     [mathutils.Vector((0,0,1)), mathutils.Vector((0,1,0)), mathutils.Vector((0,0,-1)),mathutils.Vector((0,-1,0))], 
+                     [mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)),mathutils.Vector((-1,0,0))]]
+        vecDir = tabDirVec[int((bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi/90)][int((bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi/90)]
 
         print(vecDir)
         for poly in obj.data.polygons:
@@ -532,20 +491,17 @@ class BUTTON_OT_button_op(Operator):
 
         obj = bpy.context.active_object
 
-        # Add the vertices location in an array
         tabVertices = []
         for vertex in obj.data.vertices:
            tabVertices.append(obj.matrix_world @ vertex.co)
            
-        #tabDirVec = [[mathutils.Vector((0,0,-1)), mathutils.Vector((0,-1,0)), mathutils.Vector((0,0,1)),mathutils.Vector((0,1,0))], 
-        #             [mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)),mathutils.Vector((1,0,0))], 
-        #             [mathutils.Vector((0,0,1)), mathutils.Vector((0,1,0)), mathutils.Vector((0,0,-1)),mathutils.Vector((0,-1,0))], 
-        #             [mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)),mathutils.Vector((-1,0,0))]]
-        #vecDir = tabDirVec[int((bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi/90)][int((bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi/90)]
-        vecDir = mathutils.Vector((0,0,-1))
+        tabDirVec = [[mathutils.Vector((0,0,-1)), mathutils.Vector((0,-1,0)), mathutils.Vector((0,0,1)),mathutils.Vector((0,1,0))], 
+                     [mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)),mathutils.Vector((1,0,0))], 
+                     [mathutils.Vector((0,0,1)), mathutils.Vector((0,1,0)), mathutils.Vector((0,0,-1)),mathutils.Vector((0,-1,0))], 
+                     [mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)),mathutils.Vector((-1,0,0))]]
+        vecDir = tabDirVec[int((bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi/90)][int((bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi/90)]
 
 
-        # Arrays for the function C parameters
         tabPoly = []
         tabNormalX = []
         tabNormalY = []
@@ -576,7 +532,6 @@ class BUTTON_OT_button_op(Operator):
         '''
         ###
 
-        # Fill the arrays
         for poly in obj.data.polygons:
             tabPoly.append(poly.index)
             tabNormalX.append(poly.normal[0])
@@ -610,11 +565,9 @@ class BUTTON_OT_button_op(Operator):
 
         print(len(tabPoly))   
 
-        # Get the C function
         functionC = ctypes.CDLL("C:\\Gaetan\\_Bachelor\\blender\\blenderScript\\function.dll")
 
 
-        # Create array for C function
         seq = ctypes.c_int * len(tabPoly)
         arrIndex = seq(*tabPoly)
 
@@ -671,29 +624,20 @@ class BUTTON_OT_button_op(Operator):
         ###
 
         date_3 = datetime.datetime.now()
-        
-        # Call the C function
         functionC.select_faces(arrIndex,len(tabPoly),arrNormalX,arrNormalY,arrNormalZ,ctypes.c_float(maxAngle),ctypes.c_float(vecDir.x),ctypes.c_float(vecDir.y),ctypes.c_float(vecDir.z),arrFaces,arrPoint1X,arrPoint1Y,arrPoint2X,arrPoint2Y,arrPoint3X,arrPoint3Y,arrPoint1Z,arrPoint2Z,arrPoint3Z)
-        #functionC.select_faces(arrIndex,len(tabPoly),arrNormalX,arrNormalY,arrNormalZ,ctypes.c_float(maxAngle),ctypes.c_float(0),ctypes.c_float(0),ctypes.c_float(-1),arrFaces,arrPoint1X,arrPoint1Y,arrPoint2X,arrPoint2Y,arrPoint3X,arrPoint3Y,arrPoint1Z,arrPoint2Z,arrPoint3Z)
         #functionC.select_faces(arrIndex,len(tabPoly),arrNormalX,arrNormalY,arrNormalZ,ctypes.c_float(maxAngle),ctypes.c_float(vecDir.x),ctypes.c_float(vecDir.y),ctypes.c_float(vecDir.z),arrFaces,arrPoint1X,arrPoint1Y,arrPoint2X,arrPoint2Y,arrPoint3X,arrPoint3Y,arrPoint1Z,arrPoint2Z,arrPoint3Z
         #,arrTv1x,arrTv2x,arrTv3x,arrTv1y,arrTv2y,arrTv3y,arrTv1z,arrTv2z,arrTv3z)
         date_4 = datetime.datetime.now()
 
-        # Switch in edit mode
         bpy.ops.object.mode_set(mode = 'EDIT')
-        # Deselect all the faces
         bpy.ops.mesh.select_all(action = 'DESELECT')
         bpy.ops.mesh.select_mode(type="FACE")
-        # Switch in object mode
         bpy.ops.object.mode_set(mode = 'OBJECT')
 
-        # Select all the faces needed support
         for i in range(len(arrFaces)):
             if arrFaces[i] == 1:
                 obj.data.polygons[tabPoly[i]].select = True
         print(len(arrFaces))
-        
-        # Switch in edit mode
         bpy.ops.object.mode_set(mode = 'EDIT')
         print("End")
 
@@ -712,27 +656,22 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.object.mode_set(mode='EDIT')
     
         # Find the stl files
-        #txtfiles = []
-        #for file in glob.glob("C:/Gaetan/_Bachelor/blender/blenderScript/test/*.stl"):
-        #    txtfiles.append(file)
+        txtfiles = []
+        for file in glob.glob("C:/Gaetan/_Bachelor/blender/blenderScript/test/*.stl"):
+            txtfiles.append(file)
         # Choose the first stl file
-        #pathIn = txtfiles[0]
-        #print(txtfiles[0])
+        pathIn = txtfiles[0]
+        print(txtfiles[0])
 
         # out file
-        #pathTemp = pathIn.split('.')
-        #pathOut = pathTemp[0] + '_support.' + pathTemp[1]
+        pathTemp = pathIn.split('.')
+        pathOut = pathTemp[0] + '_support.' + pathTemp[1]
 
         # Find the name of the object
-        #nameTemp = pathIn.split("\\")
-        #print(nameTemp[1])
-        #nameObject = nameTemp[1].split(".")
-        #print(nameObject[0])
-        
-        obj = bpy.context.active_object
-        
-        # Get the name of the object
-        nameObject = obj.name
+        nameTemp = pathIn.split("\\")
+        print(nameTemp[1])
+        nameObject = nameTemp[1].split(".")
+        print(nameObject[0])
 
         # Separate the selected faces
         bpy.ops.mesh.separate(type='SELECTED')
@@ -741,12 +680,9 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.object.mode_set(mode = 'OBJECT')
 
         # Select the support object
-        #bpy.context.view_layer.objects.active = bpy.data.objects[nameObject[0] + ".001"]
-        #bpy.data.objects[nameObject[0] + ".001"].select_set(True)
-        #bpy.data.objects[nameObject[0]].select_set(False)
-        bpy.context.view_layer.objects.active = bpy.data.objects[nameObject + ".001"]
-        bpy.data.objects[nameObject + ".001"].select_set(True)
-        bpy.data.objects[nameObject].select_set(False)
+        bpy.context.view_layer.objects.active = bpy.data.objects[nameObject[0] + ".001"]
+        bpy.data.objects[nameObject[0] + ".001"].select_set(True)
+        bpy.data.objects[nameObject[0]].select_set(False)
 
         # Switch in edit mode
         bpy.ops.object.mode_set(mode = 'EDIT')
@@ -781,54 +717,40 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.object.mode_set(mode = 'OBJECT')
 
         # Select the base object
-        #bpy.data.objects[nameObject[0] + ".001"].select_set(False)
-        #bpy.data.objects[nameObject[0]].select_set(True)
-        bpy.data.objects[nameObject + ".001"].select_set(False)
-        bpy.data.objects[nameObject].select_set(True)
+        bpy.data.objects[nameObject[0] + ".001"].select_set(False)
+        bpy.data.objects[nameObject[0]].select_set(True)
 
         # Delete the base object
         bpy.ops.object.delete(use_global=False, confirm=False)
 
         # Export the stl file
-        #bpy.ops.export_mesh.stl(filepath=pathOut)
-        pathOut = "C:/Gaetan/_Bachelor/blender/blenderScript/test/" + nameObject + "_support.stl"
         bpy.ops.export_mesh.stl(filepath=pathOut)
 
         # Select the support
-        #bpy.context.view_layer.objects.active = bpy.data.objects[nameObject[0] + ".001"]
-        #bpy.data.objects[nameObject[0] + ".001"].select_set(True)
-        bpy.context.view_layer.objects.active = bpy.data.objects[nameObject + ".001"]
-        bpy.data.objects[nameObject + ".001"].select_set(True)
+        bpy.context.view_layer.objects.active = bpy.data.objects[nameObject[0] + ".001"]
+        bpy.data.objects[nameObject[0] + ".001"].select_set(True)
         
         print("End Script")
 
     @staticmethod
     def generate_support_area(context):
-        # Switch in edit mode 
-        bpy.ops.object.mode_set(mode='EDIT')
-    
         # Find the stl files
-        #txtfiles = []
-        #for file in glob.glob("C:/Gaetan/_Bachelor/blender/blenderScript/test/*.stl"):
-        #    txtfiles.append(file)
+        txtfiles = []
+        for file in glob.glob("C:/Gaetan/_Bachelor/blender/blenderScript/test/*.stl"):
+            txtfiles.append(file)
         # Choose the first stl file
-        #pathIn = txtfiles[0]
-        #print(txtfiles[0])
+        pathIn = txtfiles[0]
+        print(txtfiles[0])
 
         # out file
-        #pathTemp = pathIn.split('.')
-        #pathOut = pathTemp[0] + '_support.' + pathTemp[1]
+        pathTemp = pathIn.split('.')
+        pathOut = pathTemp[0] + '_support.' + pathTemp[1]
 
         # Find the name of the object
-        #nameTemp = pathIn.split("\\")
-        #print(nameTemp[1])
-        #nameObject = nameTemp[1].split(".")
-        #print(nameObject[0])
-
-        obj = bpy.context.active_object
-        
-        # Get the name of the object
-        nameObject = obj.name
+        nameTemp = pathIn.split("\\")
+        print(nameTemp[1])
+        nameObject = nameTemp[1].split(".")
+        print(nameObject[0])
 
         # Separate the selected faces
         bpy.ops.mesh.separate(type='SELECTED')
@@ -837,13 +759,10 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.object.mode_set(mode = 'OBJECT')
 
         # Set support as active pbject
-        #bpy.context.view_layer.objects.active = bpy.data.objects[nameObject[0] + ".001"]
-        bpy.context.view_layer.objects.active = bpy.data.objects[nameObject + ".001"]
+        bpy.context.view_layer.objects.active = bpy.data.objects[nameObject[0] + ".001"]
 
         # Delete the base object
-        #object_to_delete = bpy.data.objects[nameObject[0]]
-        #bpy.data.objects.remove(object_to_delete, do_unlink=True)
-        object_to_delete = bpy.data.objects[nameObject]
+        object_to_delete = bpy.data.objects[nameObject[0]]
         bpy.data.objects.remove(object_to_delete, do_unlink=True)
 
         # Switch in edit mode
@@ -853,8 +772,7 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.mesh.select_all(action="DESELECT")
 
         # Load mesh
-        me = bpy.context.edit_object.data
-        bm = bmesh.from_edit_mesh(me)
+        bm = bmesh.from_edit_mesh(bpy.context.selected_objects[0].data)
         bm.faces.ensure_lookup_table()
 
         loops = []
@@ -898,31 +816,15 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.mesh.separate(type='SELECTED')
 
         # Set final support as active pbject
-        #bpy.context.view_layer.objects.active = bpy.data.objects[nameObject[0] + ".002"]
-        bpy.context.view_layer.objects.active = bpy.data.objects[nameObject + ".002"]
+        bpy.context.view_layer.objects.active = bpy.data.objects[nameObject[0] + ".002"]
 
         # Delete the temp support
-        #object_to_delete = bpy.data.objects[nameObject[0] + ".001"]
-        #bpy.data.objects.remove(object_to_delete, do_unlink=True)
-        object_to_delete = bpy.data.objects[nameObject + ".001"]
+        object_to_delete = bpy.data.objects[nameObject[0] + ".001"]
         bpy.data.objects.remove(object_to_delete, do_unlink=True)
 
         # Switch in edit mode 
         bpy.ops.object.mode_set(mode='EDIT')
-        
-        # Create new edit mode bmesh to easily acces mesh data
-        mesh = bpy.context.object.data  # Get selected object's mesh
-        bm = bmesh.from_edit_mesh(mesh) 
 
-        # Select all vertices that have 1 or 2 links and deselect the others
-        for v in bm.verts:
-            v.select_set(len(v.link_edges) in (1,2))
-
-        bmesh.update_edit_mesh(mesh)  # Transfer the data back to the object's mesh
-        
-        # Delete the selected vertices
-        bpy.ops.mesh.delete(type='VERT')
-        
         # Select all
         bpy.ops.mesh.select_all(action='SELECT')
 
@@ -933,42 +835,31 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.mesh.select_all(action='SELECT')
 
         # Bissect and delete the element under the xy plane
-        #bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=True, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
-        bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=False, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
+        bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=True, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
 
         # Switch in object mode 
         bpy.ops.object.mode_set(mode='OBJECT')
 
         # Export the stl file
-        #bpy.ops.export_mesh.stl(filepath=pathOut)
-        pathOut = "C:/Gaetan/_Bachelor/blender/blenderScript/test/" + nameObject + "_support.stl"
         bpy.ops.export_mesh.stl(filepath=pathOut)
 
         print("End Script")
 
     @staticmethod
     def separate_faces(context):
-        # Switch in edit mode 
-        bpy.ops.object.mode_set(mode='EDIT')
-    
-        obj = bpy.context.active_object
-        
-        # Get the name of the object
-        nameObject = obj.name
-    
-        # Find the stl files
-        #txtfiles = []
-        #for file in glob.glob("C:/Gaetan/_Bachelor/blender/blenderScript/test/*.stl"):
-        #    txtfiles.append(file)
+                # Find the stl files
+        txtfiles = []
+        for file in glob.glob("C:/Gaetan/_Bachelor/blender/blenderScript/test/*.stl"):
+            txtfiles.append(file)
         # Choose the first stl file
-        #pathIn = txtfiles[0]
-        #print(txtfiles[0])
+        pathIn = txtfiles[0]
+        print(txtfiles[0])
 
         # Find the name of the object
-        #nameTemp = pathIn.split("\\")
-        #print(nameTemp[1])
-        #nameObject = nameTemp[1].split(".")
-        #print(nameObject[0])
+        nameTemp = pathIn.split("\\")
+        print(nameTemp[1])
+        nameObject = nameTemp[1].split(".")
+        print(nameObject[0])
 
         # Separate the selected faces
         bpy.ops.mesh.separate(type='SELECTED')
@@ -977,17 +868,11 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.object.mode_set(mode = 'OBJECT')
 
         # Set support as active pbject
-        #bpy.context.view_layer.objects.active = bpy.data.objects[nameObject[0] + ".001"]
-        bpy.context.view_layer.objects.active = bpy.data.objects[nameObject + ".001"]
+        bpy.context.view_layer.objects.active = bpy.data.objects[nameObject[0] + ".001"]
 
         # Delete the base object
-        #object_to_delete = bpy.data.objects[nameObject[0]]
-        #bpy.data.objects.remove(object_to_delete, do_unlink=True)
-        object_to_delete = bpy.data.objects[nameObject]
+        object_to_delete = bpy.data.objects[nameObject[0]]
         bpy.data.objects.remove(object_to_delete, do_unlink=True)
-
-        # Recover the name
-        bpy.context.active_object.name = nameObject
 
         # Switch in edit mode
         bpy.ops.object.mode_set(mode='EDIT')
@@ -1003,8 +888,7 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.mesh.select_all(action="DESELECT")
         
         # Load mesh
-        me = bpy.context.edit_object.data
-        bm = bmesh.from_edit_mesh(me)
+        bm = bmesh.from_edit_mesh(bpy.context.selected_objects[0].data)
         bm.faces.ensure_lookup_table()
 
         loops = []
@@ -1048,61 +932,37 @@ class BUTTON_OT_button_op(Operator):
    
     @staticmethod
     def generate_support_area_2(context): 
-        # Switch in edit mode 
-        bpy.ops.object.mode_set(mode='EDIT')
-    
-        obj = bpy.context.active_object
-        
-        # Get the name of the object
-        nameObject = obj.name
-    
         # Find the stl files
-        #txtfiles = []
-        #for file in glob.glob("C:/Gaetan/_Bachelor/blender/blenderScript/test/*.stl"):
-        #    txtfiles.append(file)
+        txtfiles = []
+        for file in glob.glob("C:/Gaetan/_Bachelor/blender/blenderScript/test/*.stl"):
+            txtfiles.append(file)
         # Choose the first stl file
-        #pathIn = txtfiles[0]
-        #print(txtfiles[0])
+        pathIn = txtfiles[0]
+        print(txtfiles[0])
 
         # out file
-        #pathTemp = pathIn.split('.')
-        #pathOut = pathTemp[0] + '_support.' + pathTemp[1]
+        pathTemp = pathIn.split('.')
+        pathOut = pathTemp[0] + '_support.' + pathTemp[1]
 
         # Find the name of the object
-        #nameTemp = pathIn.split("\\")
-        #print(nameTemp[1])
-        #nameObject = nameTemp[1].split(".")
-        #print(nameObject[0]) 
+        nameTemp = pathIn.split("\\")
+        print(nameTemp[1])
+        nameObject = nameTemp[1].split(".")
+        print(nameObject[0]) 
 
         # Separate the selected faces
         bpy.ops.mesh.separate(type='SELECTED')
 
         # Set final support as active pbject
-        #bpy.context.view_layer.objects.active = bpy.data.objects[nameObject[0] + ".002"]
-        bpy.context.view_layer.objects.active = bpy.data.objects[nameObject + ".001"]
+        bpy.context.view_layer.objects.active = bpy.data.objects[nameObject[0] + ".002"]
 
         # Delete the temp support
-        #object_to_delete = bpy.data.objects[nameObject[0] + ".001"]
-        #bpy.data.objects.remove(object_to_delete, do_unlink=True)
-        object_to_delete = bpy.data.objects[nameObject]
+        object_to_delete = bpy.data.objects[nameObject[0] + ".001"]
         bpy.data.objects.remove(object_to_delete, do_unlink=True)
 
         # Switch in edit mode 
         bpy.ops.object.mode_set(mode='EDIT')
-        
-        # Create new edit mode bmesh to easily acces mesh data
-        mesh = bpy.context.object.data  # Get selected object's mesh
-        bm = bmesh.from_edit_mesh(mesh) 
 
-        # Select all vertices that have 1 or 2 links and deselect the others
-        for v in bm.verts:
-            v.select_set(len(v.link_edges) in (1,2))
-
-        bmesh.update_edit_mesh(mesh)  # Transfer the data back to the object's mesh
-        
-        # Delete the selected vertices
-        bpy.ops.mesh.delete(type='VERT')
-        
         # Select all
         bpy.ops.mesh.select_all(action='SELECT')
 
@@ -1120,8 +980,6 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.object.mode_set(mode='OBJECT')
 
         # Export the stl file
-        #bpy.ops.export_mesh.stl(filepath=pathOut)
-        pathOut = "C:/Gaetan/_Bachelor/blender/blenderScript/test/" + nameObject + "_support.stl"
         bpy.ops.export_mesh.stl(filepath=pathOut)
 
         print("End Script")
@@ -1205,12 +1063,11 @@ class BUTTON_OT_button_op(Operator):
         for vertex in obj.data.vertices:
            tabVertices.append(obj.matrix_world @ vertex.co)
            
-        #tabDirVec = [[mathutils.Vector((0,0,-1)), mathutils.Vector((0,-1,0)), mathutils.Vector((0,0,1)),mathutils.Vector((0,1,0))], 
-        #             [mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)),mathutils.Vector((1,0,0))], 
-        #             [mathutils.Vector((0,0,1)), mathutils.Vector((0,1,0)), mathutils.Vector((0,0,-1)),mathutils.Vector((0,-1,0))], 
-        #             [mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)),mathutils.Vector((-1,0,0))]]
-        #vecDir = tabDirVec[int((bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi/90)][int((bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi/90)]
-        vecDir = mathutils.Vector((0,0,-1))
+        tabDirVec = [[mathutils.Vector((0,0,-1)), mathutils.Vector((0,-1,0)), mathutils.Vector((0,0,1)),mathutils.Vector((0,1,0))], 
+                     [mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)),mathutils.Vector((1,0,0))], 
+                     [mathutils.Vector((0,0,1)), mathutils.Vector((0,1,0)), mathutils.Vector((0,0,-1)),mathutils.Vector((0,-1,0))], 
+                     [mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)),mathutils.Vector((-1,0,0))]]
+        vecDir = tabDirVec[int((bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi/90)][int((bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi/90)]
 
 
         tabPoly = []
@@ -1397,12 +1254,11 @@ class BUTTON_OT_button_op(Operator):
         for vertex in obj.data.vertices:
            tabVertices.append(obj.matrix_world @ vertex.co)
            
-        #tabDirVec = [[mathutils.Vector((0,0,-1)), mathutils.Vector((0,-1,0)), mathutils.Vector((0,0,1)),mathutils.Vector((0,1,0))], 
-        #             [mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)),mathutils.Vector((1,0,0))], 
-        #             [mathutils.Vector((0,0,1)), mathutils.Vector((0,1,0)), mathutils.Vector((0,0,-1)),mathutils.Vector((0,-1,0))], 
-        #             [mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)),mathutils.Vector((-1,0,0))]]
-        #vecDir = tabDirVec[int((bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi/90)][int((bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi/90)]
-        vecDir = mathutils.Vector((0,0,-1))
+        tabDirVec = [[mathutils.Vector((0,0,-1)), mathutils.Vector((0,-1,0)), mathutils.Vector((0,0,1)),mathutils.Vector((0,1,0))], 
+                     [mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)),mathutils.Vector((1,0,0))], 
+                     [mathutils.Vector((0,0,1)), mathutils.Vector((0,1,0)), mathutils.Vector((0,0,-1)),mathutils.Vector((0,-1,0))], 
+                     [mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)),mathutils.Vector((-1,0,0))]]
+        vecDir = tabDirVec[int((bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi/90)][int((bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi/90)]
 
 
         tabPoly = []
@@ -1538,12 +1394,11 @@ class BUTTON_OT_button_op(Operator):
         for vertex in obj.data.vertices:
            tabVertices.append(obj.matrix_world @ vertex.co)
            
-        #tabDirVec = [[mathutils.Vector((0,0,-1)), mathutils.Vector((0,-1,0)), mathutils.Vector((0,0,1)),mathutils.Vector((0,1,0))], 
-        #             [mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)),mathutils.Vector((1,0,0))], 
-        #             [mathutils.Vector((0,0,1)), mathutils.Vector((0,1,0)), mathutils.Vector((0,0,-1)),mathutils.Vector((0,-1,0))], 
-        #             [mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)),mathutils.Vector((-1,0,0))]]
-        #vecDir = tabDirVec[int((bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi/90)][int((bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi/90)]
-        vecDir = mathutils.Vector((0,0,-1))
+        tabDirVec = [[mathutils.Vector((0,0,-1)), mathutils.Vector((0,-1,0)), mathutils.Vector((0,0,1)),mathutils.Vector((0,1,0))], 
+                     [mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)),mathutils.Vector((1,0,0))], 
+                     [mathutils.Vector((0,0,1)), mathutils.Vector((0,1,0)), mathutils.Vector((0,0,-1)),mathutils.Vector((0,-1,0))], 
+                     [mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)),mathutils.Vector((-1,0,0))]]
+        vecDir = tabDirVec[int((bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi/90)][int((bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi/90)]
 
 
         tabPoly = []
@@ -1694,25 +1549,11 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.object.mode_set(mode = 'OBJECT')
 
         # Select the support object
-        bpy.context.view_layer.objects.active = bpy.data.objects[nameObject[0] + ".001"]
         bpy.data.objects[nameObject[0] + ".001"].select_set(True)
         bpy.data.objects[nameObject[0]].select_set(False)
 
         # Switch in edit mode
         bpy.ops.object.mode_set(mode = 'EDIT')
-
-        # Create new edit mode bmesh to easily acces mesh data
-        mesh = bpy.context.object.data  # Get selected object's mesh
-        bm = bmesh.from_edit_mesh(mesh) 
-
-        # Select all vertices that have 1 or 2 links and deselect the others
-        for v in bm.verts:
-            v.select_set(len(v.link_edges) in (1,2))
-
-        bmesh.update_edit_mesh(mesh)  # Transfer the data back to the object's mesh
-        
-        # Delete the selected vertices
-        bpy.ops.mesh.delete(type='VERT')
 
         # Select all the faces
         bpy.ops.mesh.select_all(action='SELECT')
@@ -1937,103 +1778,6 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.mesh.fill()  
 
     @staticmethod
-    def add_lattice(context):
-        # Switch in object mode
-        bpy.ops.object.mode_set(mode='OBJECT') 
-    
-        obj = bpy.context.active_object
-        
-        flagLattice = False
-        for o in bpy.data.objects:
-            if o.type == 'LATTICE':
-                flagLattice = True
-                
-        if flagLattice == False:
-            nameObject = obj.name
-            bpy.ops.object.add(type='LATTICE', enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
-            # Select the object
-            bpy.context.view_layer.objects.active = bpy.data.objects[nameObject]
-            bpy.data.objects[nameObject].select_set(True)
-            bpy.data.objects["Lattice"].select_set(False)
-            
-
-        xPlus = float('-inf')
-        xMoins = float('inf')
-        yPlus = float('-inf')
-        yMoins = float('inf')
-        zPlus = float('-inf')
-        zMoins = float('inf')
-
-        tabVertices = []
-        for vertex in obj.data.vertices:
-            tabVertices.append(obj.matrix_world @ vertex.co)
-            if xPlus < (obj.matrix_world @ vertex.co).x:
-                xPlus = (obj.matrix_world @ vertex.co).x
-            elif xMoins > (obj.matrix_world @ vertex.co).x:
-                xMoins = (obj.matrix_world @ vertex.co).x
-                
-            if yPlus < (obj.matrix_world @ vertex.co).y:
-                yPlus = (obj.matrix_world @ vertex.co).y
-            elif yMoins > (obj.matrix_world @ vertex.co).y:
-                yMoins = (obj.matrix_world @ vertex.co).y
-                
-            if zPlus < (obj.matrix_world @ vertex.co).z:
-                zPlus = (obj.matrix_world @ vertex.co).z
-            elif zMoins > (obj.matrix_world @ vertex.co).z:
-                zMoins = (obj.matrix_world @ vertex.co).z
-
-        bpy.data.objects["Lattice"].scale = (obj.dimensions[0], obj.dimensions[1], obj.dimensions[2])
-        bpy.data.objects["Lattice"].location = ((xPlus+xMoins)/2, (yPlus+yMoins)/2,(zPlus+zMoins)/2)
-
-        bpy.types.Scene.lattice_size_x = bpy.props.FloatProperty(name = "Size X", min = 0, max = 2*obj.dimensions[0], soft_min = 0, soft_max = 2*obj.dimensions[0], step = 1, get=get_lattice_size_x, set=set_lattice_size_x)
-        bpy.types.Scene.lattice_size_y = bpy.props.FloatProperty(name = "Size Y", min = 0, max = 2*obj.dimensions[1], soft_min = 0, soft_max = 2*obj.dimensions[1], step = 1, get=get_lattice_size_y, set=set_lattice_size_y)
-        bpy.types.Scene.lattice_size_z = bpy.props.FloatProperty(name = "Size Z", min = 0, max = 2*obj.dimensions[2], soft_min = 0, soft_max = 2*obj.dimensions[2], step = 1, get=get_lattice_size_z, set=set_lattice_size_z)
-        
-        bpy.context.scene.lattice_size_x = obj.dimensions[0]
-        bpy.context.scene.lattice_size_y = obj.dimensions[1]
-        bpy.context.scene.lattice_size_z = obj.dimensions[2]
-        
-        bpy.types.Scene.lattice_offset_x = bpy.props.FloatProperty(name = "Size X", min = -obj.dimensions[0], max = obj.dimensions[0], soft_min = -obj.dimensions[0], soft_max = obj.dimensions[0], step = 1, get=get_lattice_offset_x, set=set_lattice_offset_x)
-        bpy.types.Scene.lattice_offset_y = bpy.props.FloatProperty(name = "Size Y", min = -obj.dimensions[1], max = obj.dimensions[1], soft_min = -obj.dimensions[1], soft_max = obj.dimensions[1], step = 1, get=get_lattice_offset_y, set=set_lattice_offset_y)
-        bpy.types.Scene.lattice_offset_z = bpy.props.FloatProperty(name = "Size Z", min = -obj.dimensions[2], max = obj.dimensions[2], soft_min = -obj.dimensions[2], soft_max = obj.dimensions[2], step = 1, get=get_lattice_offset_z, set=set_lattice_offset_z)
-        
-        bpy.context.scene.lattice_offset_x = 0
-        bpy.context.scene.lattice_offset_y = 0
-        bpy.context.scene.lattice_offset_z = 0
-
-    @staticmethod
-    def select_lattice(context):
-        # Switch in edit mode
-        bpy.ops.object.mode_set(mode='EDIT')
-        
-        obj = bpy.context.active_object
-        
-        # Deselect all the faces
-        bpy.ops.mesh.select_all(action='DESELECT')
-        
-        # Switch in object mode
-        bpy.ops.object.mode_set(mode='OBJECT')
-
-        for poly in obj.data.polygons:
-            if (obj.matrix_world @ poly.center)[0]>=(bpy.data.lattices['Lattice'].points[0].co[0]*bpy.data.objects["Lattice"].scale[0]+bpy.data.objects["Lattice"].location[0]) and (obj.matrix_world @ poly.center)[0]<=(bpy.data.lattices['Lattice'].points[1].co[0]*bpy.data.objects["Lattice"].scale[0]+bpy.data.objects["Lattice"].location[0]):
-                if (obj.matrix_world @ poly.center)[1]>=(bpy.data.lattices['Lattice'].points[0].co[1]*bpy.data.objects["Lattice"].scale[1]+bpy.data.objects["Lattice"].location[1]) and (obj.matrix_world @ poly.center)[1]<=(bpy.data.lattices['Lattice'].points[2].co[1]*bpy.data.objects["Lattice"].scale[1]+bpy.data.objects["Lattice"].location[1]):
-                    if (obj.matrix_world @ poly.center)[2]>=(bpy.data.lattices['Lattice'].points[0].co[2]*bpy.data.objects["Lattice"].scale[2]+bpy.data.objects["Lattice"].location[2]) and (obj.matrix_world @ poly.center)[2]<=(bpy.data.lattices['Lattice'].points[4].co[2]*bpy.data.objects["Lattice"].scale[2]+bpy.data.objects["Lattice"].location[2]):
-                        poly.select = True
-                        #print(poly.center[0],bpy.data.lattices['Lattice'].points[0].co[0])
-
-                        
-        # Switch in edit mode
-        bpy.ops.object.mode_set(mode='EDIT')
-
-    @staticmethod
-    def delete_lattice(context):
-        flagLattice = False
-        for o in bpy.data.objects:
-            if o.type == 'LATTICE':
-                # Delete the existing lattice
-                object_to_delete = bpy.data.objects["Lattice"]
-                bpy.data.objects.remove(object_to_delete, do_unlink=True) 
-    @staticmethod
     def voxel(context):
         obj = bpy.context.active_object
     
@@ -2198,12 +1942,11 @@ class BUTTON_OT_button_op(Operator):
         for vertex in obj.data.vertices:
            tabVertices.append(obj.matrix_world @ vertex.co)
            
-        #tabDirVec = [[mathutils.Vector((0,0,-1)), mathutils.Vector((0,-1,0)), mathutils.Vector((0,0,1)),mathutils.Vector((0,1,0))], 
-        #             [mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)),mathutils.Vector((1,0,0))], 
-        #             [mathutils.Vector((0,0,1)), mathutils.Vector((0,1,0)), mathutils.Vector((0,0,-1)),mathutils.Vector((0,-1,0))], 
-        #             [mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)),mathutils.Vector((-1,0,0))]]
-        #vecDir = tabDirVec[int((bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi/90)][int((bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi/90)]
-        vecDir = mathutils.Vector((0,0,-1))
+        tabDirVec = [[mathutils.Vector((0,0,-1)), mathutils.Vector((0,-1,0)), mathutils.Vector((0,0,1)),mathutils.Vector((0,1,0))], 
+                     [mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)),mathutils.Vector((1,0,0))], 
+                     [mathutils.Vector((0,0,1)), mathutils.Vector((0,1,0)), mathutils.Vector((0,0,-1)),mathutils.Vector((0,-1,0))], 
+                     [mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)),mathutils.Vector((-1,0,0))]]
+        vecDir = tabDirVec[int((bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi/90)][int((bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi/90)]
 
         tabPoly = []
         tabNormalX = []
@@ -2333,8 +2076,8 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.object.mode_set(mode='OBJECT')
             
     @staticmethod
-    def test_import(context):   
-        bpy.ops.stl_file.import_file('INVOKE_DEFAULT')         
+    def test_import(context):
+        bpy.ops.stl_file.import_file('INVOKE_DEFAULT')   
         
     @staticmethod
     def test_export(context):
@@ -2363,9 +2106,6 @@ class STL_FILE_import(Operator, ImportHelper):
         
         # Import the stl file
         bpy.ops.import_mesh.stl(filepath = self.filepath)
-        
-        # Align the object on the xy plane
-        bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_1', align_axis={'Z'}) 
         
         return {'FINISHED'}
   
@@ -2422,200 +2162,7 @@ class STL_FILE_export(Operator, ExportHelper):
 
     # Switch in the edit mode
 #    bpy.ops.object.mode_set(mode = 'EDIT')  
-
-
-#get, set methods of the floatproperty
-def get_lattice_size_x(self):
-    return self.get("lattice_size_x", 0.0)    
-def set_lattice_size_x(self, value):
-    self["lattice_size_x"] = value
-
-    obj = bpy.context.active_object
-
-    xPlus = float('-inf')
-    xMoins = float('inf')
-    yPlus = float('-inf')
-    yMoins = float('inf')
-    zPlus = float('-inf')
-    zMoins = float('inf')   
-    for vertex in obj.data.vertices:
-        if xPlus < (obj.matrix_world @ vertex.co).x:
-            xPlus = (obj.matrix_world @ vertex.co).x
-        elif xMoins > (obj.matrix_world @ vertex.co).x:
-            xMoins = (obj.matrix_world @ vertex.co).x
-            
-        if yPlus < (obj.matrix_world @ vertex.co).y:
-            yPlus = (obj.matrix_world @ vertex.co).y
-        elif yMoins > (obj.matrix_world @ vertex.co).y:
-            yMoins = (obj.matrix_world @ vertex.co).y
-            
-        if zPlus < (obj.matrix_world @ vertex.co).z:
-            zPlus = (obj.matrix_world @ vertex.co).z
-        elif zMoins > (obj.matrix_world @ vertex.co).z:
-            zMoins = (obj.matrix_world @ vertex.co).z
-            
-    bpy.data.objects["Lattice"].scale = (self["lattice_size_x"], self["lattice_size_y"], self["lattice_size_z"])
-    bpy.data.objects["Lattice"].location = (self["lattice_offset_x"]+xMoins+self["lattice_size_x"]/2, self["lattice_offset_y"]+yMoins+self["lattice_size_y"]/2, self["lattice_offset_z"]+zMoins+self["lattice_size_z"]/2)
     
-def get_lattice_size_y(self):
-    return self.get("lattice_size_y", 0.0)   
-def set_lattice_size_y(self, value):
-    self["lattice_size_y"] = value
-
-    obj = bpy.context.active_object
-
-    xPlus = float('-inf')
-    xMoins = float('inf')
-    yPlus = float('-inf')
-    yMoins = float('inf')
-    zPlus = float('-inf')
-    zMoins = float('inf')   
-    for vertex in obj.data.vertices:
-        if xPlus < (obj.matrix_world @ vertex.co).x:
-            xPlus = (obj.matrix_world @ vertex.co).x
-        elif xMoins > (obj.matrix_world @ vertex.co).x:
-            xMoins = (obj.matrix_world @ vertex.co).x
-            
-        if yPlus < (obj.matrix_world @ vertex.co).y:
-            yPlus = (obj.matrix_world @ vertex.co).y
-        elif yMoins > (obj.matrix_world @ vertex.co).y:
-            yMoins = (obj.matrix_world @ vertex.co).y
-            
-        if zPlus < (obj.matrix_world @ vertex.co).z:
-            zPlus = (obj.matrix_world @ vertex.co).z
-        elif zMoins > (obj.matrix_world @ vertex.co).z:
-            zMoins = (obj.matrix_world @ vertex.co).z
-            
-    bpy.data.objects["Lattice"].scale = (self["lattice_size_x"], self["lattice_size_y"], self["lattice_size_z"])
-    bpy.data.objects["Lattice"].location = (self["lattice_offset_x"]+xMoins+self["lattice_size_x"]/2, self["lattice_offset_y"]+yMoins+self["lattice_size_y"]/2, self["lattice_offset_z"]+zMoins+self["lattice_size_z"]/2)
- 
-def get_lattice_size_z(self):
-    return self.get("lattice_size_z", 0.0)
-def set_lattice_size_z(self, value):
-    self["lattice_size_z"] = value
-
-    obj = bpy.context.active_object
-
-    xPlus = float('-inf')
-    xMoins = float('inf')
-    yPlus = float('-inf')
-    yMoins = float('inf')
-    zPlus = float('-inf')
-    zMoins = float('inf')   
-    for vertex in obj.data.vertices:
-        if xPlus < (obj.matrix_world @ vertex.co).x:
-            xPlus = (obj.matrix_world @ vertex.co).x
-        elif xMoins > (obj.matrix_world @ vertex.co).x:
-            xMoins = (obj.matrix_world @ vertex.co).x
-            
-        if yPlus < (obj.matrix_world @ vertex.co).y:
-            yPlus = (obj.matrix_world @ vertex.co).y
-        elif yMoins > (obj.matrix_world @ vertex.co).y:
-            yMoins = (obj.matrix_world @ vertex.co).y
-            
-        if zPlus < (obj.matrix_world @ vertex.co).z:
-            zPlus = (obj.matrix_world @ vertex.co).z
-        elif zMoins > (obj.matrix_world @ vertex.co).z:
-            zMoins = (obj.matrix_world @ vertex.co).z
-            
-    bpy.data.objects["Lattice"].scale = (self["lattice_size_x"], self["lattice_size_y"], self["lattice_size_z"])
-    bpy.data.objects["Lattice"].location = (self["lattice_offset_x"]+xMoins+self["lattice_size_x"]/2, self["lattice_offset_y"]+yMoins+self["lattice_size_y"]/2, self["lattice_offset_z"]+zMoins+self["lattice_size_z"]/2)
- 
-
-def get_lattice_offset_x(self):
-    return self.get("lattice_offset_x", 0.0)
-def set_lattice_offset_x(self, value):
-    self["lattice_offset_x"] = value
-
-    obj = bpy.context.active_object
-
-    xPlus = float('-inf')
-    xMoins = float('inf')
-    yPlus = float('-inf')
-    yMoins = float('inf')
-    zPlus = float('-inf')
-    zMoins = float('inf')   
-    for vertex in obj.data.vertices:
-        if xPlus < (obj.matrix_world @ vertex.co).x:
-            xPlus = (obj.matrix_world @ vertex.co).x
-        elif xMoins > (obj.matrix_world @ vertex.co).x:
-            xMoins = (obj.matrix_world @ vertex.co).x
-            
-        if yPlus < (obj.matrix_world @ vertex.co).y:
-            yPlus = (obj.matrix_world @ vertex.co).y
-        elif yMoins > (obj.matrix_world @ vertex.co).y:
-            yMoins = (obj.matrix_world @ vertex.co).y
-            
-        if zPlus < (obj.matrix_world @ vertex.co).z:
-            zPlus = (obj.matrix_world @ vertex.co).z
-        elif zMoins > (obj.matrix_world @ vertex.co).z:
-            zMoins = (obj.matrix_world @ vertex.co).z
-
-    bpy.data.objects["Lattice"].location = (self["lattice_offset_x"]+xMoins+self["lattice_size_x"]/2, self["lattice_offset_y"]+yMoins+self["lattice_size_y"]/2, self["lattice_offset_z"]+zMoins+self["lattice_size_z"]/2)
-
-def get_lattice_offset_y(self):
-    return self.get("lattice_offset_y", 0.0)
-def set_lattice_offset_y(self, value):
-    self["lattice_offset_y"] = value
-
-    obj = bpy.context.active_object
-
-    xPlus = float('-inf')
-    xMoins = float('inf')
-    yPlus = float('-inf')
-    yMoins = float('inf')
-    zPlus = float('-inf')
-    zMoins = float('inf')   
-    for vertex in obj.data.vertices:
-        if xPlus < (obj.matrix_world @ vertex.co).x:
-            xPlus = (obj.matrix_world @ vertex.co).x
-        elif xMoins > (obj.matrix_world @ vertex.co).x:
-            xMoins = (obj.matrix_world @ vertex.co).x
-            
-        if yPlus < (obj.matrix_world @ vertex.co).y:
-            yPlus = (obj.matrix_world @ vertex.co).y
-        elif yMoins > (obj.matrix_world @ vertex.co).y:
-            yMoins = (obj.matrix_world @ vertex.co).y
-            
-        if zPlus < (obj.matrix_world @ vertex.co).z:
-            zPlus = (obj.matrix_world @ vertex.co).z
-        elif zMoins > (obj.matrix_world @ vertex.co).z:
-            zMoins = (obj.matrix_world @ vertex.co).z
-
-    bpy.data.objects["Lattice"].location = (self["lattice_offset_x"]+xMoins+self["lattice_size_x"]/2, self["lattice_offset_y"]+yMoins+self["lattice_size_y"]/2, self["lattice_offset_z"]+zMoins+self["lattice_size_z"]/2)
-    
-def get_lattice_offset_z(self):
-    return self.get("lattice_offset_z", 0.0)
-def set_lattice_offset_z(self, value):
-    self["lattice_offset_z"] = value
-
-    obj = bpy.context.active_object
-
-    xPlus = float('-inf')
-    xMoins = float('inf')
-    yPlus = float('-inf')
-    yMoins = float('inf')
-    zPlus = float('-inf')
-    zMoins = float('inf')   
-    for vertex in obj.data.vertices:
-        if xPlus < (obj.matrix_world @ vertex.co).x:
-            xPlus = (obj.matrix_world @ vertex.co).x
-        elif xMoins > (obj.matrix_world @ vertex.co).x:
-            xMoins = (obj.matrix_world @ vertex.co).x
-            
-        if yPlus < (obj.matrix_world @ vertex.co).y:
-            yPlus = (obj.matrix_world @ vertex.co).y
-        elif yMoins > (obj.matrix_world @ vertex.co).y:
-            yMoins = (obj.matrix_world @ vertex.co).y
-            
-        if zPlus < (obj.matrix_world @ vertex.co).z:
-            zPlus = (obj.matrix_world @ vertex.co).z
-        elif zMoins > (obj.matrix_world @ vertex.co).z:
-            zMoins = (obj.matrix_world @ vertex.co).z
-
-    bpy.data.objects["Lattice"].location = (self["lattice_offset_x"]+xMoins+self["lattice_size_x"]/2, self["lattice_offset_y"]+yMoins+self["lattice_size_y"]/2, self["lattice_offset_z"]+zMoins+self["lattice_size_z"]/2)
-  
-  
 def register():
     pi = 3.14159265
     
@@ -2624,12 +2171,6 @@ def register():
     bpy.types.Scene.min_area = bpy.props.FloatProperty(name="Min Area", default = 0.1, options={'SKIP_SAVE'}, min = 0, max = 1, soft_min = 0, soft_max = 1, step = 1)
     bpy.types.Object.offset = bpy.props.FloatProperty(name = "Offset", default = 0, options={'SKIP_SAVE'}, min = -10, max = 10, soft_min = -10, soft_max = 10, step = 100)
     bpy.types.Scene.resize = bpy.props.FloatProperty(name = "Resize", default = 0, options={'SKIP_SAVE'}, min = -10, max = 10, soft_min = -10, soft_max = 10, step = 1)#,get=get_location, set=set_location)
-    bpy.types.Scene.lattice_size_x = bpy.props.FloatProperty(name = "Size X", default = 0)
-    bpy.types.Scene.lattice_size_y = bpy.props.FloatProperty(name = "Size Y", default = 0)
-    bpy.types.Scene.lattice_size_z = bpy.props.FloatProperty(name = "Size Z", default = 0)
-    bpy.types.Scene.lattice_offset_x = bpy.props.FloatProperty(name = "Offset X", default = 0)
-    bpy.types.Scene.lattice_offset_y = bpy.props.FloatProperty(name = "Offset Y", default = 0)
-    bpy.types.Scene.lattice_offset_z = bpy.props.FloatProperty(name = "Offset Z", default = 0)
     bpy.types.Scene.min_angle_z = bpy.props.FloatProperty(name="Min Angle z", default = 90, options={'SKIP_SAVE'}, min = 0, max = 181,soft_min = 0, soft_max = 181, step = 100)
     bpy.types.Scene.max_angle_z = bpy.props.FloatProperty(name="Max Angle z", default = 90, options={'SKIP_SAVE'}, min = 0, max = 181,soft_min = 0, soft_max = 181, step = 100)
     bpy.types.Scene.voxel_size = bpy.props.FloatProperty(name="Voxel Size", default = 0.01, options={'SKIP_SAVE'}, min = 0.01, max = 0.1,soft_min = 0.01, soft_max = 0.1, step = 1)
@@ -2647,7 +2188,6 @@ def register():
     register_class(BUTTON_PT_area)
     register_class(BUTTON_PT_offset)
     register_class(BUTTON_PT_resize)
-    register_class(BUTTON_PT_lattice)
     register_class(BUTTON_PT_voxel)
     register_class(BUTTON_PT_import_export)
  
@@ -2658,12 +2198,6 @@ def unregister():
     del bpy.types.Scene.min_area
     del bpy.types.Object.offset
     del bpy.types.Scene.resize
-    del bpy.types.Scene.lattice_size_x
-    del bpy.types.Scene.lattice_size_y
-    del bpy.types.Scene.lattice_size_z
-    del bpy.types.Scene.lattice_offset_x
-    del bpy.types.Scene.lattice_offset_y
-    del bpy.types.Scene.lattice_offset_z
     del bpy.types.Scene.min_angle_z
     del bpy.types.Scene.max_angle_z
     del bpy.types.Scene.voxel_size
@@ -2681,7 +2215,6 @@ def unregister():
     unregister_class(BUTTON_PT_area)
     unregister_class(BUTTON_PT_offset)
     unregister_class(BUTTON_PT_resize)
-    unregister_class(BUTTON_PT_lattice)
     unregister_class(BUTTON_PT_voxel)
     unregister_class(BUTTON_PT_import_export)
  

@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <math.h>
 
-void select_faces(int *ptr, int max, float *normalX, float *normalY, float *normalZ, float maxAngle, float vecDirX, float vecDirY, float vecDirZ, int *faces, float *point1X, float *point1Y, float *point2X, float *point2Y, float *point3X, float *point3Y, float *point1Z, float *point2Z, float *point3Z);
+void select_faces(int *ptr, int max, float *normalX, float *normalY, float *normalZ, float maxAngle, float vecDirX, float vecDirY, float vecDirZ, int *faces, float *point1X, float *point1Y, float *point2X, float *point2Y, float *point3X, float *point3Y, float *point1Z, float *point2Z, float *point3Z
+,float *tv1x,float *tv2x,float *tv3x,float *tv1y,float *tv2y,float *tv3y,float *tv1z,float *tv2z,float *tv3z);
 int point_inside_trigon(float sx, float sy, float ax, float ay, float bx, float by, float cx, float cy);
 
-void select_faces(int *ptr, int max, float *normalX, float *normalY, float *normalZ, float maxAngle, float vecDirX, float vecDirY, float vecDirZ, int *faces, float *point1X, float *point1Y, float *point2X, float *point2Y, float *point3X, float *point3Y, float *point1Z, float *point2Z, float *point3Z)
+void select_faces(int *ptr, int max, float *normalX, float *normalY, float *normalZ, float maxAngle, float vecDirX, float vecDirY, float vecDirZ, int *faces, float *point1X, float *point1Y, float *point2X, float *point2Y, float *point3X, float *point3Y, float *point1Z, float *point2Z, float *point3Z
+,float *tv1x,float *tv2x,float *tv3x,float *tv1y,float *tv2y,float *tv3y,float *tv1z,float *tv2z,float *tv3z)
 {
     int i;
     int j;
@@ -17,8 +19,8 @@ void select_faces(int *ptr, int max, float *normalX, float *normalY, float *norm
     float y2 = vecDirY;
     float z2 = vecDirZ;
     
-    float triangleCenterX;
-    float triangleCenterY;
+    //float triangleCenterX;
+    //float triangleCenterY;
     float triangleCenterZ;
     float triangleCenterZ2;
 
@@ -34,8 +36,8 @@ void select_faces(int *ptr, int max, float *normalX, float *normalY, float *norm
       if((angle*180/M_PI) < maxAngle || ((dot > 0.9999) && (dot < 1.0001)))
       {
         faces[i] = 1;
-        triangleCenterX = (point1X[i]+point2X[i]+point3X[i])/3;
-        triangleCenterY = (point1Y[i]+point2Y[i]+point3Y[i])/3;
+        //triangleCenterX = (point1X[i]+point2X[i]+point3X[i])/3;
+        //triangleCenterY = (point1Y[i]+point2Y[i]+point3Y[i])/3;
         triangleCenterZ = (point1Z[i]+point2Z[i]+point3Z[i])/3;
         
         for (j = 0; j < max; j++)       
@@ -44,7 +46,17 @@ void select_faces(int *ptr, int max, float *normalX, float *normalY, float *norm
           if((triangleCenterZ > triangleCenterZ2)  && (i != j))
           {
             
-            if(point_inside_trigon(triangleCenterX,triangleCenterY,point1X[j],point1Y[j],point2X[j],point2Y[j],point3X[j],point3Y[j]) == 1)
+            if(point_inside_trigon(tv1x[i],tv1y[i],point1X[j],point1Y[j],point2X[j],point2Y[j],point3X[j],point3Y[j]) == 1)
+            {
+              faces[i] = 0;
+              break;
+            }
+            if(point_inside_trigon(tv2x[i],tv2y[i],point1X[j],point1Y[j],point2X[j],point2Y[j],point3X[j],point3Y[j]) == 1)
+            {
+              faces[i] = 0;
+              break;
+            }
+            if(point_inside_trigon(tv3x[i],tv3y[i],point1X[j],point1Y[j],point2X[j],point2Y[j],point3X[j],point3Y[j]) == 1)
             {
               faces[i] = 0;
               break;

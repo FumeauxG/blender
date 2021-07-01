@@ -40,8 +40,8 @@ void select_faces(int *ptr, int max, float *normalX, float *normalY, float *norm
         
         for (j = 0; j < max; j++)       
         {
-          triangleCenterZ2 = point1Z[j];//(point1Z[j]+point2Z[j]+point3Z[j])/3;
-          if((triangleCenterZ > triangleCenterZ2)  && (i != j))
+          triangleCenterZ2 = (point1Z[j]+point2Z[j]+point3Z[j])/3;
+          if((triangleCenterZ > triangleCenterZ2) && (i != j))
           {
             
             if(point_inside_trigon(triangleCenterX,triangleCenterY,point1X[j],point1Y[j],point2X[j],point2Y[j],point3X[j],point3Y[j]) == 1)

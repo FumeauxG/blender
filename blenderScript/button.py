@@ -41,6 +41,14 @@ class BUTTON_PT_rotation(Panel):
         layout.operator('btn.btn_op', text='Rotation y').action = 'ROTY'
         layout.operator('btn.btn_op', text='Rotation z').action = 'ROTZ'
         
+        box = layout.box()
+        row = box.row()
+        row.prop(scene, "angle_x")  
+        row.prop(scene, "angle_y")
+        row.prop(scene, "angle_z") 
+        
+        
+        
 class BUTTON_PT_generation(Panel):
     bl_idname = 'BUTTON_PT_generation'
     bl_label = 'Generation'
@@ -104,8 +112,9 @@ class BUTTON_PT_offset(Panel):
         
         layout.separator()
         
-        layout.operator('btn.btn_op', text='Mold').action = 'MOLD'
-
+        layout.operator('btn.btn_op', text='Mold1').action = 'MOLD1'
+        layout.operator('btn.btn_op', text='Mold2').action = 'MOLD2'
+        
 class BUTTON_PT_resize(Panel):
     bl_idname = 'BUTTON_PT_resize'
     bl_label = 'Resize'
@@ -242,7 +251,8 @@ class BUTTON_OT_button_op(Operator):
             ('GENERATE_AREA_2', 'Generate support (area2)', 'Generate support (area2)'),
             
             ('OFFSET', 'Offset', 'Offset'),
-            ('MOLD', 'Mold', 'Mold'),
+            ('MOLD1', 'Mold1', 'Mold1'),
+            ('MOLD2', 'Mold2', 'Mold2'),
             
             ('SELECT_RESIZE', 'Select resize', 'Select resize'),
             ('SELECT_RESIZE_ALL', 'Select resize all', 'Select resize all'),
@@ -295,8 +305,10 @@ class BUTTON_OT_button_op(Operator):
             
         elif self.action == 'OFFSET':   
             self.offset(context=context) 
-        elif self.action == 'MOLD':   
-            self.mold(context=context)
+        elif self.action == 'MOLD1':   
+            self.mold1(context=context)
+        elif self.action == 'MOLD2':   
+            self.mold2(context=context)
             
         elif self.action == 'SELECT_RESIZE':   
             self.select_resize(context=context) 
@@ -343,26 +355,21 @@ class BUTTON_OT_button_op(Operator):
     @staticmethod
     def rot_x(context):
         pi = 3.14159265
-        
+
+        obj = bpy.context.active_object 
+ 
         # Switch in the object mode
         bpy.ops.object.mode_set(mode = 'OBJECT')
-
-        oldX  = (bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi
-        oldY  = (bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi
-        oldZ  = (bpy.context.selected_objects[0].rotation_euler[2]) * 180/pi
-
-        #convert degrees to radians
-        x = ((90+oldX)%360)*pi/180
-        y = oldY*pi/180
-        z = oldZ*pi/180
-        xyz_rot = (x,y,z)
-
-        for obj in bpy.context.selected_objects:
-            obj.rotation_euler = xyz_rot
+     
+        # Modify the angle
+        obj.rotation_euler[0] = 90*pi/180
             
         # Align the object on the xy plane
         bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_1', align_axis={'Z'})
- 
+        # Align in the center
+        bpy.ops.object.align(align_mode='OPT_2', relative_to='OPT_1', align_axis={'X'})
+        bpy.ops.object.align(align_mode='OPT_2', relative_to='OPT_1', align_axis={'Y'})
+    
         # Apply rotation
         bpy.ops.object.transform_apply(location=True, rotation=True, scale=True) 
  
@@ -373,66 +380,64 @@ class BUTTON_OT_button_op(Operator):
     def rot_y(context):
         pi = 3.14159265
 
+        obj = bpy.context.active_object 
+ 
         # Switch in the object mode
         bpy.ops.object.mode_set(mode = 'OBJECT')
-
-        oldX  = (bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi
-        oldY  = (bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi
-        oldZ  = (bpy.context.selected_objects[0].rotation_euler[2]) * 180/pi
-
-        #convert degrees to radians
-        x = oldX*pi/180
-        y = ((90+oldY)%360)*pi/180
-        z = oldZ*pi/180
-        xyz_rot = (x,y,z)
-
-        for obj in bpy.context.selected_objects:
-            obj.rotation_euler = xyz_rot
+     
+        # Modify the angle
+        obj.rotation_euler[1] = 90*pi/180
             
         # Align the object on the xy plane
         bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_1', align_axis={'Z'})
-
+        # Align in the center
+        bpy.ops.object.align(align_mode='OPT_2', relative_to='OPT_1', align_axis={'X'})
+        bpy.ops.object.align(align_mode='OPT_2', relative_to='OPT_1', align_axis={'Y'})
+    
         # Apply rotation
         bpy.ops.object.transform_apply(location=True, rotation=True, scale=True) 
  
         # Switch in the edit mode
-        bpy.ops.object.mode_set(mode = 'EDIT')
+        bpy.ops.object.mode_set(mode = 'EDIT') 
  
     @staticmethod
     def rot_z(context):
         pi = 3.14159265
 
+        obj = bpy.context.active_object 
+ 
         # Switch in the object mode
         bpy.ops.object.mode_set(mode = 'OBJECT')
-
-        oldX  = (bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi
-        oldY  = (bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi
-        oldZ  = (bpy.context.selected_objects[0].rotation_euler[2]) * 180/pi
-
-        #convert degrees to radians
-        x = oldX*pi/180
-        y = oldY*pi/180
-        z = ((90+oldZ)%360)*pi/180
-        xyz_rot = (x,y,z)
-
-        for obj in bpy.context.selected_objects:
-            obj.rotation_euler = xyz_rot
+     
+        # Modify the angle
+        obj.rotation_euler[2] = 90*pi/180
             
         # Align the object on the xy plane
         bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_1', align_axis={'Z'})
-
+        # Align in the center
+        bpy.ops.object.align(align_mode='OPT_2', relative_to='OPT_1', align_axis={'X'})
+        bpy.ops.object.align(align_mode='OPT_2', relative_to='OPT_1', align_axis={'Y'})
+    
         # Apply rotation
         bpy.ops.object.transform_apply(location=True, rotation=True, scale=True) 
  
         # Switch in the edit mode
-        bpy.ops.object.mode_set(mode = 'EDIT')
+        bpy.ops.object.mode_set(mode = 'EDIT') 
         
     @staticmethod
     def import_object(context):
+        # init properties of angles
+        bpy.context.scene.angle_x = 0
+        bpy.context.scene.angle_y = 0
+        bpy.context.scene.angle_z = 0
+    
+        # Switch in the object mode
+        bpy.ops.object.mode_set(mode = 'OBJECT')
+        
         # Delete the existing cube or support
         object_to_delete = bpy.context.selected_objects[0]
         bpy.data.objects.remove(object_to_delete, do_unlink=True)
-
+        
         # Find the stl files
         txtfiles = []
         for file in glob.glob("C:/Gaetan/_Bachelor/blender/blenderScript/test/*.stl"):
@@ -450,15 +455,21 @@ class BUTTON_OT_button_op(Operator):
         print(nameTemp[1])
         nameObject = nameTemp[1].split(".")
         print(nameObject[0])
-
+        
         # Import the stl file
         bpy.ops.import_mesh.stl(filepath=pathIn)
-
+        
         # Rename the base object
         bpy.context.selected_objects[0].name = nameObject[0]
 
         # Align the object on the xy plane
         bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_1', align_axis={'Z'})
+        # Align in the center
+        bpy.ops.object.align(align_mode='OPT_2', relative_to='OPT_1', align_axis={'X'})
+        bpy.ops.object.align(align_mode='OPT_2', relative_to='OPT_1', align_axis={'Y'})
+    
+        # Apply location
+        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True) 
 
         # Switch in the edit mode
         bpy.ops.object.mode_set(mode = 'EDIT')
@@ -490,11 +501,6 @@ class BUTTON_OT_button_op(Operator):
         for vertex in obj.data.vertices:
            tabVertices.append(obj.matrix_world @ vertex.co) 
         
-        #tabDirVec = [[mathutils.Vector((0,0,-1)), mathutils.Vector((0,-1,0)), mathutils.Vector((0,0,1)),mathutils.Vector((0,1,0))], 
-        #             [mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)),mathutils.Vector((1,0,0))], 
-        #             [mathutils.Vector((0,0,1)), mathutils.Vector((0,1,0)), mathutils.Vector((0,0,-1)),mathutils.Vector((0,-1,0))], 
-        #             [mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)),mathutils.Vector((-1,0,0))]]
-        #vecDir = tabDirVec[int((bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi/90)][int((bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi/90)]
         vecDir = mathutils.Vector((0,0,-1))
 
         print(vecDir)
@@ -510,7 +516,6 @@ class BUTTON_OT_button_op(Operator):
                         poly.select = False
                         break
                         
-
         bpy.ops.object.mode_set(mode = 'EDIT')
         print("Endscript")
 
@@ -528,7 +533,7 @@ class BUTTON_OT_button_op(Operator):
 
         pi = 3.14159265
         maxAngle = bpy.context.scene.max_angle
-        print(maxAngle)
+        print(maxAngle, maxAngle*180/pi)
 
         obj = bpy.context.active_object
 
@@ -537,11 +542,6 @@ class BUTTON_OT_button_op(Operator):
         for vertex in obj.data.vertices:
            tabVertices.append(obj.matrix_world @ vertex.co)
            
-        #tabDirVec = [[mathutils.Vector((0,0,-1)), mathutils.Vector((0,-1,0)), mathutils.Vector((0,0,1)),mathutils.Vector((0,1,0))], 
-        #             [mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)),mathutils.Vector((1,0,0))], 
-        #             [mathutils.Vector((0,0,1)), mathutils.Vector((0,1,0)), mathutils.Vector((0,0,-1)),mathutils.Vector((0,-1,0))], 
-        #             [mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)),mathutils.Vector((-1,0,0))]]
-        #vecDir = tabDirVec[int((bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi/90)][int((bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi/90)]
         vecDir = mathutils.Vector((0,0,-1))
 
 
@@ -561,20 +561,6 @@ class BUTTON_OT_button_op(Operator):
         tabPoint1Z = []
         tabPoint2Z = []
         tabPoint3Z = []
-        
-        ###
-        '''
-        tv1x = []
-        tv2x = []
-        tv3x = []
-        tv1y = []
-        tv2y = []
-        tv3y = []
-        tv1z = []
-        tv2z = []
-        tv3z = []
-        '''
-        ###
 
         # Fill the arrays
         for poly in obj.data.polygons:
@@ -593,20 +579,6 @@ class BUTTON_OT_button_op(Operator):
             tabPoint1Z.append(tabVertices[poly.vertices[0]].z)
             tabPoint2Z.append(tabVertices[poly.vertices[1]].z)
             tabPoint3Z.append(tabVertices[poly.vertices[2]].z)
-            
-            ###
-            '''
-            tv1x.append(tabVertices[poly.vertices[0]].x)
-            tv1y.append(tabVertices[poly.vertices[0]].y)
-            tv1z.append(tabVertices[poly.vertices[0]].z)
-            tv2x.append(tabVertices[poly.vertices[0]].x)
-            tv2y.append(tabVertices[poly.vertices[1]].y)
-            tv2z.append(tabVertices[poly.vertices[1]].z)
-            tv3x.append(tabVertices[poly.vertices[2]].x)
-            tv3y.append(tabVertices[poly.vertices[2]].y)
-            tv3z.append(tabVertices[poly.vertices[2]].z)
-            '''
-            ###
 
         print(len(tabPoly))   
 
@@ -646,37 +618,12 @@ class BUTTON_OT_button_op(Operator):
         arrPoint2Z = seq(*tabPoint2Z)
         seq = ctypes.c_float * len(tabPoint3Z)
         arrPoint3Z = seq(*tabPoint3Z)
-        
-        ###
-        '''
-        seq = ctypes.c_float * len(tv1x)
-        arrTv1x = seq(*tv1x)
-        seq = ctypes.c_float * len(tv2x)
-        arrTv2x = seq(*tv2x)
-        seq = ctypes.c_float * len(tv3x)
-        arrTv3x = seq(*tv3x)
-        seq = ctypes.c_float * len(tv1y)
-        arrTv1y = seq(*tv1y)
-        seq = ctypes.c_float * len(tv2y)
-        arrTv2y = seq(*tv2y)
-        seq = ctypes.c_float * len(tv3y)
-        arrTv3y = seq(*tv3y)
-        seq = ctypes.c_float * len(tv1z)
-        arrTv1z = seq(*tv1z)
-        seq = ctypes.c_float * len(tv2z)
-        arrTv2z = seq(*tv2z)
-        seq = ctypes.c_float * len(tv3z)
-        arrTv3z = seq(*tv3z)
-        '''
-        ###
 
         date_3 = datetime.datetime.now()
         
         # Call the C function
         functionC.select_faces(arrIndex,len(tabPoly),arrNormalX,arrNormalY,arrNormalZ,ctypes.c_float(maxAngle),ctypes.c_float(vecDir.x),ctypes.c_float(vecDir.y),ctypes.c_float(vecDir.z),arrFaces,arrPoint1X,arrPoint1Y,arrPoint2X,arrPoint2Y,arrPoint3X,arrPoint3Y,arrPoint1Z,arrPoint2Z,arrPoint3Z)
-        #functionC.select_faces(arrIndex,len(tabPoly),arrNormalX,arrNormalY,arrNormalZ,ctypes.c_float(maxAngle),ctypes.c_float(0),ctypes.c_float(0),ctypes.c_float(-1),arrFaces,arrPoint1X,arrPoint1Y,arrPoint2X,arrPoint2Y,arrPoint3X,arrPoint3Y,arrPoint1Z,arrPoint2Z,arrPoint3Z)
-        #functionC.select_faces(arrIndex,len(tabPoly),arrNormalX,arrNormalY,arrNormalZ,ctypes.c_float(maxAngle),ctypes.c_float(vecDir.x),ctypes.c_float(vecDir.y),ctypes.c_float(vecDir.z),arrFaces,arrPoint1X,arrPoint1Y,arrPoint2X,arrPoint2Y,arrPoint3X,arrPoint3Y,arrPoint1Z,arrPoint2Z,arrPoint3Z
-        #,arrTv1x,arrTv2x,arrTv3x,arrTv1y,arrTv2y,arrTv3y,arrTv1z,arrTv2z,arrTv3z)
+
         date_4 = datetime.datetime.now()
 
         # Switch in edit mode
@@ -710,24 +657,6 @@ class BUTTON_OT_button_op(Operator):
     def generate_support(context):
         # Switch in edit mode 
         bpy.ops.object.mode_set(mode='EDIT')
-    
-        # Find the stl files
-        #txtfiles = []
-        #for file in glob.glob("C:/Gaetan/_Bachelor/blender/blenderScript/test/*.stl"):
-        #    txtfiles.append(file)
-        # Choose the first stl file
-        #pathIn = txtfiles[0]
-        #print(txtfiles[0])
-
-        # out file
-        #pathTemp = pathIn.split('.')
-        #pathOut = pathTemp[0] + '_support.' + pathTemp[1]
-
-        # Find the name of the object
-        #nameTemp = pathIn.split("\\")
-        #print(nameTemp[1])
-        #nameObject = nameTemp[1].split(".")
-        #print(nameObject[0])
         
         obj = bpy.context.active_object
         
@@ -741,9 +670,6 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.object.mode_set(mode = 'OBJECT')
 
         # Select the support object
-        #bpy.context.view_layer.objects.active = bpy.data.objects[nameObject[0] + ".001"]
-        #bpy.data.objects[nameObject[0] + ".001"].select_set(True)
-        #bpy.data.objects[nameObject[0]].select_set(False)
         bpy.context.view_layer.objects.active = bpy.data.objects[nameObject + ".001"]
         bpy.data.objects[nameObject + ".001"].select_set(True)
         bpy.data.objects[nameObject].select_set(False)
@@ -774,15 +700,12 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.mesh.select_all(action='SELECT')
 
         # Bissect and delete the element under the xy plane
-        #bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=True, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
         bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=False, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
 
         # Switch in object mode
         bpy.ops.object.mode_set(mode = 'OBJECT')
 
         # Select the base object
-        #bpy.data.objects[nameObject[0] + ".001"].select_set(False)
-        #bpy.data.objects[nameObject[0]].select_set(True)
         bpy.data.objects[nameObject + ".001"].select_set(False)
         bpy.data.objects[nameObject].select_set(True)
 
@@ -795,8 +718,6 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.export_mesh.stl(filepath=pathOut)
 
         # Select the support
-        #bpy.context.view_layer.objects.active = bpy.data.objects[nameObject[0] + ".001"]
-        #bpy.data.objects[nameObject[0] + ".001"].select_set(True)
         bpy.context.view_layer.objects.active = bpy.data.objects[nameObject + ".001"]
         bpy.data.objects[nameObject + ".001"].select_set(True)
         
@@ -806,24 +727,6 @@ class BUTTON_OT_button_op(Operator):
     def generate_support_area(context):
         # Switch in edit mode 
         bpy.ops.object.mode_set(mode='EDIT')
-    
-        # Find the stl files
-        #txtfiles = []
-        #for file in glob.glob("C:/Gaetan/_Bachelor/blender/blenderScript/test/*.stl"):
-        #    txtfiles.append(file)
-        # Choose the first stl file
-        #pathIn = txtfiles[0]
-        #print(txtfiles[0])
-
-        # out file
-        #pathTemp = pathIn.split('.')
-        #pathOut = pathTemp[0] + '_support.' + pathTemp[1]
-
-        # Find the name of the object
-        #nameTemp = pathIn.split("\\")
-        #print(nameTemp[1])
-        #nameObject = nameTemp[1].split(".")
-        #print(nameObject[0])
 
         obj = bpy.context.active_object
         
@@ -837,12 +740,9 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.object.mode_set(mode = 'OBJECT')
 
         # Set support as active pbject
-        #bpy.context.view_layer.objects.active = bpy.data.objects[nameObject[0] + ".001"]
         bpy.context.view_layer.objects.active = bpy.data.objects[nameObject + ".001"]
 
         # Delete the base object
-        #object_to_delete = bpy.data.objects[nameObject[0]]
-        #bpy.data.objects.remove(object_to_delete, do_unlink=True)
         object_to_delete = bpy.data.objects[nameObject]
         bpy.data.objects.remove(object_to_delete, do_unlink=True)
 
@@ -897,8 +797,7 @@ class BUTTON_OT_button_op(Operator):
         # Separate the selected faces
         bpy.ops.mesh.separate(type='SELECTED')
 
-        # Set final support as active pbject
-        #bpy.context.view_layer.objects.active = bpy.data.objects[nameObject[0] + ".002"]
+        # Set final support as active object
         bpy.context.view_layer.objects.active = bpy.data.objects[nameObject + ".002"]
 
         # Delete the temp support
@@ -933,14 +832,12 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.mesh.select_all(action='SELECT')
 
         # Bissect and delete the element under the xy plane
-        #bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=True, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
         bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=False, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
 
         # Switch in object mode 
         bpy.ops.object.mode_set(mode='OBJECT')
 
         # Export the stl file
-        #bpy.ops.export_mesh.stl(filepath=pathOut)
         pathOut = "C:/Gaetan/_Bachelor/blender/blenderScript/test/" + nameObject + "_support.stl"
         bpy.ops.export_mesh.stl(filepath=pathOut)
 
@@ -955,20 +852,6 @@ class BUTTON_OT_button_op(Operator):
         
         # Get the name of the object
         nameObject = obj.name
-    
-        # Find the stl files
-        #txtfiles = []
-        #for file in glob.glob("C:/Gaetan/_Bachelor/blender/blenderScript/test/*.stl"):
-        #    txtfiles.append(file)
-        # Choose the first stl file
-        #pathIn = txtfiles[0]
-        #print(txtfiles[0])
-
-        # Find the name of the object
-        #nameTemp = pathIn.split("\\")
-        #print(nameTemp[1])
-        #nameObject = nameTemp[1].split(".")
-        #print(nameObject[0])
 
         # Separate the selected faces
         bpy.ops.mesh.separate(type='SELECTED')
@@ -977,12 +860,9 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.object.mode_set(mode = 'OBJECT')
 
         # Set support as active pbject
-        #bpy.context.view_layer.objects.active = bpy.data.objects[nameObject[0] + ".001"]
         bpy.context.view_layer.objects.active = bpy.data.objects[nameObject + ".001"]
 
         # Delete the base object
-        #object_to_delete = bpy.data.objects[nameObject[0]]
-        #bpy.data.objects.remove(object_to_delete, do_unlink=True)
         object_to_delete = bpy.data.objects[nameObject]
         bpy.data.objects.remove(object_to_delete, do_unlink=True)
 
@@ -1055,35 +935,14 @@ class BUTTON_OT_button_op(Operator):
         
         # Get the name of the object
         nameObject = obj.name
-    
-        # Find the stl files
-        #txtfiles = []
-        #for file in glob.glob("C:/Gaetan/_Bachelor/blender/blenderScript/test/*.stl"):
-        #    txtfiles.append(file)
-        # Choose the first stl file
-        #pathIn = txtfiles[0]
-        #print(txtfiles[0])
-
-        # out file
-        #pathTemp = pathIn.split('.')
-        #pathOut = pathTemp[0] + '_support.' + pathTemp[1]
-
-        # Find the name of the object
-        #nameTemp = pathIn.split("\\")
-        #print(nameTemp[1])
-        #nameObject = nameTemp[1].split(".")
-        #print(nameObject[0]) 
 
         # Separate the selected faces
         bpy.ops.mesh.separate(type='SELECTED')
 
         # Set final support as active pbject
-        #bpy.context.view_layer.objects.active = bpy.data.objects[nameObject[0] + ".002"]
         bpy.context.view_layer.objects.active = bpy.data.objects[nameObject + ".001"]
 
         # Delete the temp support
-        #object_to_delete = bpy.data.objects[nameObject[0] + ".001"]
-        #bpy.data.objects.remove(object_to_delete, do_unlink=True)
         object_to_delete = bpy.data.objects[nameObject]
         bpy.data.objects.remove(object_to_delete, do_unlink=True)
 
@@ -1113,14 +972,12 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.mesh.select_all(action='SELECT')
 
         # Bissect and delete the element under the xy plane
-        #bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=True, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
         bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=False, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
 
         # Switch in object mode 
         bpy.ops.object.mode_set(mode='OBJECT')
 
         # Export the stl file
-        #bpy.ops.export_mesh.stl(filepath=pathOut)
         pathOut = "C:/Gaetan/_Bachelor/blender/blenderScript/test/" + nameObject + "_support.stl"
         bpy.ops.export_mesh.stl(filepath=pathOut)
 
@@ -1145,23 +1002,55 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.object.mode_set(mode = 'EDIT')
 
     @staticmethod
-    def mold(context): 
+    def mold1(context): 
+        date_x = datetime.datetime.now()
+
         obj = bpy.context.active_object
         moldOffset = obj.offset
     
         nameCopy = "temp_copy"
 
         nameObject = bpy.context.active_object.name
-
+        
         # Switch in object mode 
         bpy.ops.object.mode_set(mode='OBJECT')
+        
+        # Make a copy of the object
+        new_obj = bpy.context.active_object.copy()
+        new_obj.data = bpy.context.active_object.data.copy()
+        new_obj.animation_data_clear()
+        bpy.context.collection.objects.link(new_obj)
 
-        tabSelection = []
-        for poly in obj.data.polygons:
-            if poly.select:
-                tabSelection.append(poly.index)
-                print(poly.index)
+        # Rename the copy
+        new_obj.name = nameCopy
 
+        # Show the copy
+        new_obj.hide_viewport = True
+        new_obj.hide_viewport = False
+
+        # Select the copy
+        bpy.data.objects[nameObject].select_set(False)
+        bpy.data.objects[nameCopy].select_set(True)
+        bpy.context.view_layer.objects.active = bpy.data.objects[nameCopy]
+
+        # Switch in edit mode 
+        bpy.ops.object.mode_set(mode='EDIT')
+        
+        # Separate the selected faces
+        bpy.ops.mesh.separate(type='SELECTED')
+        
+        # Switch in object mode
+        bpy.ops.object.mode_set(mode = 'OBJECT')
+
+        # Select the support object
+        bpy.context.view_layer.objects.active = bpy.data.objects[nameObject]
+        bpy.data.objects[nameCopy + ".001"].select_set(False)
+        bpy.data.objects[nameObject].select_set(True)
+        
+        # Delete the copy
+        object_to_delete = bpy.data.objects[nameCopy]
+        bpy.data.objects.remove(object_to_delete, do_unlink=True)
+        
         # Make a copy of the object
         new_obj = bpy.context.active_object.copy()
         new_obj.data = bpy.context.active_object.data.copy()
@@ -1205,11 +1094,6 @@ class BUTTON_OT_button_op(Operator):
         for vertex in obj.data.vertices:
            tabVertices.append(obj.matrix_world @ vertex.co)
            
-        #tabDirVec = [[mathutils.Vector((0,0,-1)), mathutils.Vector((0,-1,0)), mathutils.Vector((0,0,1)),mathutils.Vector((0,1,0))], 
-        #             [mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)),mathutils.Vector((1,0,0))], 
-        #             [mathutils.Vector((0,0,1)), mathutils.Vector((0,1,0)), mathutils.Vector((0,0,-1)),mathutils.Vector((0,-1,0))], 
-        #             [mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)),mathutils.Vector((-1,0,0))]]
-        #vecDir = tabDirVec[int((bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi/90)][int((bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi/90)]
         vecDir = mathutils.Vector((0,0,-1))
 
 
@@ -1371,7 +1255,6 @@ class BUTTON_OT_button_op(Operator):
 
         # Select the object and the mold
         bpy.data.objects[nameObject].select_set(True)
-        #bpy.context.view_layer.objects.active = bpy.data.objects[nameObject]
 
         # Switch in object mode 
         bpy.ops.object.mode_set(mode='OBJECT')
@@ -1388,7 +1271,7 @@ class BUTTON_OT_button_op(Operator):
         print("Start")
 
         pi = 3.14159265
-        maxAngle = bpy.context.scene.max_angle
+        maxAngle = 10#bpy.context.scene.max_angle
         print(maxAngle)
 
         obj = bpy.context.active_object
@@ -1505,31 +1388,307 @@ class BUTTON_OT_button_op(Operator):
         print(total_seconds)
         ########################
         
-        tabPlane = []
-        tabPlane2 = []
-        #tm
-        for poly in obj.data.polygons:
-            if poly.select:
-                tabPlane.append(poly)
-                tabPlane2.append(poly.index)
-                print(poly.index)
-                
-        #tm  
-                
-        bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.mesh.select_all(action='DESELECT')
+        # Separate the selected faces
+        bpy.ops.mesh.separate(type='SELECTED')
+        
+        # Switch in object mode
+        bpy.ops.object.mode_set(mode = 'OBJECT')
+
+        # Select the support object
+        bpy.context.view_layer.objects.active = bpy.data.objects[nameObject + ".001"]
+        bpy.data.objects[nameObject + ".001"].select_set(True)
+        bpy.data.objects[nameCopy + ".001"].select_set(True)
+        bpy.data.objects[nameObject].select_set(False)
+        
+        # Delete the copy
+        object_to_delete = bpy.data.objects[nameObject]
+        bpy.data.objects.remove(object_to_delete, do_unlink=True)
+        
+        # Join the outline and the mold
+        bpy.ops.object.join()
+        
+        # Switch in edit mode
+        bpy.ops.object.mode_set(mode = 'EDIT')
+
+        # Create new edit mode bmesh to easily acces mesh data
+        mesh = bpy.context.object.data  # Get selected object's mesh
+        bm = bmesh.from_edit_mesh(mesh) 
+
+        # Select all vertices that have 1 or 2 links and deselect the others
+        for v in bm.verts:
+            v.select_set(len(v.link_edges) in (1,2))
+
+        bmesh.update_edit_mesh(mesh)  # Transfer the data back to the object's mesh
+        
+        # Delete the selected vertices
+        bpy.ops.mesh.delete(type='VERT')
+
+        # Select all the faces
+        bpy.ops.mesh.select_all(action='SELECT')
+
+        # Extrude the support
+        bpy.ops.mesh.extrude_region_move(MESH_OT_extrude_region={"use_normal_flip":False, "use_dissolve_ortho_edges":False, "mirror":False}, TRANSFORM_OT_translate={"value":(0, 0, -20), "orient_type":'GLOBAL', "orient_matrix":((1, 0, 0), (0, 1, 0), (0, 0, 1)), "orient_matrix_type":'GLOBAL', "constraint_axis":(False, False, True), "mirror":False, "use_proportional_edit":False, "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "use_proportional_connected":False, "use_proportional_projected":False, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "cursor_transform":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False, "use_automerge_and_split":False})
+
+        # Select all
+        bpy.ops.mesh.select_all(action='SELECT')
+
+        # Bissect and delete the element under the xy plane
+        #bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=True, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
+        bpy.ops.mesh.bisect(plane_co=(0, 0, moldOffset), plane_no=(0, 0, 1), use_fill=False, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
+
+        # Switch in object mode
+        bpy.ops.object.mode_set(mode = 'OBJECT')
+
+        # Add the bottom
+        bpy.ops.mesh.primitive_cube_add(size=1, enter_editmode=False, align='WORLD', location=(0, 0, moldOffset-0.2), scale=(1,1,1))
+        bpy.data.objects["Cube"].dimensions = [bpy.data.objects[nameObject + ".001"].dimensions[0], bpy.data.objects[nameObject + ".001"].dimensions[1], 0.4]
+
+        # Select the copy
+        bpy.context.view_layer.objects.active = bpy.data.objects[nameObject + ".001"]
+        bpy.data.objects[nameObject + ".001"].select_set(True)
+
+        # Align the mold in x and y
+        bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_4', align_axis={'X'})
+        bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_4', align_axis={'Y'})
+
+        bpy.ops.object.join()
+
+        date_y = datetime.datetime.now()
+        time_delta = (date_y - date_x)
+        total_seconds = time_delta.total_seconds()
+        print(total_seconds)
+
+        print("End Script")
+        
+    @staticmethod
+    def mold2(context): 
+        date_x = datetime.datetime.now()
+    
+        obj = bpy.context.active_object
+        moldOffset = obj.offset
+    
+        nameCopy = "temp_copy"
+
+        nameObject = bpy.context.active_object.name
+
+        # Switch in object mode 
         bpy.ops.object.mode_set(mode='OBJECT')
-        
-        #for poly in tabPlane:
-        #    poly.select = True
-        
-        # Second turn
+
+        # Make a copy of the object
+        new_obj = bpy.context.active_object.copy()
+        new_obj.data = bpy.context.active_object.data.copy()
+        new_obj.animation_data_clear()
+        bpy.context.collection.objects.link(new_obj)
+
+        # Rename the copy
+        new_obj.name = nameCopy
+
+        # Show the copy
+        new_obj.hide_viewport = True
+        new_obj.hide_viewport = False
+
+        # Select the copy
+        bpy.data.objects[nameObject].select_set(False)
+        bpy.data.objects[nameCopy].select_set(True)
+        bpy.context.view_layer.objects.active = bpy.data.objects[nameCopy]
+
+        # Switch in edit mode 
+        bpy.ops.object.mode_set(mode='EDIT')
+
+        # Select all
+        bpy.ops.mesh.select_all(action='SELECT')
+
+        # Cut the faces above the xy plane
+        bpy.ops.mesh.bisect(plane_co=(0, 0, 0), plane_no=(0, 0, 1), clear_inner=False, clear_outer=True, xstart=60, xend=424, ystart=126, yend=224, flip=False)
+
+        # Switch in object mode 
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+        # Select faces below 89°
         ########################
         date_1 = datetime.datetime.now()
         print("Start")
 
         pi = 3.14159265
-        maxAngle = bpy.context.scene.max_angle
+        maxAngle = 89
+
+        tabVertices = []
+        obj = bpy.context.active_object
+        for vertex in obj.data.vertices:
+           tabVertices.append(obj.matrix_world @ vertex.co)
+           
+        vecDir = mathutils.Vector((0,0,-1))
+
+
+        tabPoly = []
+        tabNormalX = []
+        tabNormalY = []
+        tabNormalZ = []
+        tabFaces = []
+
+        tabPoint1X = []
+        tabPoint1Y = []
+        tabPoint2X = []
+        tabPoint2Y = []
+        tabPoint3X = []
+        tabPoint3Y = []
+        tabPoint1Z = []
+        tabPoint2Z = []
+        tabPoint3Z = []
+
+        for poly in obj.data.polygons:
+            tabPoly.append(poly.index)
+            tabNormalX.append(poly.normal[0])
+            tabNormalY.append(poly.normal[1])
+            tabNormalZ.append(poly.normal[2])
+            tabFaces.append(0)
+            
+            tabPoint1X.append(tabVertices[poly.vertices[0]].x)
+            tabPoint1Y.append(tabVertices[poly.vertices[0]].y)
+            tabPoint2X.append(tabVertices[poly.vertices[1]].x)
+            tabPoint2Y.append(tabVertices[poly.vertices[1]].y)
+            tabPoint3X.append(tabVertices[poly.vertices[2]].x)
+            tabPoint3Y.append(tabVertices[poly.vertices[2]].y)
+            tabPoint1Z.append(tabVertices[poly.vertices[0]].z)
+            tabPoint2Z.append(tabVertices[poly.vertices[1]].z)
+            tabPoint3Z.append(tabVertices[poly.vertices[2]].z)
+
+        print(len(tabPoly))  
+        maxFacesMold = len(tabPoly)
+
+        functionC = ctypes.CDLL("C:\\Gaetan\\_Bachelor\\blender\\blenderScript\\function.dll")
+
+
+        seq = ctypes.c_int * len(tabPoly)
+        arrIndex = seq(*tabPoly)
+
+        seq = ctypes.c_float * len(tabNormalX)
+        arrNormalX = seq(*tabNormalX)
+        seq = ctypes.c_float * len(tabNormalY)
+        arrNormalY = seq(*tabNormalY)
+        seq = ctypes.c_float * len(tabNormalZ)
+        arrNormalZ = seq(*tabNormalZ)
+
+        seq = ctypes.c_int * len(tabFaces)
+        arrFaces = seq(*tabFaces)
+
+        seq = ctypes.c_float * len(tabPoint1X)
+        arrPoint1X = seq(*tabPoint1X)
+        seq = ctypes.c_float * len(tabPoint1Y)
+        arrPoint1Y = seq(*tabPoint1Y)
+        seq = ctypes.c_float * len(tabPoint2X)
+        arrPoint2X = seq(*tabPoint2X)
+        seq = ctypes.c_float * len(tabPoint2Y)
+        arrPoint2Y = seq(*tabPoint2Y)
+        seq = ctypes.c_float * len(tabPoint3X)
+        arrPoint3X = seq(*tabPoint3X)
+        seq = ctypes.c_float * len(tabPoint3Y)
+        arrPoint3Y = seq(*tabPoint3Y)
+        seq = ctypes.c_float * len(tabPoint1Z)
+        arrPoint1Z = seq(*tabPoint1Z)
+        seq = ctypes.c_float * len(tabPoint2Z)
+        arrPoint2Z = seq(*tabPoint2Z)
+        seq = ctypes.c_float * len(tabPoint3Z)
+        arrPoint3Z = seq(*tabPoint3Z)
+
+        functionC.select_faces(arrIndex,len(tabPoly),arrNormalX,arrNormalY,arrNormalZ,ctypes.c_float(maxAngle),ctypes.c_float(vecDir.x),ctypes.c_float(vecDir.y),ctypes.c_float(vecDir.z),arrFaces,arrPoint1X,arrPoint1Y,arrPoint2X,arrPoint2Y,arrPoint3X,arrPoint3Y,arrPoint1Z,arrPoint2Z,arrPoint3Z)
+
+        bpy.ops.object.mode_set(mode = 'EDIT')
+        bpy.ops.mesh.select_all(action = 'DESELECT')
+        bpy.ops.mesh.select_mode(type="FACE")
+        bpy.ops.object.mode_set(mode = 'OBJECT')
+
+        for i in range(len(arrFaces)):
+            if arrFaces[i] == 1:
+                obj.data.polygons[tabPoly[i]].select = True
+        print(len(arrFaces))
+
+        bpy.ops.object.mode_set(mode = 'EDIT')
+        print("End")
+
+        date_2 = datetime.datetime.now()
+        time_delta = (date_2 - date_1)
+        total_seconds = time_delta.total_seconds()
+        print(total_seconds)
+        ########################
+
+        # Extrude the selected faces to the high 
+        bpy.ops.mesh.extrude_region_move(MESH_OT_extrude_region={"use_normal_flip":False, "use_dissolve_ortho_edges":False, "mirror":False}, TRANSFORM_OT_translate={"value":(0, 0, 10), "orient_type":'GLOBAL', "orient_matrix":((1, 0, 0), (0, 1, 0), (0, 0, 1)), "orient_matrix_type":'GLOBAL', "constraint_axis":(True, True, True), "mirror":False, "use_proportional_edit":False, "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "use_proportional_connected":False, "use_proportional_projected":False, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "cursor_transform":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False, "use_automerge_and_split":False})
+
+        # Switch in object mode 
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+        # Add the mold
+        bpy.ops.mesh.primitive_plane_add(size=1, enter_editmode=False, align='WORLD', location=(0, 0, 0),rotation=(3.14159, 0, 0), scale=(1, 1, 1))
+
+        # Dimension of the mold
+        bpy.data.objects["Plane"].dimensions = [bpy.data.objects[nameObject].dimensions[0], bpy.data.objects[nameObject].dimensions[1], 0]
+
+        # Align the mold in Z
+        bpy.ops.object.align(align_mode='OPT_3', relative_to='OPT_1', align_axis={'Z'})
+
+        # Select the object
+        bpy.context.view_layer.objects.active = bpy.data.objects[nameObject]
+        bpy.data.objects[nameObject].select_set(True)
+
+        # Align the mold in x and y
+        bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_4', align_axis={'X'})
+        bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_4', align_axis={'Y'})
+
+        # Margins x and y
+        bpy.data.objects["Plane"].dimensions = [bpy.data.objects[nameObject].dimensions[0]+0.3, bpy.data.objects[nameObject].dimensions[1]+0.3, 0]
+
+        # Apply transformation of the mold
+        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+
+        # Select the copy and the mold
+        bpy.context.view_layer.objects.active = bpy.data.objects[nameCopy]
+        bpy.data.objects[nameCopy].select_set(True)
+        bpy.data.objects[nameObject].select_set(False)
+
+        # Join the outline and the mold
+        bpy.ops.object.join()
+
+        # Switch in edit mode 
+        bpy.ops.object.mode_set(mode='EDIT')
+
+        # Select all the faces
+        bpy.ops.mesh.select_all(action='SELECT')
+
+        # Cut the intersected faces
+        bpy.ops.mesh.intersect(mode='SELECT', separate_mode='NONE')
+
+        # Select all the faces
+        bpy.ops.mesh.select_all(action='SELECT')
+
+        # Only keep the faces on the plane xy
+        bpy.ops.mesh.bisect(plane_co=(0, 0, 0), plane_no=(0, 0, 1), clear_inner=True, clear_outer=True, xstart=1273, xend=2086, ystart=286, yend=287, flip=False)
+
+        # Select all the faces
+        bpy.ops.mesh.select_all(action='SELECT')
+
+        # Triangulate all the faces
+        bpy.ops.mesh.quads_convert_to_tris(quad_method='BEAUTY', ngon_method='BEAUTY')
+
+        # Select the object and the mold
+        bpy.data.objects[nameObject].select_set(True)
+
+        # Switch in object mode 
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+        # Join the object and the mold
+        bpy.ops.object.join()
+
+        # Recover the name
+        obj.name = nameObject
+        
+        # Select faces
+        ########################
+        date_1 = datetime.datetime.now()
+        print("Start")
+
+        pi = 3.14159265
+        maxAngle = 10#bpy.context.scene.max_angle
         print(maxAngle)
 
         obj = bpy.context.active_object
@@ -1538,11 +1697,6 @@ class BUTTON_OT_button_op(Operator):
         for vertex in obj.data.vertices:
            tabVertices.append(obj.matrix_world @ vertex.co)
            
-        #tabDirVec = [[mathutils.Vector((0,0,-1)), mathutils.Vector((0,-1,0)), mathutils.Vector((0,0,1)),mathutils.Vector((0,1,0))], 
-        #             [mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)),mathutils.Vector((1,0,0))], 
-        #             [mathutils.Vector((0,0,1)), mathutils.Vector((0,1,0)), mathutils.Vector((0,0,-1)),mathutils.Vector((0,-1,0))], 
-        #             [mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)),mathutils.Vector((-1,0,0))]]
-        #vecDir = tabDirVec[int((bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi/90)][int((bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi/90)]
         vecDir = mathutils.Vector((0,0,-1))
 
 
@@ -1562,29 +1716,146 @@ class BUTTON_OT_button_op(Operator):
         tabPoint2Z = []
         tabPoint3Z = []
         
-        #bpy.ops.object.mode_set(mode='EDIT')
-        #bpy.ops.mesh.select_all(action='DESELECT')
-        #bpy.ops.object.mode_set(mode='OBJECT')        
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_all(action='DESELECT')
+        bpy.ops.object.mode_set(mode='OBJECT')        
         
         print(len(tabPoly))   
+
+        bpy.ops.object.mode_set(mode = 'EDIT')
+        bpy.ops.mesh.select_all(action='DESELECT')
+        bpy.ops.object.mode_set(mode = 'OBJECT')
         
-        #bpy.ops.object.mode_set(mode = 'EDIT')
-        #bpy.ops.mesh.select_all(action='DESELECT')
+        for poly in obj.data.polygons:
+            tabPoly.append(poly.index)
+            tabNormalX.append(poly.normal[0])
+            tabNormalY.append(poly.normal[1])
+            tabNormalZ.append(poly.normal[2])
+            tabFaces.append(0)
+            
+            tabPoint1X.append(tabVertices[poly.vertices[0]].x)
+            tabPoint1Y.append(tabVertices[poly.vertices[0]].y)
+            tabPoint2X.append(tabVertices[poly.vertices[1]].x)
+            tabPoint2Y.append(tabVertices[poly.vertices[1]].y)
+            tabPoint3X.append(tabVertices[poly.vertices[2]].x)
+            tabPoint3Y.append(tabVertices[poly.vertices[2]].y)
+            tabPoint1Z.append(tabVertices[poly.vertices[0]].z)
+            tabPoint2Z.append(tabVertices[poly.vertices[1]].z)
+            tabPoint3Z.append(tabVertices[poly.vertices[2]].z)
+
+        functionC = ctypes.CDLL("C:\\Gaetan\\_Bachelor\\blender\\blenderScript\\function.dll")
+
+        seq = ctypes.c_int * len(tabPoly)
+        arrIndex = seq(*tabPoly)
+
+        seq = ctypes.c_float * len(tabNormalX)
+        arrNormalX = seq(*tabNormalX)
+        seq = ctypes.c_float * len(tabNormalY)
+        arrNormalY = seq(*tabNormalY)
+        seq = ctypes.c_float * len(tabNormalZ)
+        arrNormalZ = seq(*tabNormalZ)
+
+        seq = ctypes.c_int * len(tabFaces)
+        arrFaces = seq(*tabFaces)
+
+        seq = ctypes.c_float * len(tabPoint1X)
+        arrPoint1X = seq(*tabPoint1X)
+        seq = ctypes.c_float * len(tabPoint1Y)
+        arrPoint1Y = seq(*tabPoint1Y)
+        seq = ctypes.c_float * len(tabPoint2X)
+        arrPoint2X = seq(*tabPoint2X)
+        seq = ctypes.c_float * len(tabPoint2Y)
+        arrPoint2Y = seq(*tabPoint2Y)
+        seq = ctypes.c_float * len(tabPoint3X)
+        arrPoint3X = seq(*tabPoint3X)
+        seq = ctypes.c_float * len(tabPoint3Y)
+        arrPoint3Y = seq(*tabPoint3Y)
+        seq = ctypes.c_float * len(tabPoint1Z)
+        arrPoint1Z = seq(*tabPoint1Z)
+        seq = ctypes.c_float * len(tabPoint2Z)
+        arrPoint2Z = seq(*tabPoint2Z)
+        seq = ctypes.c_float * len(tabPoint3Z)
+        arrPoint3Z = seq(*tabPoint3Z)
+
+        functionC.select_faces(arrIndex,len(tabPoly),arrNormalX,arrNormalY,arrNormalZ,ctypes.c_float(maxAngle),ctypes.c_float(vecDir.x),ctypes.c_float(vecDir.y),ctypes.c_float(vecDir.z),arrFaces,arrPoint1X,arrPoint1Y,arrPoint2X,arrPoint2Y,arrPoint3X,arrPoint3Y,arrPoint1Z,arrPoint2Z,arrPoint3Z)
+
+        bpy.ops.object.mode_set(mode = 'EDIT')
+        bpy.ops.mesh.select_all(action = 'DESELECT')
+        bpy.ops.mesh.select_mode(type="FACE")
+        bpy.ops.object.mode_set(mode = 'OBJECT')
+
+        for i in range(len(arrFaces)):
+            if arrFaces[i] == 1:
+                obj.data.polygons[tabPoly[i]].select = True
+        print(len(arrFaces))
+        bpy.ops.object.mode_set(mode = 'EDIT')
+        print("End")
+
+        date_2 = datetime.datetime.now()
+        time_delta = (date_2 - date_1)
+        total_seconds = time_delta.total_seconds()
+        print(total_seconds)
+        ########################
+        
+        tabPlane = []
+        tabPlane2 = []
+        #tm
+        for poly in obj.data.polygons:
+            if poly.select:
+                tabPlane.append(poly)
+                tabPlane2.append(poly.index)
+                print(poly.index)
+                
+        #tm  
+                
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_all(action='DESELECT')
+        bpy.ops.object.mode_set(mode='OBJECT')
+        
+        # Second turn
+        ########################
+        date_1 = datetime.datetime.now()
+        print("Start")
+
+        pi = 3.14159265
+        maxAngle = bpy.context.scene.max_angle
+        print(maxAngle)
+
+        obj = bpy.context.active_object
+
+        tabVertices = []
+        for vertex in obj.data.vertices:
+           tabVertices.append(obj.matrix_world @ vertex.co)
+           
+        vecDir = mathutils.Vector((0,0,-1))
+
+
+        tabPoly = []
+        tabNormalX = []
+        tabNormalY = []
+        tabNormalZ = []
+        tabFaces = []
+
+        tabPoint1X = []
+        tabPoint1Y = []
+        tabPoint2X = []
+        tabPoint2Y = []
+        tabPoint3X = []
+        tabPoint3Y = []
+        tabPoint1Z = []
+        tabPoint2Z = []
+        tabPoint3Z = []
+        
         bpy.ops.object.mode_set(mode = 'OBJECT')
         
         # Apply rotation
         bpy.ops.object.transform_apply(location=True, rotation=True, scale=True) 
         
         for poly in obj.data.polygons:
-            #if poly.center[2] == 0:
-                #poly.select = True
-            #else:
             if poly.center[2] > (0-0.01) and poly.center[2] < (0+0.01):
-                #poly.select = False
-                print("SALUT",poly.index)
+                print(poly.index)
 
             else:
-                #poly.select = False
                 tabPoly.append(poly.index)
                 tabNormalX.append(poly.normal[0])
                 tabNormalY.append(poly.normal[1])
@@ -1659,13 +1930,13 @@ class BUTTON_OT_button_op(Operator):
         #tm
         obj = bpy.context.active_object
         for poly in tabPlane:
-        #    poly.select = True
             print(poly.index)
             print(tabPlane2[0])
             obj.data.polygons[tabPlane2[0]].select = True
             tabPlane2.pop(0)
         print("TM")
         #tm
+        
         # Switch in edit mode 
         bpy.ops.object.mode_set(mode='EDIT')
         
@@ -1747,8 +2018,6 @@ class BUTTON_OT_button_op(Operator):
         # Add the bottom
         bpy.ops.mesh.primitive_cube_add(size=1, enter_editmode=False, align='WORLD', location=(0, 0, moldOffset-0.2), scale=(1,1,1))
         bpy.data.objects["Cube"].dimensions = [bpy.data.objects[nameObject[0] + ".001"].dimensions[0], bpy.data.objects[nameObject[0] + ".001"].dimensions[1], 0.4]
-        # Align the mold in Z
-        #bpy.ops.object.align(align_mode='OPT_3', relative_to='OPT_1', align_axis={'Z'})
 
         # Select the copy
         bpy.context.view_layer.objects.active = bpy.data.objects[nameObject[0] + ".001"]
@@ -1759,7 +2028,12 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_4', align_axis={'Y'})
 
         bpy.ops.object.join()
-        
+
+        date_y = datetime.datetime.now()
+        time_delta = (date_y - date_x)
+        total_seconds = time_delta.total_seconds()
+        print(total_seconds)
+
         print("End Script")
          
 
@@ -2014,13 +2288,21 @@ class BUTTON_OT_button_op(Operator):
         # Switch in object mode
         bpy.ops.object.mode_set(mode='OBJECT')
 
+        xMax = float('-inf')
+        xMin = float('inf')
+
         for poly in obj.data.polygons:
             if (obj.matrix_world @ poly.center)[0]>=(bpy.data.lattices['Lattice'].points[0].co[0]*bpy.data.objects["Lattice"].scale[0]+bpy.data.objects["Lattice"].location[0]) and (obj.matrix_world @ poly.center)[0]<=(bpy.data.lattices['Lattice'].points[1].co[0]*bpy.data.objects["Lattice"].scale[0]+bpy.data.objects["Lattice"].location[0]):
                 if (obj.matrix_world @ poly.center)[1]>=(bpy.data.lattices['Lattice'].points[0].co[1]*bpy.data.objects["Lattice"].scale[1]+bpy.data.objects["Lattice"].location[1]) and (obj.matrix_world @ poly.center)[1]<=(bpy.data.lattices['Lattice'].points[2].co[1]*bpy.data.objects["Lattice"].scale[1]+bpy.data.objects["Lattice"].location[1]):
                     if (obj.matrix_world @ poly.center)[2]>=(bpy.data.lattices['Lattice'].points[0].co[2]*bpy.data.objects["Lattice"].scale[2]+bpy.data.objects["Lattice"].location[2]) and (obj.matrix_world @ poly.center)[2]<=(bpy.data.lattices['Lattice'].points[4].co[2]*bpy.data.objects["Lattice"].scale[2]+bpy.data.objects["Lattice"].location[2]):
                         poly.select = True
-                        #print(poly.center[0],bpy.data.lattices['Lattice'].points[0].co[0])
-
+                        xMax = max(xMax, obj.data.vertices[poly.vertices[0]].co.x, obj.data.vertices[poly.vertices[1]].co.x, obj.data.vertices[poly.vertices[2]].co.x)
+                        xMin = min(xMin, obj.data.vertices[poly.vertices[0]].co.x, obj.data.vertices[poly.vertices[1]].co.x, obj.data.vertices[poly.vertices[2]].co.x)
+                        
+        global sizeX
+        sizeX = xMax-xMin
+        global oldResize
+        oldResize = 1
                         
         # Switch in edit mode
         bpy.ops.object.mode_set(mode='EDIT')
@@ -2033,6 +2315,7 @@ class BUTTON_OT_button_op(Operator):
                 # Delete the existing lattice
                 object_to_delete = bpy.data.objects["Lattice"]
                 bpy.data.objects.remove(object_to_delete, do_unlink=True) 
+    
     @staticmethod
     def voxel(context):
         obj = bpy.context.active_object
@@ -2070,6 +2353,9 @@ class BUTTON_OT_button_op(Operator):
     @staticmethod
     def validate(context):
         bpy.ops.object.apply_all_modifiers()
+        
+        obj = bpy.context.active_object
+        print("Number of faces", len(obj.data.polygons))
 
     @staticmethod
     def manifold(context):
@@ -2400,31 +2686,100 @@ class STL_FILE_export(Operator, ExportHelper):
         bpy.ops.export_mesh.stl(filepath = self.filepath)
         
         return {'FINISHED'}
- 
+  
 
 #get, set methods of the floatproperty
-#def get_location(self):
-#    return self.get("resize", 0.0)
+def get_angle_x(self):
+    return self.get("angle_x", 0.0)    
+def set_angle_x(self, value):
+    pi = 3.14159265
 
-#scaleOldX = 1
+    obj = bpy.context.active_object
+
+    # Save the old value of the angle
+    oldValue = bpy.context.scene.angle_x
+    # Update the value of the angle
+    self["angle_x"] = value
+        
+    # Switch in the object mode
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+ 
+    # Modify the angle
+    obj.rotation_euler[0] = ((value-oldValue))*pi/180
     
-#def set_location(self, value):
-#    sizeX = 0.6
-#    global scaleOldX
-    
-#    self["resize"] = value
-#    scaleX = 1/scaleOldX
-#    bpy.ops.transform.resize(value=(scaleX, scaleX, 1), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=0.811, use_proportional_connected=False, use_proportional_projected=False)
+    # Align the object on the xy plane
+    bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_1', align_axis={'Z'})
+    # Align in the center
+    bpy.ops.object.align(align_mode='OPT_2', relative_to='OPT_1', align_axis={'X'})
+    bpy.ops.object.align(align_mode='OPT_2', relative_to='OPT_1', align_axis={'Y'})
 
-#    scaleOldX = value
-#    bpy.ops.transform.resize(value=(value, value, 1), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=0.811, use_proportional_connected=False, use_proportional_projected=False)
-
+    # Apply rotation
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True) 
 
     # Switch in the edit mode
-#    bpy.ops.object.mode_set(mode = 'EDIT')  
+    bpy.ops.object.mode_set(mode = 'EDIT') 
+
+def get_angle_y(self):
+    return self.get("angle_y", 0.0)    
+def set_angle_y(self, value):
+    pi = 3.14159265
+
+    obj = bpy.context.active_object
+
+    # Save the old value of the angle
+    oldValue = bpy.context.scene.angle_y
+    # Update the value of the angle
+    self["angle_y"] = value
+        
+    # Switch in the object mode
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+ 
+    # Modify the angle
+    obj.rotation_euler[1] = ((value-oldValue))*pi/180
+    
+    # Align the object on the xy plane
+    bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_1', align_axis={'Z'})
+    # Align in the center
+    bpy.ops.object.align(align_mode='OPT_2', relative_to='OPT_1', align_axis={'X'})
+    bpy.ops.object.align(align_mode='OPT_2', relative_to='OPT_1', align_axis={'Y'})
+    
+    # Apply rotation
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True) 
+
+    # Switch in the edit mode
+    bpy.ops.object.mode_set(mode = 'EDIT')
+
+def get_angle_z(self):
+    return self.get("angle_z", 0.0)    
+def set_angle_z(self, value):
+    pi = 3.14159265
+
+    obj = bpy.context.active_object
+
+    # Save the old value of the angle
+    oldValue = bpy.context.scene.angle_z
+    # Update the value of the angle
+    self["angle_z"] = value
+        
+    # Switch in the object mode
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+ 
+    # Modify the angle
+    obj.rotation_euler[2] = ((value-oldValue))*pi/180
+    
+    # Align the object on the xy plane
+    bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_1', align_axis={'Z'})
+    # Align in the center
+    bpy.ops.object.align(align_mode='OPT_2', relative_to='OPT_1', align_axis={'X'})
+    bpy.ops.object.align(align_mode='OPT_2', relative_to='OPT_1', align_axis={'Y'})
+
+    # Apply rotation
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True) 
+
+    # Switch in the edit mode
+    bpy.ops.object.mode_set(mode = 'EDIT')
 
 
-#get, set methods of the floatproperty
 def get_lattice_size_x(self):
     return self.get("lattice_size_x", 0.0)    
 def set_lattice_size_x(self, value):
@@ -2620,10 +2975,13 @@ def register():
     pi = 3.14159265
     
     # create personal properties
-    bpy.types.Scene.max_angle = bpy.props.FloatProperty(name="Max Angle", default = 45, options={'SKIP_SAVE'}, min = 0, max = 90,soft_min = 0, soft_max = 90, step = 100)
+    bpy.types.Scene.angle_x = bpy.props.IntProperty(name="Angle x", default = 0, options={'SKIP_SAVE'}, min = -180, max = 180, soft_min = -180, soft_max = 180, step = 1, get=get_angle_x, set=set_angle_x)
+    bpy.types.Scene.angle_y = bpy.props.IntProperty(name="Angle y", default = 0, options={'SKIP_SAVE'}, min = -180, max = 180, soft_min = -180, soft_max = 180, step = 1, get=get_angle_y, set=set_angle_y)
+    bpy.types.Scene.angle_z = bpy.props.IntProperty(name="Angle z", default = 0, options={'SKIP_SAVE'}, min = -180, max = 180, soft_min = -180, soft_max = 180, step = 1, get=get_angle_z, set=set_angle_z)
+    bpy.types.Scene.max_angle = bpy.props.FloatProperty(name="Max Angle", default = 45, options={'SKIP_SAVE'}, min = 0, max = 90, soft_min = 0, soft_max = 90, step = 100)#, unit = 'ROTATION')
     bpy.types.Scene.min_area = bpy.props.FloatProperty(name="Min Area", default = 0.1, options={'SKIP_SAVE'}, min = 0, max = 1, soft_min = 0, soft_max = 1, step = 1)
     bpy.types.Object.offset = bpy.props.FloatProperty(name = "Offset", default = 0, options={'SKIP_SAVE'}, min = -10, max = 10, soft_min = -10, soft_max = 10, step = 100)
-    bpy.types.Scene.resize = bpy.props.FloatProperty(name = "Resize", default = 0, options={'SKIP_SAVE'}, min = -10, max = 10, soft_min = -10, soft_max = 10, step = 1)#,get=get_location, set=set_location)
+    bpy.types.Scene.resize = bpy.props.FloatProperty(name = "Resize", default = 0, options={'SKIP_SAVE'}, min = -10, max = 10, soft_min = -10, soft_max = 10, step = 1)
     bpy.types.Scene.lattice_size_x = bpy.props.FloatProperty(name = "Size X", default = 0)
     bpy.types.Scene.lattice_size_y = bpy.props.FloatProperty(name = "Size Y", default = 0)
     bpy.types.Scene.lattice_size_z = bpy.props.FloatProperty(name = "Size Z", default = 0)
@@ -2649,11 +3007,13 @@ def register():
     register_class(BUTTON_PT_resize)
     register_class(BUTTON_PT_lattice)
     register_class(BUTTON_PT_voxel)
-    register_class(BUTTON_PT_import_export)
- 
+    register_class(BUTTON_PT_import_export) 
  
 def unregister():
     # delete personal properties
+    del bpy.types.Scene.angle_x
+    del bpy.types.Scene.angle_y
+    del bpy.types.Scene.angle_z
     del bpy.types.Scene.max_angle
     del bpy.types.Scene.min_area
     del bpy.types.Object.offset

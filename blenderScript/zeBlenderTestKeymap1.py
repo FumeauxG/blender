@@ -29,7 +29,7 @@ def myFunction():
     pi = 3.14159265
     scene = bpy.data.scenes["Scene"]
     # Set render resolution
-    scene.render.resolution_x = 1920
+    scene.render.resolution_x = 1080
     scene.render.resolution_y = 1080
     # Set camera fov in degrees
     scene.camera.data.angle = fov*(pi/180.0)
@@ -185,7 +185,7 @@ def myFunction():
 
     doStuff()
     ############################################################################################
-
+    
     # Separate the selected faces
     bpy.ops.mesh.separate(type='SELECTED')
 
@@ -229,7 +229,7 @@ def myFunction():
     for area in bpy.context.screen.areas:
         if area.type == 'VIEW_3D':
             area.spaces[0].region_3d.view_perspective = 'ORTHO'
-
+    
     print("End Script")
     
 #########################################

@@ -15,6 +15,7 @@ from bpy.utils import register_class, unregister_class
 import mathutils
 from math import pi
 from math import radians
+from math import sqrt
 import datetime
 import bmesh
 import ctypes
@@ -44,8 +45,13 @@ class BUTTON_PT_import_export(Panel):
         
         layout.label(text="Beta import/export")
         
-        layout.operator('btn.btn_op', text='Test import').action = 'TEST_IMPORT'
-        layout.operator('btn.btn_op', text='Test export').action = 'TEST_EXPORT'  
+        layout.operator('btn.btn_op', text='Import Object').action = 'IMPORT_OBJECT'
+        layout.operator('btn.btn_op', text='Export Object').action = 'EXPORT_OBJECT' 
+
+        if bpy.context.selected_objects[0] != None:
+            layout.label(text= ("Number of faces : " + str(len(bpy.context.active_object.data.polygons))))
+            layout.label(text= ("Size of the stl file : ~" + str(int(len(bpy.context.active_object.data.polygons)/20.4)) + " Ko"))
+            
  
 class BUTTON_PT_rotation(Panel):
     bl_idname = 'BUTTON_PT_rotation'
@@ -83,9 +89,9 @@ class BUTTON_PT_generation(Panel):
         row = box.row()
         row.prop(scene, "max_angle")
         
-        layout.operator('btn.btn_op', text='Import object').action = 'IMPORT'
+        layout.operator('btn.btn_op', text='Import object old').action = 'IMPORT'
         layout.operator('btn.btn_op', text='Select faces').action = 'SELECT'
-        layout.operator('btn.btn_op', text='Select faces fast').action = 'SELECTFAST'
+        layout.operator('btn.btn_op', text='Select faces fast').action = 'SELECT_FAST'
         layout.operator('btn.btn_op', text='Generate support').action = 'GENERATE'
         
 class BUTTON_PT_area(Panel):
@@ -230,8 +236,23 @@ class BUTTON_PT_voxel(Panel):
         row.prop(scene, "level_blocks")
         layout.operator('btn.btn_op', text='Remesh Blocks').action = 'REMESH_BLOCKS'
         layout.operator('btn.btn_op', text='Validate Blocks').action = 'VALIDATE_BLOCKS'
+           
+class BUTTON_PT_measure(Panel):
+    bl_idname = 'BUTTON_PT_measure'
+    bl_label = 'Measure'
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'Button'
+ 
+    def draw(self, context): 
+        layout = self.layout    
+        scene = context.scene
         
-    
+        layout.operator('btn.btn_op', text='Measure distance').action = 'MEASURE_DISTANCE'
+        layout.label(text= ("X : " + '{:.2f}'.format(bpy.context.scene.distance[0]) + " mm"))
+        layout.label(text= ("Y : " + '{:.2f}'.format(bpy.context.scene.distance[1]) + " mm"))
+        layout.label(text= ("Z : " + '{:.2f}'.format(bpy.context.scene.distance[2]) + " mm"))
+        layout.label(text= ("Distance : " + '{:.2f}'.format(bpy.context.scene.distance[3]) + " mm"))
         
 class BUTTON_OT_button_op(Operator):
     bl_idname = 'btn.btn_op'
@@ -242,16 +263,16 @@ class BUTTON_OT_button_op(Operator):
     action: EnumProperty(
         items=[
             ('M_TO_MM', 'm to mm', 'm to mm'),
-            ('TEST_IMPORT', 'Test import', 'Test import'),
-            ('TEST_EXPORT', 'Test export', 'Test export'),
+            ('IMPORT_OBJECT', 'Import Object', 'Import Object'),
+            ('EXPORT_OBJECT', 'Export Object', 'Export Object'),
         
             ('ROTX', 'rotation x', 'rotation x'),
             ('ROTY', 'rotation y', 'rotation y'),
             ('ROTZ', 'rotation z', 'rotation z'),
             
-            ('IMPORT', 'Import object', 'Import object'),
+            ('IMPORT', 'Import object old', 'Import object old'),
             ('SELECT', 'Select faces', 'Select faces'),
-            ('SELECTFAST', 'Select faces fast', 'Select faces fast'),
+            ('SELECT_FAST', 'Select faces fast', 'Select faces fast'),
             ('GENERATE', 'Generate support', 'Generate support'),
             
             ('GENERATE_AREA', 'Generate support (area)', 'Generate support (area)'),
@@ -279,7 +300,9 @@ class BUTTON_OT_button_op(Operator):
             ('MANIFOLD', 'Manifold', 'Manifold'),
             ('VOLUME', 'Volume', 'Volume'),
             ('REMESH_BLOCKS', 'Remesh Blocks', 'Remesh Blocks'),
-            ('VALIDATE_BLOCKS', 'Validate Blocks', 'Validate Blocks')
+            ('VALIDATE_BLOCKS', 'Validate Blocks', 'Validate Blocks'),
+            
+            ('MEASURE_DISTANCE', 'Measure distance', 'Measure distance'),
                        
         ]
     )
@@ -287,10 +310,10 @@ class BUTTON_OT_button_op(Operator):
     def execute(self, context):
         if self.action == 'M_TO_MM':   
             self.m_to_mm(context=context)
-        elif self.action == 'TEST_IMPORT':   
-            self.test_import(context=context)
-        elif self.action == 'TEST_EXPORT':   
-            self.test_export(context=context)
+        elif self.action == 'IMPORT_OBJECT':   
+            self.import_object(context=context)
+        elif self.action == 'EXPORT_OBJECT':   
+            self.export_object(context=context)
     
         elif self.action == 'ROTX':
             self.rot_x(context=context)
@@ -300,10 +323,10 @@ class BUTTON_OT_button_op(Operator):
             self.rot_z(context=context)
             
         elif self.action == 'IMPORT':
-            self.import_object(context=context)
+            self.import_object_old(context=context)
         elif self.action == 'SELECT':   
             self.select_faces(context=context) 
-        elif self.action == 'SELECTFAST':   
+        elif self.action == 'SELECT_FAST':   
             self.select_faces_fast(context=context) 
         elif self.action == 'GENERATE':   
             self.generate_support(context=context)
@@ -355,7 +378,10 @@ class BUTTON_OT_button_op(Operator):
         elif self.action == 'REMESH_BLOCKS':   
             self.remesh_blocks(context=context)
         elif self.action == 'VALIDATE_BLOCKS':   
-            self.validate_blocks(context=context)            
+            self.validate_blocks(context=context) 
+
+        elif self.action == 'MEASURE_DISTANCE':   
+            self.measure_distance(context=context)             
             
         return {'FINISHED'}
 
@@ -366,11 +392,11 @@ class BUTTON_OT_button_op(Operator):
         bpy.context.scene.unit_settings.length_unit = 'MILLIMETERS'
         
     @staticmethod
-    def test_import(context):   
+    def import_object(context):   
         bpy.ops.stl_file.import_file('INVOKE_DEFAULT')         
         
     @staticmethod
-    def test_export(context):
+    def export_object(context):
         bpy.ops.stl_file.export_file('INVOKE_DEFAULT')
     
     @staticmethod
@@ -440,7 +466,7 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.object.mode_set(mode = 'EDIT') 
         
     @staticmethod
-    def import_object(context):
+    def import_object_old(context):
         # init properties of angles
         bpy.context.scene.angle_x = 0
         bpy.context.scene.angle_y = 0
@@ -733,6 +759,9 @@ class BUTTON_OT_button_op(Operator):
         bpy.context.view_layer.objects.active = bpy.data.objects[nameObject + ".001"]
         bpy.data.objects[nameObject + ".001"].select_set(True)
         
+        # Rename the support
+        bpy.context.active_object.name = nameObject + "_support"
+        
         print("End Script")
 
     @staticmethod
@@ -813,8 +842,6 @@ class BUTTON_OT_button_op(Operator):
         bpy.context.view_layer.objects.active = bpy.data.objects[nameObject + ".002"]
 
         # Delete the temp support
-        #object_to_delete = bpy.data.objects[nameObject[0] + ".001"]
-        #bpy.data.objects.remove(object_to_delete, do_unlink=True)
         object_to_delete = bpy.data.objects[nameObject + ".001"]
         bpy.data.objects.remove(object_to_delete, do_unlink=True)
 
@@ -852,6 +879,9 @@ class BUTTON_OT_button_op(Operator):
         # Export the stl file
         pathOut = "C:/Gaetan/_Bachelor/blender/blenderScript/test/" + nameObject + "_support.stl"
         bpy.ops.export_mesh.stl(filepath=pathOut)
+        
+        # Rename the support
+        bpy.context.active_object.name = nameObject + "_support"
 
         print("End Script")
 
@@ -992,6 +1022,9 @@ class BUTTON_OT_button_op(Operator):
         # Export the stl file
         pathOut = "C:/Gaetan/_Bachelor/blender/blenderScript/test/" + nameObject + "_support.stl"
         bpy.ops.export_mesh.stl(filepath=pathOut)
+        
+        # Rename the support
+        bpy.context.active_object.name = nameObject + "_support"
 
         print("End Script")
  
@@ -2378,8 +2411,15 @@ class BUTTON_OT_button_op(Operator):
         # Pass in faces selection
         bpy.ops.mesh.select_mode(type="FACE")
 
+        # Select all the faces
+        bpy.ops.mesh.select_all(action='SELECT')
+        
+        # Triangulate the faces
+        bpy.ops.mesh.quads_convert_to_tris(quad_method='FIXED_ALTERNATE', ngon_method='CLIP')
+
         # Switch in object mode 
         bpy.ops.object.mode_set(mode='OBJECT')
+
 
     @staticmethod
     def volume(context):
@@ -2611,8 +2651,40 @@ class BUTTON_OT_button_op(Operator):
         
         # Switch in object mode 
         bpy.ops.object.mode_set(mode='OBJECT')
-            
 
+    @staticmethod
+    def measure_distance(context):
+        obj = bpy.context.active_object
+    
+        # Switch in object mode
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+        # Get the two selected vertices
+        twoVerts = [None, None]
+        index = 0
+        for vertex in obj.data.vertices:
+            if vertex.select:
+                twoVerts[index] = (obj.matrix_world @ vertex.co)
+                index = index + 1
+                if index == 2:
+                    break   
+        
+        print(twoVerts)
+        
+        if twoVerts[0] != None and twoVerts[1] != None:
+            bpy.context.scene.distance[0] = abs(twoVerts[0].x - twoVerts[1].x)
+            bpy.context.scene.distance[1] = abs(twoVerts[0].y - twoVerts[1].y)
+            bpy.context.scene.distance[2] = abs(twoVerts[0].z - twoVerts[1].z)
+            bpy.context.scene.distance[3] = sqrt(bpy.context.scene.distance[0]**2 + bpy.context.scene.distance[1]**2 + bpy.context.scene.distance[2]**2)
+        else:
+            bpy.context.scene.distance[0] = 0
+            bpy.context.scene.distance[1] = 0
+            bpy.context.scene.distance[2] = 0
+            bpy.context.scene.distance[3] = 0  
+            
+        # Switch in edit mode
+        bpy.ops.object.mode_set(mode='EDIT')
+   
 # import class
 class STL_FILE_import(Operator, ImportHelper):
     bl_idname = 'stl_file.import_file'
@@ -2638,7 +2710,20 @@ class STL_FILE_import(Operator, ImportHelper):
         bpy.ops.import_mesh.stl(filepath = self.filepath)
         
         # Align the object on the xy plane
-        bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_1', align_axis={'Z'}) 
+        bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_1', align_axis={'Z'})
+        # Align in the center
+        bpy.ops.object.align(align_mode='OPT_2', relative_to='OPT_1', align_axis={'X'})
+        bpy.ops.object.align(align_mode='OPT_2', relative_to='OPT_1', align_axis={'Y'})
+    
+        # Apply location
+        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True) 
+
+        # Switch in the edit mode
+        bpy.ops.object.mode_set(mode = 'EDIT')
+
+        # Deselect all
+        bpy.ops.mesh.select_all(action = 'DESELECT')
+        bpy.ops.mesh.select_mode(type="FACE")
         
         return {'FINISHED'}
   
@@ -2658,7 +2743,7 @@ class STL_FILE_export(Operator, ExportHelper):
     def invoke(self, context, event):
         nameSupport = ""
         if bpy.context.active_object != None:
-            nameSupport =  bpy.context.active_object.name + "_support"
+            nameSupport =  bpy.context.active_object.name
         else:
             nameSupport = "support"
           
@@ -2973,6 +3058,7 @@ def register():
     bpy.types.Scene.decimate_ratio = bpy.props.FloatProperty(name="Decimate Ratio", default = 0.01, options={'SKIP_SAVE'}, min = 0, max = 1,soft_min = 0, soft_max = 1, step = 1)
     bpy.types.Scene.volume = bpy.props.FloatProperty(name="Volume", default = 0, options={'SKIP_SAVE'}, min = 0, step = 100)
     bpy.types.Scene.level_blocks = bpy.props.IntProperty(name="Level Blocks", default = 5, options={'SKIP_SAVE'}, min = 1, max = 9,soft_min = 1, soft_max = 9, step = 1)
+    bpy.types.Scene.distance = bpy.props.FloatVectorProperty(name='Distance', default=(0.0, 0.0, 0.0, 0.0), options={'SKIP_SAVE'}, step=3, size=4)
     
     # register all the classes
     register_class(STL_FILE_import)
@@ -2987,6 +3073,7 @@ def register():
     register_class(BUTTON_PT_resize)
     register_class(BUTTON_PT_lattice)
     register_class(BUTTON_PT_voxel) 
+    register_class(BUTTON_PT_measure) 
  
 def unregister():
     # delete personal properties
@@ -3009,6 +3096,7 @@ def unregister():
     del bpy.types.Scene.decimate_ratio
     del bpy.types.Scene.volume
     del bpy.types.Scene.level_blocks
+    del bpy.types.Scene.distance
     
     # unregister all the classes
     unregister_class(STL_FILE_import)
@@ -3023,6 +3111,7 @@ def unregister():
     unregister_class(BUTTON_PT_resize)
     unregister_class(BUTTON_PT_lattice)
     unregister_class(BUTTON_PT_voxel)
+    unregister_class(BUTTON_PT_measure) 
  
  
 if __name__ == '__main__':

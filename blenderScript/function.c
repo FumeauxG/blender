@@ -31,7 +31,7 @@ void select_faces(int *ptr, int max, float *normalX, float *normalY, float *norm
       lenSq2 = x2*x2 + y2*y2 + z2*z2;
       angle = acos(dot/sqrt(lenSq1 * lenSq2));
 
-      if((angle*180/M_PI) < maxAngle || ((dot > 0.9999) && (dot < 1.0001)))
+      if(angle < maxAngle || ((dot > 0.9999) && (dot < 1.0001)))
       {
         faces[i] = 1;
         triangleCenterX = (point1X[i]+point2X[i]+point3X[i])/3;

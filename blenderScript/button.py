@@ -13,6 +13,8 @@ from bpy.props import EnumProperty
 from bpy.types import Operator, Panel
 from bpy.utils import register_class, unregister_class
 import mathutils
+from math import pi
+from math import radians
 import datetime
 import bmesh
 import ctypes
@@ -25,6 +27,25 @@ from bpy.props import StringProperty
 from bpy.utils import register_class
 
 
+class BUTTON_PT_import_export(Panel):
+    bl_idname = 'BUTTON_PT_import_export'
+    bl_label = 'Import/Export'
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'Button'
+ 
+    def draw(self, context):
+        layout = self.layout    
+        scene = context.scene
+        
+        layout.operator('btn.btn_op', text='m to mm').action = 'M_TO_MM'
+        
+        layout.separator()
+        
+        layout.label(text="Beta import/export")
+        
+        layout.operator('btn.btn_op', text='Test import').action = 'TEST_IMPORT'
+        layout.operator('btn.btn_op', text='Test export').action = 'TEST_EXPORT'  
  
 class BUTTON_PT_rotation(Panel):
     bl_idname = 'BUTTON_PT_rotation'
@@ -45,9 +66,7 @@ class BUTTON_PT_rotation(Panel):
         row = box.row()
         row.prop(scene, "angle_x")  
         row.prop(scene, "angle_y")
-        row.prop(scene, "angle_z") 
-        
-        
+        row.prop(scene, "angle_z")                
         
 class BUTTON_PT_generation(Panel):
     bl_idname = 'BUTTON_PT_generation'
@@ -212,21 +231,7 @@ class BUTTON_PT_voxel(Panel):
         layout.operator('btn.btn_op', text='Remesh Blocks').action = 'REMESH_BLOCKS'
         layout.operator('btn.btn_op', text='Validate Blocks').action = 'VALIDATE_BLOCKS'
         
-class BUTTON_PT_import_export(Panel):
-    bl_idname = 'BUTTON_PT_import_export'
-    bl_label = 'Import/Export'
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'Button'
- 
-    def draw(self, context):
-        layout = self.layout    
-        scene = context.scene
-        
-        layout.label(text="Beta import/export")
-        
-        layout.operator('btn.btn_op', text='Test import').action = 'TEST_IMPORT'
-        layout.operator('btn.btn_op', text='Test export').action = 'TEST_EXPORT'      
+    
         
 class BUTTON_OT_button_op(Operator):
     bl_idname = 'btn.btn_op'
@@ -236,6 +241,10 @@ class BUTTON_OT_button_op(Operator):
  
     action: EnumProperty(
         items=[
+            ('M_TO_MM', 'm to mm', 'm to mm'),
+            ('TEST_IMPORT', 'Test import', 'Test import'),
+            ('TEST_EXPORT', 'Test export', 'Test export'),
+        
             ('ROTX', 'rotation x', 'rotation x'),
             ('ROTY', 'rotation y', 'rotation y'),
             ('ROTZ', 'rotation z', 'rotation z'),
@@ -270,15 +279,20 @@ class BUTTON_OT_button_op(Operator):
             ('MANIFOLD', 'Manifold', 'Manifold'),
             ('VOLUME', 'Volume', 'Volume'),
             ('REMESH_BLOCKS', 'Remesh Blocks', 'Remesh Blocks'),
-            ('VALIDATE_BLOCKS', 'Validate Blocks', 'Validate Blocks'),
-            
-            ('TEST_IMPORT', 'Test import', 'Test import'),
-            ('TEST_EXPORT', 'Test export', 'Test export')            
+            ('VALIDATE_BLOCKS', 'Validate Blocks', 'Validate Blocks')
+                       
         ]
     )
  
     def execute(self, context):
-        if self.action == 'ROTX':
+        if self.action == 'M_TO_MM':   
+            self.m_to_mm(context=context)
+        elif self.action == 'TEST_IMPORT':   
+            self.test_import(context=context)
+        elif self.action == 'TEST_EXPORT':   
+            self.test_export(context=context)
+    
+        elif self.action == 'ROTX':
             self.rot_x(context=context)
         elif self.action == 'ROTY':
             self.rot_y(context=context)
@@ -341,28 +355,33 @@ class BUTTON_OT_button_op(Operator):
         elif self.action == 'REMESH_BLOCKS':   
             self.remesh_blocks(context=context)
         elif self.action == 'VALIDATE_BLOCKS':   
-            self.validate_blocks(context=context)
-         
-        elif self.action == 'TEST_IMPORT':   
-            self.test_import(context=context)
-        elif self.action == 'TEST_EXPORT':   
-            self.test_export(context=context)
-            
+            self.validate_blocks(context=context)            
             
         return {'FINISHED'}
-    
+
+    @staticmethod
+    def m_to_mm(context):          
+        # Set blender unit in mm
+        bpy.context.scene.unit_settings.scale_length = 0.001
+        bpy.context.scene.unit_settings.length_unit = 'MILLIMETERS'
+        
+    @staticmethod
+    def test_import(context):   
+        bpy.ops.stl_file.import_file('INVOKE_DEFAULT')         
+        
+    @staticmethod
+    def test_export(context):
+        bpy.ops.stl_file.export_file('INVOKE_DEFAULT')
     
     @staticmethod
     def rot_x(context):
-        pi = 3.14159265
-
         obj = bpy.context.active_object 
  
         # Switch in the object mode
         bpy.ops.object.mode_set(mode = 'OBJECT')
      
         # Modify the angle
-        obj.rotation_euler[0] = 90*pi/180
+        obj.rotation_euler[0] = radians(90)
             
         # Align the object on the xy plane
         bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_1', align_axis={'Z'})
@@ -378,15 +397,13 @@ class BUTTON_OT_button_op(Operator):
  
     @staticmethod
     def rot_y(context):
-        pi = 3.14159265
-
         obj = bpy.context.active_object 
  
         # Switch in the object mode
         bpy.ops.object.mode_set(mode = 'OBJECT')
      
         # Modify the angle
-        obj.rotation_euler[1] = 90*pi/180
+        obj.rotation_euler[1] = radians(90)
             
         # Align the object on the xy plane
         bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_1', align_axis={'Z'})
@@ -402,15 +419,13 @@ class BUTTON_OT_button_op(Operator):
  
     @staticmethod
     def rot_z(context):
-        pi = 3.14159265
-
         obj = bpy.context.active_object 
  
         # Switch in the object mode
         bpy.ops.object.mode_set(mode = 'OBJECT')
      
         # Modify the angle
-        obj.rotation_euler[2] = 90*pi/180
+        obj.rotation_euler[2] = radians(90)
             
         # Align the object on the xy plane
         bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_1', align_axis={'Z'})
@@ -485,10 +500,8 @@ class BUTTON_OT_button_op(Operator):
         date_1 = datetime.datetime.now()
         print("Start")
 
-        pi = 3.14159265
         maxAngle = bpy.context.scene.max_angle
-        print(maxAngle)
-        maxAngleRad = maxAngle*pi/180
+        print(maxAngle, maxAngle*180/pi)
 
         obj = bpy.context.active_object
 
@@ -506,7 +519,7 @@ class BUTTON_OT_button_op(Operator):
         print(vecDir)
         for poly in obj.data.polygons:
             angle = mathutils.Vector(poly.normal).angle(vecDir)
-            if angle < maxAngleRad:
+            if angle < maxAngle:
                 poly.select = True
                 print(poly.index)
                 triangleCenter = (tabVertices[poly.vertices[0]]+tabVertices[poly.vertices[1]]+tabVertices[poly.vertices[2]])/3
@@ -531,7 +544,6 @@ class BUTTON_OT_button_op(Operator):
         date_1 = datetime.datetime.now()
         print("Start")
 
-        pi = 3.14159265
         maxAngle = bpy.context.scene.max_angle
         print(maxAngle, maxAngle*180/pi)
 
@@ -1086,7 +1098,6 @@ class BUTTON_OT_button_op(Operator):
         date_1 = datetime.datetime.now()
         print("Start")
 
-        pi = 3.14159265
         maxAngle = 89
 
         tabVertices = []
@@ -1270,8 +1281,7 @@ class BUTTON_OT_button_op(Operator):
         date_1 = datetime.datetime.now()
         print("Start")
 
-        pi = 3.14159265
-        maxAngle = 10#bpy.context.scene.max_angle
+        maxAngle = radians(10)#bpy.context.scene.max_angle
         print(maxAngle)
 
         obj = bpy.context.active_object
@@ -1280,11 +1290,6 @@ class BUTTON_OT_button_op(Operator):
         for vertex in obj.data.vertices:
            tabVertices.append(obj.matrix_world @ vertex.co)
            
-        #tabDirVec = [[mathutils.Vector((0,0,-1)), mathutils.Vector((0,-1,0)), mathutils.Vector((0,0,1)),mathutils.Vector((0,1,0))], 
-        #             [mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)),mathutils.Vector((1,0,0))], 
-        #             [mathutils.Vector((0,0,1)), mathutils.Vector((0,1,0)), mathutils.Vector((0,0,-1)),mathutils.Vector((0,-1,0))], 
-        #             [mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)),mathutils.Vector((-1,0,0))]]
-        #vecDir = tabDirVec[int((bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi/90)][int((bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi/90)]
         vecDir = mathutils.Vector((0,0,-1))
 
 
@@ -1509,8 +1514,7 @@ class BUTTON_OT_button_op(Operator):
         date_1 = datetime.datetime.now()
         print("Start")
 
-        pi = 3.14159265
-        maxAngle = 89
+        maxAngle = radians(89)
 
         tabVertices = []
         obj = bpy.context.active_object
@@ -1687,8 +1691,7 @@ class BUTTON_OT_button_op(Operator):
         date_1 = datetime.datetime.now()
         print("Start")
 
-        pi = 3.14159265
-        maxAngle = 10#bpy.context.scene.max_angle
+        maxAngle = radians(10)#bpy.context.scene.max_angle
         print(maxAngle)
 
         obj = bpy.context.active_object
@@ -1817,7 +1820,6 @@ class BUTTON_OT_button_op(Operator):
         date_1 = datetime.datetime.now()
         print("Start")
 
-        pi = 3.14159265
         maxAngle = bpy.context.scene.max_angle
         print(maxAngle)
 
@@ -2048,7 +2050,6 @@ class BUTTON_OT_button_op(Operator):
         xMax = float('-inf')
         xMin = float('inf')
         
-        pi = 3.14159265
         obj = bpy.context.active_object
         matrix_new = obj.matrix_world.to_3x3().inverted().transposed()
 
@@ -2081,7 +2082,7 @@ class BUTTON_OT_button_op(Operator):
                 no_world.normalize()
                 print(no_world)
                 if no_world != mathutils.Vector((0,0,0)):
-                    angle = mathutils.Vector(no_world).angle(mathutils.Vector((0,0,-1)))*180/pi
+                    angle = mathutils.Vector(no_world).angle(mathutils.Vector((0,0,-1)))
                 else:
                     angle = 0
             
@@ -2259,17 +2260,17 @@ class BUTTON_OT_button_op(Operator):
         bpy.data.objects["Lattice"].scale = (obj.dimensions[0], obj.dimensions[1], obj.dimensions[2])
         bpy.data.objects["Lattice"].location = ((xPlus+xMoins)/2, (yPlus+yMoins)/2,(zPlus+zMoins)/2)
 
-        bpy.types.Scene.lattice_size_x = bpy.props.FloatProperty(name = "Size X", min = 0, max = 2*obj.dimensions[0], soft_min = 0, soft_max = 2*obj.dimensions[0], step = 1, get=get_lattice_size_x, set=set_lattice_size_x)
-        bpy.types.Scene.lattice_size_y = bpy.props.FloatProperty(name = "Size Y", min = 0, max = 2*obj.dimensions[1], soft_min = 0, soft_max = 2*obj.dimensions[1], step = 1, get=get_lattice_size_y, set=set_lattice_size_y)
-        bpy.types.Scene.lattice_size_z = bpy.props.FloatProperty(name = "Size Z", min = 0, max = 2*obj.dimensions[2], soft_min = 0, soft_max = 2*obj.dimensions[2], step = 1, get=get_lattice_size_z, set=set_lattice_size_z)
+        bpy.types.Scene.lattice_size_x = bpy.props.FloatProperty(name = "Size X", min = 0, max = 2*obj.dimensions[0], soft_min = 0, soft_max = 2*obj.dimensions[0], step = 10, get=get_lattice_size_x, set=set_lattice_size_x, unit = 'LENGTH')
+        bpy.types.Scene.lattice_size_y = bpy.props.FloatProperty(name = "Size Y", min = 0, max = 2*obj.dimensions[1], soft_min = 0, soft_max = 2*obj.dimensions[1], step = 10, get=get_lattice_size_y, set=set_lattice_size_y, unit = 'LENGTH')
+        bpy.types.Scene.lattice_size_z = bpy.props.FloatProperty(name = "Size Z", min = 0, max = 2*obj.dimensions[2], soft_min = 0, soft_max = 2*obj.dimensions[2], step = 10, get=get_lattice_size_z, set=set_lattice_size_z, unit = 'LENGTH')
         
         bpy.context.scene.lattice_size_x = obj.dimensions[0]
         bpy.context.scene.lattice_size_y = obj.dimensions[1]
         bpy.context.scene.lattice_size_z = obj.dimensions[2]
         
-        bpy.types.Scene.lattice_offset_x = bpy.props.FloatProperty(name = "Size X", min = -obj.dimensions[0], max = obj.dimensions[0], soft_min = -obj.dimensions[0], soft_max = obj.dimensions[0], step = 1, get=get_lattice_offset_x, set=set_lattice_offset_x)
-        bpy.types.Scene.lattice_offset_y = bpy.props.FloatProperty(name = "Size Y", min = -obj.dimensions[1], max = obj.dimensions[1], soft_min = -obj.dimensions[1], soft_max = obj.dimensions[1], step = 1, get=get_lattice_offset_y, set=set_lattice_offset_y)
-        bpy.types.Scene.lattice_offset_z = bpy.props.FloatProperty(name = "Size Z", min = -obj.dimensions[2], max = obj.dimensions[2], soft_min = -obj.dimensions[2], soft_max = obj.dimensions[2], step = 1, get=get_lattice_offset_z, set=set_lattice_offset_z)
+        bpy.types.Scene.lattice_offset_x = bpy.props.FloatProperty(name = "Size X", min = -obj.dimensions[0], max = obj.dimensions[0], soft_min = -obj.dimensions[0], soft_max = obj.dimensions[0], step = 10, get=get_lattice_offset_x, set=set_lattice_offset_x, unit = 'LENGTH')
+        bpy.types.Scene.lattice_offset_y = bpy.props.FloatProperty(name = "Size Y", min = -obj.dimensions[1], max = obj.dimensions[1], soft_min = -obj.dimensions[1], soft_max = obj.dimensions[1], step = 10, get=get_lattice_offset_y, set=set_lattice_offset_y, unit = 'LENGTH')
+        bpy.types.Scene.lattice_offset_z = bpy.props.FloatProperty(name = "Size Z", min = -obj.dimensions[2], max = obj.dimensions[2], soft_min = -obj.dimensions[2], soft_max = obj.dimensions[2], step = 10, get=get_lattice_offset_z, set=set_lattice_offset_z, unit = 'LENGTH')
         
         bpy.context.scene.lattice_offset_x = 0
         bpy.context.scene.lattice_offset_y = 0
@@ -2475,7 +2476,6 @@ class BUTTON_OT_button_op(Operator):
         date_1 = datetime.datetime.now()
         print("Start")
 
-        pi = 3.14159265
         maxAngle = 10
 
         obj = bpy.context.active_object
@@ -2484,11 +2484,6 @@ class BUTTON_OT_button_op(Operator):
         for vertex in obj.data.vertices:
            tabVertices.append(obj.matrix_world @ vertex.co)
            
-        #tabDirVec = [[mathutils.Vector((0,0,-1)), mathutils.Vector((0,-1,0)), mathutils.Vector((0,0,1)),mathutils.Vector((0,1,0))], 
-        #             [mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)), mathutils.Vector((1,0,0)),mathutils.Vector((1,0,0))], 
-        #             [mathutils.Vector((0,0,1)), mathutils.Vector((0,1,0)), mathutils.Vector((0,0,-1)),mathutils.Vector((0,-1,0))], 
-        #             [mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)), mathutils.Vector((-1,0,0)),mathutils.Vector((-1,0,0))]]
-        #vecDir = tabDirVec[int((bpy.context.selected_objects[0].rotation_euler[1]) * 180/pi/90)][int((bpy.context.selected_objects[0].rotation_euler[0]) * 180/pi/90)]
         vecDir = mathutils.Vector((0,0,-1))
 
         tabPoly = []
@@ -2587,7 +2582,6 @@ class BUTTON_OT_button_op(Operator):
         bpy.ops.mesh.select_all(action='SELECT')
 
         # Bissect and delete the element under the xy plane
-        #bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=True, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
         bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=False, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False) 
 
         # Switch in edit mode 
@@ -2618,13 +2612,6 @@ class BUTTON_OT_button_op(Operator):
         # Switch in object mode 
         bpy.ops.object.mode_set(mode='OBJECT')
             
-    @staticmethod
-    def test_import(context):   
-        bpy.ops.stl_file.import_file('INVOKE_DEFAULT')         
-        
-    @staticmethod
-    def test_export(context):
-        bpy.ops.stl_file.export_file('INVOKE_DEFAULT')
 
 # import class
 class STL_FILE_import(Operator, ImportHelper):
@@ -2692,8 +2679,6 @@ class STL_FILE_export(Operator, ExportHelper):
 def get_angle_x(self):
     return self.get("angle_x", 0.0)    
 def set_angle_x(self, value):
-    pi = 3.14159265
-
     obj = bpy.context.active_object
 
     # Save the old value of the angle
@@ -2705,7 +2690,7 @@ def set_angle_x(self, value):
     bpy.ops.object.mode_set(mode = 'OBJECT')
  
     # Modify the angle
-    obj.rotation_euler[0] = ((value-oldValue))*pi/180
+    obj.rotation_euler[0] = value-oldValue
     
     # Align the object on the xy plane
     bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_1', align_axis={'Z'})
@@ -2722,8 +2707,6 @@ def set_angle_x(self, value):
 def get_angle_y(self):
     return self.get("angle_y", 0.0)    
 def set_angle_y(self, value):
-    pi = 3.14159265
-
     obj = bpy.context.active_object
 
     # Save the old value of the angle
@@ -2735,7 +2718,7 @@ def set_angle_y(self, value):
     bpy.ops.object.mode_set(mode = 'OBJECT')
  
     # Modify the angle
-    obj.rotation_euler[1] = ((value-oldValue))*pi/180
+    obj.rotation_euler[1] = value-oldValue
     
     # Align the object on the xy plane
     bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_1', align_axis={'Z'})
@@ -2752,8 +2735,6 @@ def set_angle_y(self, value):
 def get_angle_z(self):
     return self.get("angle_z", 0.0)    
 def set_angle_z(self, value):
-    pi = 3.14159265
-
     obj = bpy.context.active_object
 
     # Save the old value of the angle
@@ -2765,7 +2746,7 @@ def set_angle_z(self, value):
     bpy.ops.object.mode_set(mode = 'OBJECT')
  
     # Modify the angle
-    obj.rotation_euler[2] = ((value-oldValue))*pi/180
+    obj.rotation_euler[2] = value-oldValue
     
     # Align the object on the xy plane
     bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_1', align_axis={'Z'})
@@ -2971,26 +2952,24 @@ def set_lattice_offset_z(self, value):
     bpy.data.objects["Lattice"].location = (self["lattice_offset_x"]+xMoins+self["lattice_size_x"]/2, self["lattice_offset_y"]+yMoins+self["lattice_size_y"]/2, self["lattice_offset_z"]+zMoins+self["lattice_size_z"]/2)
   
   
-def register():
-    pi = 3.14159265
-    
+def register():  
     # create personal properties
-    bpy.types.Scene.angle_x = bpy.props.IntProperty(name="Angle x", default = 0, options={'SKIP_SAVE'}, min = -180, max = 180, soft_min = -180, soft_max = 180, step = 1, get=get_angle_x, set=set_angle_x)
-    bpy.types.Scene.angle_y = bpy.props.IntProperty(name="Angle y", default = 0, options={'SKIP_SAVE'}, min = -180, max = 180, soft_min = -180, soft_max = 180, step = 1, get=get_angle_y, set=set_angle_y)
-    bpy.types.Scene.angle_z = bpy.props.IntProperty(name="Angle z", default = 0, options={'SKIP_SAVE'}, min = -180, max = 180, soft_min = -180, soft_max = 180, step = 1, get=get_angle_z, set=set_angle_z)
-    bpy.types.Scene.max_angle = bpy.props.FloatProperty(name="Max Angle", default = 45, options={'SKIP_SAVE'}, min = 0, max = 90, soft_min = 0, soft_max = 90, step = 100)#, unit = 'ROTATION')
-    bpy.types.Scene.min_area = bpy.props.FloatProperty(name="Min Area", default = 0.1, options={'SKIP_SAVE'}, min = 0, max = 1, soft_min = 0, soft_max = 1, step = 1)
-    bpy.types.Object.offset = bpy.props.FloatProperty(name = "Offset", default = 0, options={'SKIP_SAVE'}, min = -10, max = 10, soft_min = -10, soft_max = 10, step = 100)
+    bpy.types.Scene.angle_x = bpy.props.FloatProperty(name="Angle x", default = 0, options={'SKIP_SAVE'}, min = -pi, max = pi, soft_min = -pi, soft_max = pi, step = 100, get=get_angle_x, set=set_angle_x, unit = 'ROTATION')
+    bpy.types.Scene.angle_y = bpy.props.FloatProperty(name="Angle y", default = 0, options={'SKIP_SAVE'}, min = -pi, max = pi, soft_min = -pi, soft_max = pi, step = 100, get=get_angle_y, set=set_angle_y, unit = 'ROTATION')
+    bpy.types.Scene.angle_z = bpy.props.FloatProperty(name="Angle z", default = 0, options={'SKIP_SAVE'}, min = -pi, max = pi, soft_min = -pi, soft_max = pi, step = 100, get=get_angle_z, set=set_angle_z, unit = 'ROTATION')
+    bpy.types.Scene.max_angle = bpy.props.FloatProperty(name="Max Angle", default = pi/4, options={'SKIP_SAVE'}, min = 0, max = pi/2, soft_min = 0, soft_max = pi/2, step = 100, unit = 'ROTATION')
+    bpy.types.Scene.min_area = bpy.props.FloatProperty(name="Min Area", default = 0.1, options={'SKIP_SAVE'}, min = 0, max = 1, soft_min = 0, soft_max = 1, step = 1, unit = 'AREA')
+    bpy.types.Object.offset = bpy.props.FloatProperty(name = "Offset", default = 0, options={'SKIP_SAVE'}, min = -10, max = 10, soft_min = -10, soft_max = 10, step = 10, unit = 'LENGTH')
     bpy.types.Scene.resize = bpy.props.FloatProperty(name = "Resize", default = 0, options={'SKIP_SAVE'}, min = -10, max = 10, soft_min = -10, soft_max = 10, step = 1)
-    bpy.types.Scene.lattice_size_x = bpy.props.FloatProperty(name = "Size X", default = 0)
-    bpy.types.Scene.lattice_size_y = bpy.props.FloatProperty(name = "Size Y", default = 0)
-    bpy.types.Scene.lattice_size_z = bpy.props.FloatProperty(name = "Size Z", default = 0)
-    bpy.types.Scene.lattice_offset_x = bpy.props.FloatProperty(name = "Offset X", default = 0)
-    bpy.types.Scene.lattice_offset_y = bpy.props.FloatProperty(name = "Offset Y", default = 0)
-    bpy.types.Scene.lattice_offset_z = bpy.props.FloatProperty(name = "Offset Z", default = 0)
-    bpy.types.Scene.min_angle_z = bpy.props.FloatProperty(name="Min Angle z", default = 90, options={'SKIP_SAVE'}, min = 0, max = 181,soft_min = 0, soft_max = 181, step = 100)
-    bpy.types.Scene.max_angle_z = bpy.props.FloatProperty(name="Max Angle z", default = 90, options={'SKIP_SAVE'}, min = 0, max = 181,soft_min = 0, soft_max = 181, step = 100)
-    bpy.types.Scene.voxel_size = bpy.props.FloatProperty(name="Voxel Size", default = 0.01, options={'SKIP_SAVE'}, min = 0.01, max = 0.1,soft_min = 0.01, soft_max = 0.1, step = 1)
+    bpy.types.Scene.lattice_size_x = bpy.props.FloatProperty(name = "Size X", default = 0, step = 10, unit = 'LENGTH')
+    bpy.types.Scene.lattice_size_y = bpy.props.FloatProperty(name = "Size Y", default = 0, step = 10, unit = 'LENGTH')
+    bpy.types.Scene.lattice_size_z = bpy.props.FloatProperty(name = "Size Z", default = 0, step = 10, unit = 'LENGTH')
+    bpy.types.Scene.lattice_offset_x = bpy.props.FloatProperty(name = "Offset X", default = 0, step = 10, unit = 'LENGTH')
+    bpy.types.Scene.lattice_offset_y = bpy.props.FloatProperty(name = "Offset Y", default = 0, step = 10, unit = 'LENGTH')
+    bpy.types.Scene.lattice_offset_z = bpy.props.FloatProperty(name = "Offset Z", default = 0, step = 10, unit = 'LENGTH')
+    bpy.types.Scene.min_angle_z = bpy.props.FloatProperty(name="Min Angle z", default = pi/4, options={'SKIP_SAVE'}, min = 0, max = radians(181),soft_min = 0, soft_max = radians(181), step = 100, unit = 'ROTATION')
+    bpy.types.Scene.max_angle_z = bpy.props.FloatProperty(name="Max Angle z", default = pi/4, options={'SKIP_SAVE'}, min = 0, max = radians(181),soft_min = 0, soft_max = radians(181), step = 100, unit = 'ROTATION')
+    bpy.types.Scene.voxel_size = bpy.props.FloatProperty(name="Voxel Size", default = 0.01, options={'SKIP_SAVE'}, min = 0.01, max = 0.1,soft_min = 0.01, soft_max = 0.1, step = 1, unit = 'LENGTH')
     bpy.types.Scene.decimate_ratio = bpy.props.FloatProperty(name="Decimate Ratio", default = 0.01, options={'SKIP_SAVE'}, min = 0, max = 1,soft_min = 0, soft_max = 1, step = 1)
     bpy.types.Scene.volume = bpy.props.FloatProperty(name="Volume", default = 0, options={'SKIP_SAVE'}, min = 0, step = 100)
     bpy.types.Scene.level_blocks = bpy.props.IntProperty(name="Level Blocks", default = 5, options={'SKIP_SAVE'}, min = 1, max = 9,soft_min = 1, soft_max = 9, step = 1)
@@ -2998,7 +2977,8 @@ def register():
     # register all the classes
     register_class(STL_FILE_import)
     register_class(STL_FILE_export)
-   
+
+    register_class(BUTTON_PT_import_export)   
     register_class(BUTTON_OT_button_op)
     register_class(BUTTON_PT_rotation)
     register_class(BUTTON_PT_generation)
@@ -3006,8 +2986,7 @@ def register():
     register_class(BUTTON_PT_offset)
     register_class(BUTTON_PT_resize)
     register_class(BUTTON_PT_lattice)
-    register_class(BUTTON_PT_voxel)
-    register_class(BUTTON_PT_import_export) 
+    register_class(BUTTON_PT_voxel) 
  
 def unregister():
     # delete personal properties
@@ -3034,7 +3013,8 @@ def unregister():
     # unregister all the classes
     unregister_class(STL_FILE_import)
     unregister_class(STL_FILE_export)
-    
+
+    unregister_class(BUTTON_PT_import_export)    
     unregister_class(BUTTON_OT_button_op)
     unregister_class(BUTTON_PT_rotation)
     unregister_class(BUTTON_PT_generation)
@@ -3043,7 +3023,6 @@ def unregister():
     unregister_class(BUTTON_PT_resize)
     unregister_class(BUTTON_PT_lattice)
     unregister_class(BUTTON_PT_voxel)
-    unregister_class(BUTTON_PT_import_export)
  
  
 if __name__ == '__main__':

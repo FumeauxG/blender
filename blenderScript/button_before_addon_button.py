@@ -27,6 +27,8 @@ from bpy.types import Operator
 from bpy.props import StringProperty
 from bpy.utils import register_class
 
+import os
+
 
 class BUTTON_PT_import_export(Panel):
     bl_idname = 'BUTTON_PT_import_export'
@@ -50,8 +52,7 @@ class BUTTON_PT_import_export(Panel):
 
         if bpy.context.selected_objects[0] != None:
             layout.label(text= ("Number of faces : " + str(len(bpy.context.active_object.data.polygons))))
-            layout.label(text= ("Size of the stl file : ~" + str(int(len(bpy.context.active_object.data.polygons)/20.4)) + " Ko"))
-            
+            layout.label(text= ("Size of the stl file : ~" + str(int(len(bpy.context.active_object.data.polygons)/20.4)) + " Ko"))           
  
 class BUTTON_PT_rotation(Panel):
     bl_idname = 'BUTTON_PT_rotation'
@@ -622,7 +623,7 @@ class BUTTON_OT_button_op(Operator):
 
         # Get the C function
         functionC = ctypes.CDLL("C:\\Gaetan\\_Bachelor\\blender\\blenderScript\\function.dll")
-
+        print(os.path.dirname(__file__))
 
         # Create array for C function
         seq = ctypes.c_int * len(tabPoly)
@@ -2382,7 +2383,7 @@ class BUTTON_OT_button_op(Operator):
         bpy.context.object.modifiers["Decimate"].decimate_type = 'COLLAPSE'
         bpy.context.object.modifiers["Decimate"].ratio = bpy.context.scene.decimate_ratio
         bpy.context.object.modifiers["Decimate"].use_symmetry = False
-        bpy.context.object.modifiers["Decimate"].use_collapse_triangulate = False
+        bpy.context.object.modifiers["Decimate"].use_collapse_triangulate = True
 
     @staticmethod
     def validate(context):
@@ -2516,7 +2517,7 @@ class BUTTON_OT_button_op(Operator):
         date_1 = datetime.datetime.now()
         print("Start")
 
-        maxAngle = 10
+        maxAngle = radians(10)
 
         obj = bpy.context.active_object
 

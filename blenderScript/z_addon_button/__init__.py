@@ -777,8 +777,10 @@ def register():
     bpy.types.Scene.min_angle_z = bpy.props.FloatProperty(name="Min Angle z", default = pi/2, options={'SKIP_SAVE'}, min = 0, max = radians(181),soft_min = 0, soft_max = radians(181), step = 100, unit = 'ROTATION')
     bpy.types.Scene.max_angle_z = bpy.props.FloatProperty(name="Max Angle z", default = pi/2, options={'SKIP_SAVE'}, min = 0, max = radians(181),soft_min = 0, soft_max = radians(181), step = 100, unit = 'ROTATION')
     bpy.types.Scene.resize = bpy.props.FloatProperty(name = "Resize", default = 0, options={'SKIP_SAVE'}, min = -10, max = 10, soft_min = -10, soft_max = 10, step = 1, unit = 'LENGTH')    
-    bpy.types.Scene.size = bpy.props.FloatProperty(default = 0)
-    bpy.types.Scene.oldResize = bpy.props.FloatProperty(default = 1)
+    bpy.types.Scene.sizeX = bpy.props.FloatProperty(default = 0)
+    bpy.types.Scene.sizeY = bpy.props.FloatProperty(default = 0)
+    bpy.types.Scene.oldResizeX = bpy.props.FloatProperty(default = 1)
+    bpy.types.Scene.oldResizeY = bpy.props.FloatProperty(default = 1)
     
     bpy.types.Scene.lattice_size_x = bpy.props.FloatProperty(name = "Size X", default = 0, step = 10, unit = 'LENGTH')
     bpy.types.Scene.lattice_size_y = bpy.props.FloatProperty(name = "Size Y", default = 0, step = 10, unit = 'LENGTH')
@@ -807,8 +809,10 @@ def unregister():
     del bpy.types.Scene.min_angle_z
     del bpy.types.Scene.max_angle_z
     del bpy.types.Scene.resize
-    del bpy.types.Scene.size
-    del bpy.types.Scene.oldResize
+    del bpy.types.Scene.sizeX
+    del bpy.types.Scene.sizeY
+    del bpy.types.Scene.oldResizeX
+    del bpy.types.Scene.oldResizeY
     
     del bpy.types.Scene.lattice_size_x
     del bpy.types.Scene.lattice_size_y

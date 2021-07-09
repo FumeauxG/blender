@@ -494,15 +494,19 @@ class Button_Operations():
         # Switch in object mode 
         bpy.ops.object.mode_set(mode='OBJECT')
 
-        # Get the selected faces and their min and max location in x
+        # Get the selected faces and their min and max location in x and y
         tabSelectedFaces = []
         xMax = float('-inf')
         xMin = float('inf')
+        yMax = float('-inf')
+        yMin = float('inf')
         for poly in obj.data.polygons:
             if poly.select == True:
                 tabSelectedFaces.append(poly)
                 xMax = max(xMax, obj.data.vertices[poly.vertices[0]].co.x, obj.data.vertices[poly.vertices[1]].co.x, obj.data.vertices[poly.vertices[2]].co.x)
                 xMin = min(xMin, obj.data.vertices[poly.vertices[0]].co.x, obj.data.vertices[poly.vertices[1]].co.x, obj.data.vertices[poly.vertices[2]].co.x)
+                yMax = max(yMax, obj.data.vertices[poly.vertices[0]].co.y, obj.data.vertices[poly.vertices[1]].co.y, obj.data.vertices[poly.vertices[2]].co.y)
+                yMin = min(yMin, obj.data.vertices[poly.vertices[0]].co.y, obj.data.vertices[poly.vertices[1]].co.y, obj.data.vertices[poly.vertices[2]].co.y)
 
         # Switch in edit mode 
         bpy.ops.object.mode_set(mode='EDIT')
@@ -522,18 +526,22 @@ class Button_Operations():
             if grow_faces == set():
                 break;
 
-            # Select the faces and update min and max x location
+            # Select the faces and update min and max x and y location
             for f in grow_faces:
                 f.select = True
                 xMax = max(xMax, f.verts[0].co.x, f.verts[1].co.x, f.verts[2].co.x)
                 xMin = min(xMin, f.verts[0].co.x, f.verts[1].co.x, f.verts[2].co.x)
-         
+                yMax = max(yMax, f.verts[0].co.y, f.verts[1].co.y, f.verts[2].co.y)
+                yMin = min(yMin, f.verts[0].co.y, f.verts[1].co.y, f.verts[2].co.y)
+                
         print(xMax,xMin,xMax-xMin) 
-        
+        print(yMax,yMin,yMax-yMin)         
 
         # Update the information for the resize action
-        bpy.context.scene.size = xMax-xMin
-        bpy.context.scene.oldResize = 1
+        bpy.context.scene.sizeX = xMax-xMin
+        bpy.context.scene.oldResizeX = 1
+        bpy.context.scene.sizeY = yMax-yMin
+        bpy.context.scene.oldResizeY = 1
 
         # Transfer the data back to the object's mesh               
         bmesh.update_edit_mesh(me)
@@ -569,15 +577,19 @@ class Button_Operations():
         # Switch in object mode 
         bpy.ops.object.mode_set(mode='OBJECT')
 
-        # Get the selected faces and their min and max location in x
+        # Get the selected faces and their min and max location in x and y
         tabSelectedFaces = []
         xMax = float('-inf')
         xMin = float('inf')
+        yMax = float('-inf')
+        yMin = float('inf')
         for poly in obj.data.polygons:
             if poly.select == True:
                 tabSelectedFaces.append(poly)
                 xMax = max(xMax, obj.data.vertices[poly.vertices[0]].co.x, obj.data.vertices[poly.vertices[1]].co.x, obj.data.vertices[poly.vertices[2]].co.x)
                 xMin = min(xMin, obj.data.vertices[poly.vertices[0]].co.x, obj.data.vertices[poly.vertices[1]].co.x, obj.data.vertices[poly.vertices[2]].co.x)
+                yMax = max(yMax, obj.data.vertices[poly.vertices[0]].co.y, obj.data.vertices[poly.vertices[1]].co.y, obj.data.vertices[poly.vertices[2]].co.y)
+                yMin = min(yMin, obj.data.vertices[poly.vertices[0]].co.y, obj.data.vertices[poly.vertices[1]].co.y, obj.data.vertices[poly.vertices[2]].co.y)
 
         # Switch in edit mode
         bpy.ops.object.mode_set(mode='EDIT')
@@ -611,19 +623,24 @@ class Button_Operations():
             
                 # Check if the angle is between the min and max angles z
                 if angle < maxAngleZ and angle >  minAngleZ:
-                    # Select the faces and update min and max x location
+                    # Select the faces and update min and max x and y location
                     f.select = True
                     xMax = max(xMax, f.verts[0].co.x, f.verts[1].co.x, f.verts[2].co.x)
                     xMin = min(xMin, f.verts[0].co.x, f.verts[1].co.x, f.verts[2].co.x)
+                    yMax = max(yMax, f.verts[0].co.y, f.verts[1].co.y, f.verts[2].co.y)
+                    yMin = min(yMin, f.verts[0].co.y, f.verts[1].co.y, f.verts[2].co.y)                    
                 else:
                     # Hide the face
                     f.hide = True
          
         print(xMax,xMin,xMax-xMin) 
+        print(yMax,yMin,yMax-yMin) 
         
         # Update the information for the resize action
-        bpy.context.scene.size = xMax-xMin
-        bpy.context.scene.oldResize = 1
+        bpy.context.scene.sizeX = xMax-xMin
+        bpy.context.scene.oldResizeX = 1
+        bpy.context.scene.sizeY = yMax-yMin
+        bpy.context.scene.oldResizeY = 1
          
         # Unhide all faces
         bpy.ops.mesh.reveal(select = False)
@@ -651,19 +668,23 @@ class Button_Operations():
             None
         """
         # If the resize is not validate, cancel the last resize
-        scaleX = 1/bpy.context.scene.oldResize
-        bpy.ops.transform.resize(value=(scaleX, scaleX, 1), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=0.811, use_proportional_connected=False, use_proportional_projected=False)
+        scaleX = 1/bpy.context.scene.oldResizeX
+        scaleY = 1/bpy.context.scene.oldResizeY
+        bpy.ops.transform.resize(value=(scaleX, scaleY, 1), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=0.811, use_proportional_connected=False, use_proportional_projected=False)
 
         # Calculate the new scale for resize with the value in mm
-        scaleX = 1+(2*bpy.context.scene.resize/bpy.context.scene.size)
+        scaleX = 1+(2*bpy.context.scene.resize/bpy.context.scene.sizeX)
+        scaleY = 1+(2*bpy.context.scene.resize/bpy.context.scene.sizeY)
         # If negative resize, cancel the resize
-        if scaleX < 0:
+        if scaleX <= 0 or scaleY <= 0:
             scaleX = 1
+            scaleY = 1
         print(scaleX)
 
         # Apply the resize to the selection
-        bpy.context.scene.oldResize = scaleX
-        bpy.ops.transform.resize(value=(scaleX, scaleX, 1), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=0.811, use_proportional_connected=False, use_proportional_projected=False)
+        bpy.context.scene.oldResizeX = scaleX
+        bpy.context.scene.oldResizeY = scaleY
+        bpy.ops.transform.resize(value=(scaleX, scaleY, 1), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=0.811, use_proportional_connected=False, use_proportional_projected=False)
 
     def delete_selection():
         """      
@@ -823,9 +844,11 @@ class Button_Operations():
         # Switch in object mode
         bpy.ops.object.mode_set(mode='OBJECT')
 
-        # Select the faces in the lattice and get the min and max location of these faces in x        
+        # Select the faces in the lattice and get the min and max location of these faces in x and y     
         xMax = float('-inf')
         xMin = float('inf')
+        yMax = float('-inf')
+        yMin = float('inf')
         for poly in obj.data.polygons:
             if (obj.matrix_world @ poly.center)[0]>=(bpy.data.lattices['Lattice'].points[0].co[0]*bpy.data.objects["Lattice"].scale[0]+bpy.data.objects["Lattice"].location[0]) and (obj.matrix_world @ poly.center)[0]<=(bpy.data.lattices['Lattice'].points[1].co[0]*bpy.data.objects["Lattice"].scale[0]+bpy.data.objects["Lattice"].location[0]):
                 if (obj.matrix_world @ poly.center)[1]>=(bpy.data.lattices['Lattice'].points[0].co[1]*bpy.data.objects["Lattice"].scale[1]+bpy.data.objects["Lattice"].location[1]) and (obj.matrix_world @ poly.center)[1]<=(bpy.data.lattices['Lattice'].points[2].co[1]*bpy.data.objects["Lattice"].scale[1]+bpy.data.objects["Lattice"].location[1]):
@@ -833,10 +856,14 @@ class Button_Operations():
                         poly.select = True
                         xMax = max(xMax, obj.data.vertices[poly.vertices[0]].co.x, obj.data.vertices[poly.vertices[1]].co.x, obj.data.vertices[poly.vertices[2]].co.x)
                         xMin = min(xMin, obj.data.vertices[poly.vertices[0]].co.x, obj.data.vertices[poly.vertices[1]].co.x, obj.data.vertices[poly.vertices[2]].co.x)
+                        yMax = max(yMax, obj.data.vertices[poly.vertices[0]].co.y, obj.data.vertices[poly.vertices[1]].co.y, obj.data.vertices[poly.vertices[2]].co.y)
+                        yMin = min(yMin, obj.data.vertices[poly.vertices[0]].co.y, obj.data.vertices[poly.vertices[1]].co.y, obj.data.vertices[poly.vertices[2]].co.y)
                         
         # Update the information for the resize action
-        bpy.context.scene.size = xMax-xMin
-        bpy.context.scene.oldResize = 1
+        bpy.context.scene.sizeX = xMax-xMin
+        bpy.context.scene.oldResizeX = 1
+        bpy.context.scene.sizeY = yMax-yMin
+        bpy.context.scene.oldResizeY = 1
                         
         # Switch in edit mode
         bpy.ops.object.mode_set(mode='EDIT')

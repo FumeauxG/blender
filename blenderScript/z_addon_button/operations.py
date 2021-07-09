@@ -14,6 +14,9 @@ import os
 
 
 class Button_Operations():
+    """      
+    Class containin the action of the blender buttons
+    """
     def m_to_mm():
         """      
         Change the Blender scale from metre to milimetre
@@ -31,7 +34,7 @@ class Button_Operations():
 
     def manifold_and_triangulate():
         """      
-        Find the non manifold vertices and add edges and faces to fill th hole,
+        Find the non manifold vertices and add edges and faces to fill the hole,
         Then triangulate all the faces
 
         Note:
@@ -932,4 +935,146 @@ class Button_Operations():
         obj = bpy.context.active_object
         print("Number of faces", len(obj.data.polygons))
         
+    def remesh_blocks():
+        """      
+        Add a blocks remesh to the selected mesh, then make an intersection with the mesh to keep the same occupied surface
+
+        Note:
+            A mesh must be selected
+        Args:
+            None
+        Returns:
+            None
+        """
         
+        # Get the active object
+        obj = bpy.context.active_object
+        
+        nameCopy = "temp_copy"
+
+        # Switch in object mode 
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+        # Remove all modifiers from the object
+        obj.modifiers.clear()
+
+        # Delete the existing copy 
+        for o in bpy.data.objects:
+            if o.type == 'MESH' and o.name == nameCopy:
+                # Delete the existing copy
+                object_to_delete = bpy.data.objects[nameCopy]
+                bpy.data.objects.remove(object_to_delete, do_unlink=True) 
+                
+            
+        # Make a copy of the object
+        new_obj = obj.copy()
+        new_obj.data = obj.data.copy()
+        new_obj.animation_data_clear()
+        bpy.context.collection.objects.link(new_obj)
+
+        # Rename the copy
+        new_obj.name = nameCopy
+
+        # Hide the copy
+        new_obj.hide_viewport = True
+
+        # Remesh the faces of the object with blocks
+        bpy.ops.object.modifier_add(type='REMESH')
+        bpy.context.object.modifiers["Remesh"].mode = 'BLOCKS'
+        bpy.context.object.modifiers["Remesh"].octree_depth = bpy.context.scene.level_blocks
+        bpy.context.object.modifiers["Remesh"].scale = 0.99
+        bpy.context.object.modifiers["Remesh"].use_remove_disconnected = False
+        bpy.context.object.modifiers["Remesh"].threshold = 1
+        bpy.context.object.modifiers["Remesh"].use_smooth_shade = False
+
+        # Make intersection between the remesh object and the original
+        bpy.ops.object.modifier_add(type='BOOLEAN')
+        bpy.context.object.modifiers["Boolean"].operation = 'INTERSECT'
+        bpy.context.object.modifiers["Boolean"].operand_type = 'OBJECT'
+        bpy.context.object.modifiers["Boolean"].object = bpy.data.objects[nameCopy]
+        bpy.context.object.modifiers["Boolean"].solver = 'FAST'
+        bpy.context.object.modifiers["Boolean"].double_threshold = 0
+
+    def validate_blocks():
+        """      
+        Apply blocks modifier to the selected mesh, then extrude the bottom on the xy plane
+
+        Note:
+            A mesh must be selected
+        Args:
+            None
+        Returns:
+            None
+        """
+        # Validate the remesh blocks modifiers
+        bpy.ops.object.apply_all_modifiers()
+        
+        date_1 = datetime.datetime.now()
+        print("Start")
+        
+        # Select the bottom faces
+        Button_Operations.select_faces(radians(10))
+
+        # Extrude the support
+        bpy.ops.mesh.extrude_region_move(MESH_OT_extrude_region={"use_normal_flip":False, "use_dissolve_ortho_edges":False, "mirror":False}, TRANSFORM_OT_translate={"value":(0, 0, -20), "orient_type":'GLOBAL', "orient_matrix":((1, 0, 0), (0, 1, 0), (0, 0, 1)), "orient_matrix_type":'GLOBAL', "constraint_axis":(False, False, True), "mirror":False, "use_proportional_edit":False, "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "use_proportional_connected":False, "use_proportional_projected":False, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "cursor_transform":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False, "use_automerge_and_split":False})
+
+        # Select all
+        bpy.ops.mesh.select_all(action='SELECT')
+
+        # Bissect and delete the element under the xy plane
+        bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=False, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False) 
+
+        # Fill the hole and triangulate faces
+        Button_Operations.manifold_and_triangulate()
+      
+        # Delete the copy
+        object_to_delete = bpy.data.objects["temp_copy"]
+        bpy.data.objects.remove(object_to_delete, do_unlink=True) 
+        
+        # Switch in object mode 
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+        
+    def measure_distance():
+        """      
+        Calculate the distance between two selected vertices
+
+        Note:
+            Only two vertices must be selected
+        Args:
+            None
+        Returns:
+            None
+        """
+        # Get the active object
+        obj = bpy.context.active_object
+    
+        # Switch in object mode
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+        # Get the two selected vertices
+        twoVerts = [None, None]
+        index = 0
+        for vertex in obj.data.vertices:
+            if vertex.select:
+                twoVerts[index] = (obj.matrix_world @ vertex.co)
+                index = index + 1
+                if index == 2:
+                    break   
+        
+        print(twoVerts)
+        
+        # Calculate the distance between the two points
+        if twoVerts[0] != None and twoVerts[1] != None:
+            bpy.context.scene.distance[0] = abs(twoVerts[0].x - twoVerts[1].x)
+            bpy.context.scene.distance[1] = abs(twoVerts[0].y - twoVerts[1].y)
+            bpy.context.scene.distance[2] = abs(twoVerts[0].z - twoVerts[1].z)
+            bpy.context.scene.distance[3] = sqrt(bpy.context.scene.distance[0]**2 + bpy.context.scene.distance[1]**2 + bpy.context.scene.distance[2]**2)
+        else:
+            bpy.context.scene.distance[0] = 0
+            bpy.context.scene.distance[1] = 0
+            bpy.context.scene.distance[2] = 0
+            bpy.context.scene.distance[3] = 0  
+            
+        # Switch in edit mode
+        bpy.ops.object.mode_set(mode='EDIT')

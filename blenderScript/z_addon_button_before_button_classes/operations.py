@@ -32,6 +32,45 @@ class Button_Operations():
         bpy.context.scene.unit_settings.scale_length = 0.001
         bpy.context.scene.unit_settings.length_unit = 'MILLIMETERS'        
 
+    def manifold_and_triangulate():
+        """      
+        Find the non manifold vertices and add edges and faces to fill the hole,
+        Then triangulate all the faces
+
+        Note:
+            A mesh must be selected
+        Args:
+            None
+        Returns:
+            None
+        """
+        # Switch in edit mode 
+        bpy.ops.object.mode_set(mode='EDIT')
+
+        # Deselect everything
+        bpy.ops.mesh.select_all(action="DESELECT")
+
+        # Pass in vertices selection
+        bpy.ops.mesh.select_mode(type="VERT")
+
+        # Select non manifold vertices
+        bpy.ops.mesh.select_non_manifold()
+
+        # Add an edge or face to selected vertices
+        bpy.ops.mesh.edge_face_add()
+
+        # Pass in faces selection
+        bpy.ops.mesh.select_mode(type="FACE")
+
+        # Select all the faces
+        bpy.ops.mesh.select_all(action='SELECT')
+        
+        # Triangulate the faces
+        bpy.ops.mesh.quads_convert_to_tris(quad_method='FIXED_ALTERNATE', ngon_method='CLIP')
+
+        # Switch in object mode 
+        bpy.ops.object.mode_set(mode='OBJECT')
+
     def volume():
         """      
         Calculate the volume of the selected mesh
@@ -82,28 +121,6 @@ class Button_Operations():
         # Switch in object mode 
         bpy.ops.object.mode_set(mode='OBJECT')
 
-    def triangulate():
-        """      
-        Triangulate all the faces of the selected mesh
-
-        Note:
-            A mesh must be selected
-        Args:
-            None
-        Returns:
-            None
-        """
-        # Switch in edit mode 
-        bpy.ops.object.mode_set(mode='EDIT')    
-        
-        # Select all the faces
-        bpy.ops.mesh.select_all(action='SELECT')
-        
-        # Triangulate the faces
-        bpy.ops.mesh.quads_convert_to_tris(quad_method='FIXED_ALTERNATE', ngon_method='CLIP')
-
-        # Switch in object mode 
-        bpy.ops.object.mode_set(mode='OBJECT')         
 
     def select_faces(maxAngle):
         """      
@@ -122,9 +139,6 @@ class Button_Operations():
         print("Start")
 
         print(maxAngle, maxAngle*180/pi)
-
-        # Switch in object mode
-        bpy.ops.object.mode_set(mode = 'OBJECT')
 
         # Get the active object
         obj = bpy.context.active_object
@@ -251,8 +265,7 @@ class Button_Operations():
         print("C time : ", total_seconds)
     
     def generate_support():
-        """ 
-        Generate support for the selected faces:
+        """      
         Separate and extrude selected faces
         Then bissect and cut faces under the plane xy 
         and delete the base object
@@ -315,7 +328,7 @@ class Button_Operations():
         bpy.ops.mesh.select_all(action='SELECT')
 
         # Bissect and delete the element under the xy plane
-        bpy.ops.mesh.bisect(plane_co=(0, 0, 0.001), plane_no=(0, 0, 1), use_fill=False, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
+        bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=False, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
         
         # Switch in object mode
         bpy.ops.object.mode_set(mode = 'OBJECT')
@@ -344,240 +357,7 @@ class Button_Operations():
         bpy.context.scene.offset = 0  
 
         print("End Script")         
-
-    def manifold():
-        """      
-        Find the non manifold vertices and add edges and faces to fill the hole
-
-        Note:
-            A mesh must be selected
-        Args:
-            None
-        Returns:
-            None
-        """
-        # Switch in edit mode 
-        bpy.ops.object.mode_set(mode='EDIT')
-
-        # Deselect everything
-        bpy.ops.mesh.select_all(action="DESELECT")
-
-        # Pass in vertices selection
-        bpy.ops.mesh.select_mode(type="VERT")
-
-        # Select non manifold vertices
-        bpy.ops.mesh.select_non_manifold()
-
-        # Add an edge or face to selected vertices
-        bpy.ops.mesh.edge_face_add()
-
-        # Pass in faces selection
-        bpy.ops.mesh.select_mode(type="FACE")
-
-        # Switch in object mode 
-        bpy.ops.object.mode_set(mode='OBJECT')        
-
-    def regenerate_bottom():
-        """      
-        Regenerate bottom if the bottom is bad generated
-
-        Note:
-            A mesh must be selected
-        Args:
-            None
-        Returns:
-            None
-        """
-        # Get the name of the object
-        nameObject = bpy.context.active_object.name
-
-        # Switch in edit mode 
-        bpy.ops.object.mode_set(mode='EDIT')
-
-        # Select all the faces
-        bpy.ops.mesh.select_all(action='SELECT')
-
-        # Delete the actual bottom
-        bpy.ops.mesh.bisect(plane_co=(0, 0, 0.001), plane_no=(0, 0, 1), clear_inner=True, xstart=187, xend=982, ystart=219, yend=247, flip=False)
-
-        # Init the offset
-        bpy.context.scene.offset = 0
-
-        # Switch in object mode 
-        bpy.ops.object.mode_set(mode='OBJECT')
-
-        # Get the active object
-        obj = bpy.context.active_object
-
-        # Get the min and max location in x and y of the mesh
-        xMax = float('-inf')
-        xMin = float('inf')
-        yMax = float('-inf')
-        yMin = float('inf')
-        for poly in obj.data.polygons:
-            xMax = max(xMax, obj.data.vertices[poly.vertices[0]].co.x, obj.data.vertices[poly.vertices[1]].co.x, obj.data.vertices[poly.vertices[2]].co.x)
-            xMin = min(xMin, obj.data.vertices[poly.vertices[0]].co.x, obj.data.vertices[poly.vertices[1]].co.x, obj.data.vertices[poly.vertices[2]].co.x)
-            yMax = max(yMax, obj.data.vertices[poly.vertices[0]].co.y, obj.data.vertices[poly.vertices[1]].co.y, obj.data.vertices[poly.vertices[2]].co.y)
-            yMin = min(yMin, obj.data.vertices[poly.vertices[0]].co.y, obj.data.vertices[poly.vertices[1]].co.y, obj.data.vertices[poly.vertices[2]].co.y)
-
-        # Add the new bottom
-        bpy.ops.mesh.primitive_plane_add(size=1, enter_editmode=False, align='WORLD', location=(0, 0, 0.001),rotation=(3.14159, 0, 0), scale=(1, 1, 1))
-
-        # Resize the bottom
-        bpy.data.objects["Plane"].dimensions = [bpy.data.objects[nameObject].dimensions[0], bpy.data.objects[nameObject].dimensions[1], 0]
-
-        # Select the mesh and the bottom
-        bpy.context.view_layer.objects.active = bpy.data.objects[nameObject]
-        bpy.data.objects[nameObject].select_set(True)
-        bpy.data.objects["Plane"].select_set(True)
-
-        # Join the mesh and the bottom
-        bpy.ops.object.join()
-
-        # Switch in edit mode 
-        bpy.ops.object.mode_set(mode='EDIT')
-
-        # Intersect the bottom with the mesh
-        bpy.ops.mesh.intersect(mode='SELECT_UNSELECT', separate_mode='NONE', solver='EXACT')
-
-        # Deselect all the faces
-        bpy.ops.mesh.select_all(action='DESELECT')
-        bpy.ops.mesh.select_mode(type="VERT")
-
-        # Switch in object mode 
-        bpy.ops.object.mode_set(mode='OBJECT')
-
-        # Get the active object
-        obj = bpy.context.active_object
-
-        # Find the 4 vertices of the original plane
-        for v in obj.data.vertices:
-            if (v.co.x < xMax + 0.001 and v.co.x > xMax - 0.001) or (v.co.x < xMin + 0.001 and v.co.x > xMin - 0.001):
-                if (v.co.y < yMax + 0.001 and v.co.y > yMax - 0.001) or (v.co.y < yMin + 0.001 and v.co.y > yMin - 0.001):
-                    v.select = True
-                    
-        # Switch in edit mode 
-        bpy.ops.object.mode_set(mode='EDIT')
-
-        # Delete the selected vertices
-        bpy.ops.mesh.delete(type='VERT')
-
-        # Select all the faces
-        bpy.ops.mesh.select_mode(type="FACE")
-        bpy.ops.mesh.select_all(action='SELECT')
         
-        # Bissect in the xy plane
-        bpy.ops.mesh.bisect(plane_co=(0, 0, 0.001), plane_no=(0, 0, 1), clear_inner=True, xstart=453, xend=2540, ystart=814, yend=899, flip=False)
-  
-        # Init the offset
-        bpy.context.scene.offset = 0
-  
-        # Switch in object mode 
-        bpy.ops.object.mode_set(mode='OBJECT')
-        
-    def generate_socle():
-        """      
-        Generate a socle to the selected mesh
-
-        Note:
-            A mesh must be selected
-        Args:
-            None
-        Returns:
-            None
-        """
-        # Get the active object
-        obj = bpy.context.active_object
-
-        # Name of the copy object
-        nameCopy = "temp_copy"
-
-        # Get the object name
-        nameObject = bpy.context.active_object.name
-
-        # Switch in object mode 
-        bpy.ops.object.mode_set(mode='OBJECT')
-        
-        # Make a copy of the object
-        new_obj = bpy.context.active_object.copy()
-        new_obj.data = bpy.context.active_object.data.copy()
-        new_obj.animation_data_clear()
-        bpy.context.collection.objects.link(new_obj)
-
-        # Rename the copy
-        new_obj.name = nameCopy
-
-        # Show the copy
-        new_obj.hide_viewport = True
-        new_obj.hide_viewport = False
-
-        # Select the copy
-        bpy.data.objects[nameObject].select_set(False)
-        bpy.data.objects[nameCopy].select_set(True)
-        bpy.context.view_layer.objects.active = bpy.data.objects[nameCopy]
-
-        # Switch in edit mode 
-        bpy.ops.object.mode_set(mode='EDIT')
-
-        # Select all the faces
-        bpy.ops.mesh.select_all(action='SELECT')
-
-        # Only keep the bottom
-        bpy.ops.mesh.bisect(plane_co=(0, 0, 0), plane_no=(0, 0, 1), clear_inner=True, clear_outer=True, xstart=312, xend=839, ystart=150, yend=104, flip=False)
-
-        # Select all the faces
-        bpy.ops.mesh.select_all(action='SELECT')
-
-        # Extrude the bottom
-        bpy.ops.mesh.extrude_region_move(MESH_OT_extrude_region={"use_normal_flip":False, "use_dissolve_ortho_edges":False, "mirror":False}, TRANSFORM_OT_translate={"value":(-0, -0, -0.1), "orient_type":'GLOBAL', "orient_matrix":((1, 0, 0), (0, 1, 0), (0, 0, 1)), "orient_matrix_type":'GLOBAL', "constraint_axis":(True, True, True), "mirror":False, "use_proportional_edit":False, "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "use_proportional_connected":False, "use_proportional_projected":False, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "cursor_transform":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False, "use_automerge_and_split":False})
-
-        # Deselect all the faces
-        bpy.ops.mesh.select_all(action='DESELECT')
-
-        # Switch in object mode 
-        bpy.ops.object.mode_set(mode='OBJECT')
-
-        # Get the active object
-        obj = bpy.context.active_object
-
-        # Find the mondial matrix of the mesh for the rotation of the mesh
-        matrix_new = obj.matrix_world.to_3x3().inverted().transposed()
-
-        # Find and select all the vertical faces
-        for poly in obj.data.polygons:
-            # Find the normal vector in function of the angles of the mesh               
-            no_world = matrix_new @ poly.normal
-            no_world.normalize()
-            print(no_world)
-
-            # Calculate the angle between the normal and the downward vector if the normal vector is no null
-            if no_world != mathutils.Vector((0,0,0)):
-                angle = mathutils.Vector(no_world).angle(mathutils.Vector((0,0,-1)))
-            else:
-                angle = 0
-
-            # Check if the angle is between the wanted value
-            if angle < radians(91) and angle >  radians(89):
-                # Select the faces
-                poly.select = True
-              
-        # Switch in edit mode 
-        bpy.ops.object.mode_set(mode='EDIT')  
-             
-        # Extrude vertical faces along normal to make the socle
-        bpy.ops.mesh.extrude_region_shrink_fatten(MESH_OT_extrude_region={"use_normal_flip":False, "use_dissolve_ortho_edges":False, "mirror":False}, TRANSFORM_OT_shrink_fatten={"value":0.2, "use_even_offset":False, "mirror":False, "use_proportional_edit":False, "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "use_proportional_connected":False, "use_proportional_projected":False, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "release_confirm":False, "use_accurate":False})
-
-        # Switch in object mode 
-        bpy.ops.object.mode_set(mode='OBJECT') 
-            
-        # Select the object and the socle
-        bpy.data.objects[nameObject].select_set(True)
-        bpy.data.objects[nameCopy].select_set(True)
-        bpy.context.view_layer.objects.active = bpy.data.objects[nameObject] 
-
-        # Join the mesh and the socle
-        bpy.ops.object.join()
-
    
     def separate_faces():
         """      
@@ -780,8 +560,8 @@ class Button_Operations():
         Note:
             Some faces must be selected
         Args:
-            minAngleZ: float min angle between the normal and downward vector where the connected faces is selected in radians
-            maxAngleZ: float max angle between the normal and downward vector where the connected faces is selected in radians
+            minAngleZ: float min angle between the normal and downward vector where the connected faces where selected in radians
+            maxAngleZ: float max angle between the normal and downward vector where the connected faces where selected in radians
         Returns:
             None
         """
@@ -906,9 +686,6 @@ class Button_Operations():
         bpy.context.scene.oldResizeY = scaleY
         bpy.ops.transform.resize(value=(scaleX, scaleY, 1), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=0.811, use_proportional_connected=False, use_proportional_projected=False)
 
-    def invert_selection():
-        bpy.ops.mesh.select_all(action='INVERT')
-
     def delete_selection():
         """      
         Delete the selection
@@ -1028,17 +805,17 @@ class Button_Operations():
         bpy.data.objects["Lattice"].location = ((xPlus+xMoins)/2, (yPlus+yMoins)/2,(zPlus+zMoins)/2)
 
         # Update the float properties of the lattice and init them
-        bpy.types.Scene.lattice_size_x = bpy.props.FloatProperty(name = "Size X", description="Size x of the lattice",  min = 0, max = 2*obj.dimensions[0], soft_min = 0, soft_max = 2*obj.dimensions[0], step = 10, get=Get_And_Set_Lattice.get_lattice_size_x, set=Get_And_Set_Lattice.set_lattice_size_x, unit = 'LENGTH')
-        bpy.types.Scene.lattice_size_y = bpy.props.FloatProperty(name = "Size Y", description="Size y of the lattice",  min = 0, max = 2*obj.dimensions[1], soft_min = 0, soft_max = 2*obj.dimensions[1], step = 10, get=Get_And_Set_Lattice.get_lattice_size_y, set=Get_And_Set_Lattice.set_lattice_size_y, unit = 'LENGTH')
-        bpy.types.Scene.lattice_size_z = bpy.props.FloatProperty(name = "Size Z", description="Size z of the lattice",  min = 0, max = 2*obj.dimensions[2], soft_min = 0, soft_max = 2*obj.dimensions[2], step = 10, get=Get_And_Set_Lattice.get_lattice_size_z, set=Get_And_Set_Lattice.set_lattice_size_z, unit = 'LENGTH')
+        bpy.types.Scene.lattice_size_x = bpy.props.FloatProperty(name = "Size X", min = 0, max = 2*obj.dimensions[0], soft_min = 0, soft_max = 2*obj.dimensions[0], step = 10, get=Get_And_Set_Lattice.get_lattice_size_x, set=Get_And_Set_Lattice.set_lattice_size_x, unit = 'LENGTH')
+        bpy.types.Scene.lattice_size_y = bpy.props.FloatProperty(name = "Size Y", min = 0, max = 2*obj.dimensions[1], soft_min = 0, soft_max = 2*obj.dimensions[1], step = 10, get=Get_And_Set_Lattice.get_lattice_size_y, set=Get_And_Set_Lattice.set_lattice_size_y, unit = 'LENGTH')
+        bpy.types.Scene.lattice_size_z = bpy.props.FloatProperty(name = "Size Z", min = 0, max = 2*obj.dimensions[2], soft_min = 0, soft_max = 2*obj.dimensions[2], step = 10, get=Get_And_Set_Lattice.get_lattice_size_z, set=Get_And_Set_Lattice.set_lattice_size_z, unit = 'LENGTH')
         
         bpy.context.scene.lattice_size_x = obj.dimensions[0]
         bpy.context.scene.lattice_size_y = obj.dimensions[1]
         bpy.context.scene.lattice_size_z = obj.dimensions[2]
         
-        bpy.types.Scene.lattice_offset_x = bpy.props.FloatProperty(name = "Offset X", description="Offset x of the lattice",  min = -obj.dimensions[0], max = obj.dimensions[0], soft_min = -obj.dimensions[0], soft_max = obj.dimensions[0], step = 10, get=Get_And_Set_Lattice.get_lattice_offset_x, set=Get_And_Set_Lattice.set_lattice_offset_x, unit = 'LENGTH')
-        bpy.types.Scene.lattice_offset_y = bpy.props.FloatProperty(name = "Offset Y", description="Offset y of the lattice",  min = -obj.dimensions[1], max = obj.dimensions[1], soft_min = -obj.dimensions[1], soft_max = obj.dimensions[1], step = 10, get=Get_And_Set_Lattice.get_lattice_offset_y, set=Get_And_Set_Lattice.set_lattice_offset_y, unit = 'LENGTH')
-        bpy.types.Scene.lattice_offset_z = bpy.props.FloatProperty(name = "Offset Z", description="Offset z of the lattice",  min = -obj.dimensions[2], max = obj.dimensions[2], soft_min = -obj.dimensions[2], soft_max = obj.dimensions[2], step = 10, get=Get_And_Set_Lattice.get_lattice_offset_z, set=Get_And_Set_Lattice.set_lattice_offset_z, unit = 'LENGTH')
+        bpy.types.Scene.lattice_offset_x = bpy.props.FloatProperty(name = "Size X", min = -obj.dimensions[0], max = obj.dimensions[0], soft_min = -obj.dimensions[0], soft_max = obj.dimensions[0], step = 10, get=Get_And_Set_Lattice.get_lattice_offset_x, set=Get_And_Set_Lattice.set_lattice_offset_x, unit = 'LENGTH')
+        bpy.types.Scene.lattice_offset_y = bpy.props.FloatProperty(name = "Size Y", min = -obj.dimensions[1], max = obj.dimensions[1], soft_min = -obj.dimensions[1], soft_max = obj.dimensions[1], step = 10, get=Get_And_Set_Lattice.get_lattice_offset_y, set=Get_And_Set_Lattice.set_lattice_offset_y, unit = 'LENGTH')
+        bpy.types.Scene.lattice_offset_z = bpy.props.FloatProperty(name = "Size Z", min = -obj.dimensions[2], max = obj.dimensions[2], soft_min = -obj.dimensions[2], soft_max = obj.dimensions[2], step = 10, get=Get_And_Set_Lattice.get_lattice_offset_z, set=Get_And_Set_Lattice.set_lattice_offset_z, unit = 'LENGTH')
         
         bpy.context.scene.lattice_offset_x = 0
         bpy.context.scene.lattice_offset_y = 0
@@ -1272,10 +1049,10 @@ class Button_Operations():
         bpy.ops.mesh.select_all(action='SELECT')
 
         # Bissect and delete the element under the xy plane
-        bpy.ops.mesh.bisect(plane_co=(0, 0, 0.001), plane_no=(0, 0, 1), use_fill=False, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False) 
+        bpy.ops.mesh.bisect(plane_co=(0, 0, 0.01), plane_no=(0, 0, 1), use_fill=False, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False) 
 
         # Fill the hole and triangulate faces
-        Button_Operations.manifold()
+        Button_Operations.manifold_and_triangulate()
       
         # Delete the copy
         object_to_delete = bpy.data.objects["temp_copy"]
@@ -1328,4 +1105,3 @@ class Button_Operations():
             
         # Switch in edit mode
         bpy.ops.object.mode_set(mode='EDIT')
-

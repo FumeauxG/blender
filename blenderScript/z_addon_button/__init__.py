@@ -34,9 +34,6 @@ import datetime
 import glob
 
 
-name_filepath = "C://Gaetan//_Bachelor//blender//blenderScript//test//"
-
-
 #-------------------------------------------------------
 # Class for descript the panels of the button controller
 #-------------------------------------------------------
@@ -98,8 +95,8 @@ class BUTTON_PT_generation(Panel):
         layout = self.layout    
         scene = context.scene
         
-        box = layout.box()
-        row = box.row()
+        box1 = layout.box()
+        row = box1.row()
         row.prop(scene, "max_angle")
         
         layout.operator(BUTTON_OT_button_import_for_test.bl_idname)
@@ -108,6 +105,11 @@ class BUTTON_PT_generation(Panel):
         layout.operator(BUTTON_OT_button_generate_mold.bl_idname)
         layout.operator(BUTTON_OT_button_manifold.bl_idname)
         layout.operator(BUTTON_OT_button_regenerate_bottom.bl_idname)
+        
+        box2 = layout.box()
+        row = box2.row()
+        row.prop(scene, "socle_size")
+        
         layout.operator(BUTTON_OT_button_generate_socle.bl_idname)
         
 class BUTTON_PT_area(Panel):
@@ -187,9 +189,9 @@ class BUTTON_PT_lattice(Panel):
         layout.operator(BUTTON_OT_button_select_lattice.bl_idname) 
         layout.operator(BUTTON_OT_button_delete_lattice.bl_idname) 
         
-class BUTTON_PT_voxel(Panel):
-    bl_idname = 'BUTTON_PT_voxel'
-    bl_label = 'Voxel'
+class BUTTON_PT_remesh(Panel):
+    bl_idname = 'BUTTON_PT_remesh'
+    bl_label = 'Remesh'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = 'Button'
@@ -288,6 +290,7 @@ class BUTTON_OT_button_triangulate(Operator):
     self.report({'INFO'}, f"This is {self.bl_idname}")
     return {'FINISHED'}    
 
+
 class BUTTON_OT_button_import_for_test(Operator):
   bl_idname = "btn.import_for_test"
   bl_label = "Import for test"
@@ -310,7 +313,7 @@ class BUTTON_OT_button_import_for_test(Operator):
     # Find the stl files
     txtfiles = []
     #for file in glob.glob("C:/Gaetan/_Bachelor/blender/blenderScript/test/*.stl"):
-    for file in glob.glob(name_filepath + "*.stl"):
+    for file in glob.glob(import_export.name_filepath + "*.stl"):
         txtfiles.append(file)
     # Choose the first stl file
     pathIn = txtfiles[0]
@@ -376,16 +379,23 @@ class BUTTON_OT_button_generate_support(Operator):
 class BUTTON_OT_button_generate_mold(Operator):
   bl_idname = "btn.generate_mold"
   bl_label = "Generate mold"
-  bl_description = 'Generate mold for the selected faces'
+  bl_description = 'Generate mold for the selected faces (work in progress)'
  
   def execute(self, context):
-    date_x = datetime.datetime.now()
+    date_1 = datetime.datetime.now()
 
+    # Get the active object
     obj = bpy.context.active_object
-    moldOffset = bpy.context.scene.offset#obj.offset
+    # Get the offset
+    moldOffset = bpy.context.scene.offset
 
+    # Name of the copy
     nameCopy = "temp_copy"
+    
+    # Distance of the margin
+    margin = 0.1
 
+    # Get the name of the object
     nameObject = bpy.context.active_object.name
     
     # Switch in object mode 
@@ -460,11 +470,11 @@ class BUTTON_OT_button_generate_mold(Operator):
     # Switch in object mode 
     bpy.ops.object.mode_set(mode='OBJECT')
     
-    # Select faces below 89°
+    # Select all the faces below 89°
     Button_Operations.select_faces(radians(89))
 
     # Extrude the selected faces to the high 
-    bpy.ops.mesh.extrude_region_move(MESH_OT_extrude_region={"use_normal_flip":False, "use_dissolve_ortho_edges":False, "mirror":False}, TRANSFORM_OT_translate={"value":(0, 0, 10), "orient_type":'GLOBAL', "orient_matrix":((1, 0, 0), (0, 1, 0), (0, 0, 1)), "orient_matrix_type":'GLOBAL', "constraint_axis":(True, True, True), "mirror":False, "use_proportional_edit":False, "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "use_proportional_connected":False, "use_proportional_projected":False, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "cursor_transform":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False, "use_automerge_and_split":False})
+    bpy.ops.mesh.extrude_region_move(MESH_OT_extrude_region={"use_normal_flip":False, "use_dissolve_ortho_edges":False, "mirror":False}, TRANSFORM_OT_translate={"value":(0, 0, 20), "orient_type":'GLOBAL', "orient_matrix":((1, 0, 0), (0, 1, 0), (0, 0, 1)), "orient_matrix_type":'GLOBAL', "constraint_axis":(True, True, True), "mirror":False, "use_proportional_edit":False, "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "use_proportional_connected":False, "use_proportional_projected":False, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "cursor_transform":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False, "use_automerge_and_split":False})
 
     # Switch in object mode 
     bpy.ops.object.mode_set(mode='OBJECT')
@@ -487,7 +497,7 @@ class BUTTON_OT_button_generate_mold(Operator):
     bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_4', align_axis={'Y'})
 
     # Margins x and y
-    bpy.data.objects["Plane"].dimensions = [bpy.data.objects[nameObject].dimensions[0]+0.3, bpy.data.objects[nameObject].dimensions[1]+0.3, 0]
+    bpy.data.objects["Plane"].dimensions = [bpy.data.objects[nameObject].dimensions[0]+margin, bpy.data.objects[nameObject].dimensions[1]+margin, 0]
 
     # Apply transformation of the mold
     bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
@@ -582,17 +592,16 @@ class BUTTON_OT_button_generate_mold(Operator):
     bpy.ops.mesh.select_all(action='SELECT')
 
     # Bissect and delete the element under the xy plane
-    #bpy.ops.mesh.bisect(plane_co=(0, 0, 0.001), plane_no=(0, 0, 1), use_fill=True, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
     bpy.ops.mesh.bisect(plane_co=(0, 0, moldOffset), plane_no=(0, 0, 1), use_fill=False, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
 
     # Switch in object mode
     bpy.ops.object.mode_set(mode = 'OBJECT')
 
     # Add the bottom
-    bpy.ops.mesh.primitive_cube_add(size=1, enter_editmode=False, align='WORLD', location=(0, 0, moldOffset-0.2), scale=(1,1,1))
-    bpy.data.objects["Cube"].dimensions = [bpy.data.objects[nameObject + ".001"].dimensions[0], bpy.data.objects[nameObject + ".001"].dimensions[1], 0.4]
+    bpy.ops.mesh.primitive_cube_add(size=1, enter_editmode=False, align='WORLD', location=(0, 0, moldOffset-(margin/2)), scale=(1,1,1))
+    bpy.data.objects["Cube"].dimensions = [bpy.data.objects[nameObject + ".001"].dimensions[0], bpy.data.objects[nameObject + ".001"].dimensions[1], margin]
 
-    # Select the copy
+    # Select the object
     bpy.context.view_layer.objects.active = bpy.data.objects[nameObject + ".001"]
     bpy.data.objects[nameObject + ".001"].select_set(True)
 
@@ -600,14 +609,11 @@ class BUTTON_OT_button_generate_mold(Operator):
     bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_4', align_axis={'X'})
     bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_4', align_axis={'Y'})
 
+    # Join the bottom and the mold
     bpy.ops.object.join()
 
-    date_y = datetime.datetime.now()
-    time_delta = (date_y - date_x)
-    total_seconds = time_delta.total_seconds()
-    print(total_seconds)
-
-    print("End Script")
+    # Rename the mold
+    bpy.context.active_object.name = nameObject + "_support"
     
     # Apply location
     bpy.ops.object.transform_apply(location=True, rotation=True, scale=True) 
@@ -617,6 +623,14 @@ class BUTTON_OT_button_generate_mold(Operator):
     bpy.context.scene.angle_y = 0
     bpy.context.scene.angle_z = 0
     bpy.context.scene.offset = 0
+    
+    date_2 = datetime.datetime.now()
+    time_delta = (date_2 - date_1)
+    total_seconds = time_delta.total_seconds()
+    print(total_seconds)
+
+    print("End Script")
+    
     self.report({'INFO'}, f"This is {self.bl_idname}")
     return {'FINISHED'}
 
@@ -646,7 +660,7 @@ class BUTTON_OT_button_generate_socle(Operator):
   bl_description = 'Generate a socle to the selected mesh'
  
   def execute(self, context):
-    Button_Operations.generate_socle()
+    Button_Operations.generate_socle(bpy.context.scene.socle_size)
     self.report({'INFO'}, f"This is {self.bl_idname}")
     return {'FINISHED'}
 
@@ -859,7 +873,7 @@ blenderClasses = (
     BUTTON_PT_area,
     BUTTON_PT_resize,
     BUTTON_PT_lattice,
-    BUTTON_PT_voxel,
+    BUTTON_PT_remesh,
     BUTTON_PT_measure,
     
     
@@ -914,11 +928,12 @@ def register():
     
     bpy.types.Scene.angle_x = bpy.props.FloatProperty(name="Angle x", description="Angle x of the selected mesh", default = 0, options={'SKIP_SAVE'}, min = -pi, max = pi, soft_min = -pi, soft_max = pi, step = 100, get=Get_And_Set_Rotation.get_angle_x, set=Get_And_Set_Rotation.set_angle_x, unit = 'ROTATION')
     bpy.types.Scene.angle_y = bpy.props.FloatProperty(name="Angle y", description="Angle y of the selected mesh", default = 0, options={'SKIP_SAVE'}, min = -pi, max = pi, soft_min = -pi, soft_max = pi, step = 100, get=Get_And_Set_Rotation.get_angle_y, set=Get_And_Set_Rotation.set_angle_y, unit = 'ROTATION')
-    bpy.types.Scene.angle_z = bpy.props.FloatProperty(name="Angle z", description="Angle x of the selected mesh", default = 0, options={'SKIP_SAVE'}, min = -pi, max = pi, soft_min = -pi, soft_max = pi, step = 100, get=Get_And_Set_Rotation.get_angle_z, set=Get_And_Set_Rotation.set_angle_z, unit = 'ROTATION')
+    bpy.types.Scene.angle_z = bpy.props.FloatProperty(name="Angle z", description="Angle z of the selected mesh", default = 0, options={'SKIP_SAVE'}, min = -pi, max = pi, soft_min = -pi, soft_max = pi, step = 100, get=Get_And_Set_Rotation.get_angle_z, set=Get_And_Set_Rotation.set_angle_z, unit = 'ROTATION')
     bpy.types.Scene.offset = bpy.props.FloatProperty(name = "Offset", description="Offset of the selected mesh", default = 0, options={'SKIP_SAVE'}, min = -10, max = 10, soft_min = -10, soft_max = 10, step = 10,get=Get_And_Set_Offset.get_offset, set=Get_And_Set_Offset.set_offset, unit = 'LENGTH')
         
     bpy.types.Scene.max_angle = bpy.props.FloatProperty(name="Max Angle", description="Angle under the face is selected", default = pi/4, options={'SKIP_SAVE'}, min = 0, max = pi/2, soft_min = 0, soft_max = pi/2, step = 100, unit = 'ROTATION')    
-    bpy.types.Scene.min_area = bpy.props.FloatProperty(name="Min Area", description="Minimum value of the area for select the faces of a piece of a mesh", default = 0.1, options={'SKIP_SAVE'}, min = 0, max = 1, soft_min = 0, soft_max = 1, step = 1, unit = 'AREA')
+    bpy.types.Scene.socle_size = bpy.props.FloatProperty(name="Socle size", description="Distance to be extruded horizontally from the vertical faces to create the socle", default = 0.2, options={'SKIP_SAVE'}, min = 0, max = 2, soft_min = 0, soft_max = 2, step = 10, unit = 'LENGTH')    
+    bpy.types.Scene.min_area = bpy.props.FloatProperty(name="Min Area", description="Minimum value of the area for select the faces of a piece of a mesh", default = 0.1, options={'SKIP_SAVE'}, min = 0, max = 1, soft_min = 0, soft_max = 10, step = 1, unit = 'AREA')
     
     bpy.types.Scene.min_angle_z = bpy.props.FloatProperty(name="Min Angle z", description="Min angle between the normal and downward vector where the connected faces is selected", default = pi/2, options={'SKIP_SAVE'}, min = 0, max = radians(181),soft_min = 0, soft_max = radians(181), step = 100, unit = 'ROTATION')
     bpy.types.Scene.max_angle_z = bpy.props.FloatProperty(name="Max Angle z", description="Max angle between the normal and downward vector where the connected faces is selected", default = pi/2, options={'SKIP_SAVE'}, min = 0, max = radians(181),soft_min = 0, soft_max = radians(181), step = 100, unit = 'ROTATION')
@@ -951,6 +966,7 @@ def unregister():
     del bpy.types.Scene.offset
         
     del bpy.types.Scene.max_angle
+    del bpy.types.Scene.socle_size
     del bpy.types.Scene.min_area
 
     del bpy.types.Scene.min_angle_z

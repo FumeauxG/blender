@@ -105,6 +105,7 @@ class Button_Operations():
         # Switch in object mode 
         bpy.ops.object.mode_set(mode='OBJECT')         
 
+
     def select_faces(maxAngle):
         """      
         Select the faces where the angle between the 
@@ -475,14 +476,14 @@ class Button_Operations():
         # Switch in object mode 
         bpy.ops.object.mode_set(mode='OBJECT')
         
-    def generate_socle():
+    def generate_socle(socleSize):
         """      
         Generate a socle to the selected mesh
 
         Note:
             A mesh must be selected
         Args:
-            None
+            socleSize: float distance to be extruded horizontally from the vertical faces to create the socle
         Returns:
             None
         """
@@ -565,7 +566,7 @@ class Button_Operations():
         bpy.ops.object.mode_set(mode='EDIT')  
              
         # Extrude vertical faces along normal to make the socle
-        bpy.ops.mesh.extrude_region_shrink_fatten(MESH_OT_extrude_region={"use_normal_flip":False, "use_dissolve_ortho_edges":False, "mirror":False}, TRANSFORM_OT_shrink_fatten={"value":0.2, "use_even_offset":False, "mirror":False, "use_proportional_edit":False, "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "use_proportional_connected":False, "use_proportional_projected":False, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "release_confirm":False, "use_accurate":False})
+        bpy.ops.mesh.extrude_region_shrink_fatten(MESH_OT_extrude_region={"use_normal_flip":False, "use_dissolve_ortho_edges":False, "mirror":False}, TRANSFORM_OT_shrink_fatten={"value":socleSize, "use_even_offset":False, "mirror":False, "use_proportional_edit":False, "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "use_proportional_connected":False, "use_proportional_projected":False, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "release_confirm":False, "use_accurate":False})
 
         # Switch in object mode 
         bpy.ops.object.mode_set(mode='OBJECT') 
@@ -907,6 +908,16 @@ class Button_Operations():
         bpy.ops.transform.resize(value=(scaleX, scaleY, 1), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=0.811, use_proportional_connected=False, use_proportional_projected=False)
 
     def invert_selection():
+        """      
+        Invert the selection
+
+        Note:
+            Some faces must be selected
+        Args:
+            None
+        Returns:
+            None
+        """
         bpy.ops.mesh.select_all(action='INVERT')
 
     def delete_selection():

@@ -59,7 +59,7 @@ class BUTTON_PT_import_export(Panel):
 
         if len(bpy.context.selected_objects) != 0:
             layout.label(text= ("Number of faces : " + str(len(bpy.context.active_object.data.polygons))))
-            layout.label(text= ("Size of the stl file : ~" + str(int(len(bpy.context.active_object.data.polygons)/20.4)) + " Ko"))
+            layout.label(text= ("Size of the stl file : ~" + str(int(len(bpy.context.active_object.data.polygons)/20.47)) + " Ko"))
 
         layout.operator(BUTTON_OT_button_triangulate.bl_idname)
  

@@ -793,7 +793,7 @@ class Button_Operations():
         obj = bpy.context.active_object
         
         # Find the mondial matrix of the mesh for the rotation of the mesh
-        matrix_new = obj.matrix_world.to_3x3().inverted().transposed()
+        matrix_new = obj.matrix_world.to_3x3()#.inverted().transposed()
 
         # Switch in object mode 
         bpy.ops.object.mode_set(mode='OBJECT')
@@ -834,7 +834,7 @@ class Button_Operations():
                 # Find the normal vector in function of the angles of the mesh               
                 no_world = matrix_new @ f.normal
                 no_world.normalize()
-                print(no_world)
+                print("no_world ",no_world,"matrix_new ",matrix_new,"f.normal ", f.normal)
                 
                 # Calculate the angle between the normal and the downward vector if the normal vector is no null
                 if no_world != mathutils.Vector((0,0,0)):

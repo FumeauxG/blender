@@ -16,6 +16,9 @@ class Get_And_Set_Rotation():
         # Update the value of the angle
         self["angle_x"] = value
      
+        # Set the euler mode
+        obj.rotation_mode = 'XYZ'
+     
         # Modify the angle
         obj.rotation_euler[0] = value
         
@@ -40,6 +43,9 @@ class Get_And_Set_Rotation():
 
         # Get the active object
         obj = bpy.context.active_object
+
+        # Set the euler mode
+        obj.rotation_mode = 'XYZ'
         
         # Update the value of the angle
         self["angle_y"] = value
@@ -67,6 +73,9 @@ class Get_And_Set_Rotation():
         
         # Get the active object
         obj = bpy.context.active_object
+
+        # Set the euler mode
+        obj.rotation_mode = 'XYZ'
         
         # Update the value of the angle
         self["angle_z"] = value

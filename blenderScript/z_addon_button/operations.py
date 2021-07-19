@@ -176,6 +176,9 @@ class Button_Operations():
             tabPoint3Y.append(tabVertices[poly.vertices[2]].y)
             tabPoint1Z.append(tabVertices[poly.vertices[0]].z)
             tabPoint2Z.append(tabVertices[poly.vertices[1]].z)
+            #tabPoint1Z.append(min(tabVertices[poly.vertices[0]].z, tabVertices[poly.vertices[1]].z,tabVertices[poly.vertices[2]].z))
+            #tabPoint2Z.append(max(tabVertices[poly.vertices[0]].z, tabVertices[poly.vertices[1]].z,tabVertices[poly.vertices[2]].z))
+            
             tabPoint3Z.append(tabVertices[poly.vertices[2]].z)
 
         print(len(tabPoly))   
@@ -291,7 +294,7 @@ class Button_Operations():
 
         # Switch in edit mode
         bpy.ops.object.mode_set(mode = 'EDIT')
-
+        '''
         # Create new edit mode bmesh to easily acces mesh data
         me = bpy.context.object.data  # Get selected object's mesh
         bm = bmesh.from_edit_mesh(me) 
@@ -302,7 +305,7 @@ class Button_Operations():
 
         # Transfer the data back to the object's mesh
         bmesh.update_edit_mesh(me)
-        
+        '''
         # Delete the selected vertices
         bpy.ops.mesh.delete(type='VERT')
         

@@ -506,13 +506,13 @@ class BUTTON_OT_button_generate_mold(Operator):
     bpy.context.view_layer.objects.active = bpy.data.objects[nameCopy]
     bpy.data.objects[nameCopy].select_set(True)
     bpy.data.objects[nameObject].select_set(False)
-
+    
     # Join the outline and the mold
     bpy.ops.object.join()
 
     # Switch in edit mode 
     bpy.ops.object.mode_set(mode='EDIT')
-
+    
     # Select all the faces
     bpy.ops.mesh.select_all(action='SELECT')
 
@@ -533,10 +533,10 @@ class BUTTON_OT_button_generate_mold(Operator):
 
     # Select the object and the mold
     bpy.data.objects[nameObject].select_set(True)
-
+    
     # Switch in object mode 
     bpy.ops.object.mode_set(mode='OBJECT')
-
+    '''
     # Join the object and the mold
     bpy.ops.object.join()
 
@@ -546,7 +546,7 @@ class BUTTON_OT_button_generate_mold(Operator):
     
     # Select faces
     Button_Operations.select_faces(radians(10))
-
+    
     # Separate the selected faces
     bpy.ops.mesh.separate(type='SELECTED')
     
@@ -568,20 +568,7 @@ class BUTTON_OT_button_generate_mold(Operator):
     
     # Switch in edit mode
     bpy.ops.object.mode_set(mode = 'EDIT')
-
-    # Create new edit mode bmesh to easily acces mesh data
-    mesh = bpy.context.object.data  # Get selected object's mesh
-    bm = bmesh.from_edit_mesh(mesh) 
-
-    # Select all vertices that have 1 or 2 links and deselect the others
-    for v in bm.verts:
-        v.select_set(len(v.link_edges) in (1,2))
-
-    bmesh.update_edit_mesh(mesh)  # Transfer the data back to the object's mesh
     
-    # Delete the selected vertices
-    bpy.ops.mesh.delete(type='VERT')
-
     # Select all the faces
     bpy.ops.mesh.select_all(action='SELECT')
 
@@ -630,7 +617,7 @@ class BUTTON_OT_button_generate_mold(Operator):
     print(total_seconds)
 
     print("End Script")
-    
+    '''
     self.report({'INFO'}, f"This is {self.bl_idname}")
     return {'FINISHED'}
 

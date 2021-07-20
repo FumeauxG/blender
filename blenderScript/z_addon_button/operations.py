@@ -135,13 +135,11 @@ class Button_Operations():
         for vertex in obj.data.vertices:
            tabVertices.append(obj.matrix_world @ vertex.co)
 
-        # Find the downward vector in function of the angles of the mesh
-        matrix_new = obj.matrix_world.to_3x3().inverted()
-        no_world = matrix_new @ mathutils.Vector((0,0,-1))
-        no_world.normalize() 
-        print(no_world)
-        vecDir = no_world
-
+        # Find the mondial matrix of the mesh for calculate the angle
+        matrix_new = obj.matrix_world.to_3x3()
+        
+        # Vector to compare for calculate the angle
+        vecDir = mathutils.Vector((0,0,-1))
 
         # Arrays for the function C parameters
         tabPoly = []
@@ -163,9 +161,11 @@ class Button_Operations():
         # Fill the arrays
         for poly in obj.data.polygons:
             tabPoly.append(poly.index)
-            tabNormalX.append(poly.normal[0])
-            tabNormalY.append(poly.normal[1])
-            tabNormalZ.append(poly.normal[2])
+            normalWorld = matrix_new @ poly.normal
+            tabNormalX.append(normalWorld[0])
+            tabNormalY.append(normalWorld[1])
+            tabNormalZ.append(normalWorld[2])
+            
             tabFaces.append(0)
             
             tabPoint1X.append(tabVertices[poly.vertices[0]].x)
@@ -175,10 +175,7 @@ class Button_Operations():
             tabPoint3X.append(tabVertices[poly.vertices[2]].x)
             tabPoint3Y.append(tabVertices[poly.vertices[2]].y)
             tabPoint1Z.append(tabVertices[poly.vertices[0]].z)
-            tabPoint2Z.append(tabVertices[poly.vertices[1]].z)
-            #tabPoint1Z.append(min(tabVertices[poly.vertices[0]].z, tabVertices[poly.vertices[1]].z,tabVertices[poly.vertices[2]].z))
-            #tabPoint2Z.append(max(tabVertices[poly.vertices[0]].z, tabVertices[poly.vertices[1]].z,tabVertices[poly.vertices[2]].z))
-            
+            tabPoint2Z.append(tabVertices[poly.vertices[1]].z)          
             tabPoint3Z.append(tabVertices[poly.vertices[2]].z)
 
         print(len(tabPoly))   
@@ -305,10 +302,10 @@ class Button_Operations():
 
         # Transfer the data back to the object's mesh
         bmesh.update_edit_mesh(me)
-        '''
+        
         # Delete the selected vertices
         bpy.ops.mesh.delete(type='VERT')
-        
+        '''
         # Select all the faces
         bpy.ops.mesh.select_all(action='SELECT')
         

@@ -74,15 +74,13 @@ class BUTTON_PT_rotation_offset(Panel):
         layout = self.layout
         scene = context.scene
         
-        box1 = layout.box()
-        row = box1.row()
+        row = layout.row()
         row.prop(scene, "angle_x")  
         row.prop(scene, "angle_y")
         row.prop(scene, "angle_z") 
 
-        box2 = layout.box()
-        row = box2.row()
-        row.prop(context.scene, "offset")        
+        column = layout.column()
+        column.prop(context.scene, "offset")        
         
 class BUTTON_PT_generation(Panel):
     bl_idname = 'BUTTON_PT_generation'
@@ -92,12 +90,12 @@ class BUTTON_PT_generation(Panel):
     bl_category = 'Button'
  
     def draw(self, context): 
-        layout = self.layout    
+        layout = self.layout   
+        
         scene = context.scene
         
-        box1 = layout.box()
-        row = box1.row()
-        row.prop(scene, "max_angle")
+        column1 = layout.column()
+        column1.prop(scene, "max_angle")
         
         layout.operator(BUTTON_OT_button_import_for_test.bl_idname)
         layout.operator(BUTTON_OT_button_select_faces.bl_idname)
@@ -106,9 +104,8 @@ class BUTTON_PT_generation(Panel):
         layout.operator(BUTTON_OT_button_manifold.bl_idname)
         layout.operator(BUTTON_OT_button_regenerate_bottom.bl_idname)
         
-        box2 = layout.box()
-        row = box2.row()
-        row.prop(scene, "socle_size")
+        column2 = layout.column()
+        column2.prop(scene, "socle_size")
         
         layout.operator(BUTTON_OT_button_generate_socle.bl_idname)
         
@@ -123,9 +120,8 @@ class BUTTON_PT_area(Panel):
         layout = self.layout    
         scene = context.scene
         
-        box = layout.box()
-        row = box.row()
-        row.prop(scene, "min_area")
+        column = layout.column()
+        column.prop(scene, "min_area")
         
         layout.operator(BUTTON_OT_button_generate_area.bl_idname)
         layout.operator(BUTTON_OT_button_separate_faces.bl_idname)
@@ -144,16 +140,14 @@ class BUTTON_PT_resize(Panel):
         
         layout.operator(BUTTON_OT_button_select_resize_all.bl_idname)        
         
-        box1 = layout.box()
-        row = box1.row()
+        row = layout.row()
         row.prop(scene, "min_angle_z")  
         row.prop(scene, "max_angle_z")  
         
         layout.operator(BUTTON_OT_button_select_resize.bl_idname)          
 
-        box2 = layout.box()
-        row = box2.row()
-        row.prop(scene, "resize")  
+        column = layout.column()
+        column.prop(scene, "resize")  
         layout.operator(BUTTON_OT_button_resize.bl_idname)  
         
         layout.separator()
@@ -174,17 +168,15 @@ class BUTTON_PT_lattice(Panel):
         scene = context.scene 
 
         layout.operator(BUTTON_OT_button_add_lattice.bl_idname) 
-        box1 = layout.box()
-        row = box1.row()
-        row.prop(scene, "lattice_size_x")  
-        row.prop(scene, "lattice_size_y")
-        row.prop(scene, "lattice_size_z")  
+        row1 = layout.row()
+        row1.prop(scene, "lattice_size_x")  
+        row1.prop(scene, "lattice_size_y")
+        row1.prop(scene, "lattice_size_z")  
         
-        box2 = layout.box()
-        row = box2.row()
-        row.prop(scene, "lattice_offset_x")  
-        row.prop(scene, "lattice_offset_y")
-        row.prop(scene, "lattice_offset_z") 
+        row2 = layout.row()
+        row2.prop(scene, "lattice_offset_x")  
+        row2.prop(scene, "lattice_offset_y")
+        row2.prop(scene, "lattice_offset_z") 
         
         layout.operator(BUTTON_OT_button_select_lattice.bl_idname) 
         layout.operator(BUTTON_OT_button_delete_lattice.bl_idname) 
@@ -200,21 +192,18 @@ class BUTTON_PT_remesh(Panel):
         layout = self.layout    
         scene = context.scene
         
-        box1 = layout.box()
-        row = box1.row()
-        row.prop(scene, "voxel_size")
+        column1 = layout.column()
+        column1.prop(scene, "voxel_size")
         layout.operator(BUTTON_OT_button_voxel.bl_idname) 
         layout.operator(BUTTON_OT_button_validate.bl_idname) 
         
-        box2 = layout.box()
-        row = box2.row()
-        row.prop(scene, "decimate_ratio")
+        column2 = layout.column()
+        column2.prop(scene, "decimate_ratio")
         layout.operator(BUTTON_OT_button_decimate.bl_idname) 
         layout.operator(BUTTON_OT_button_validate.bl_idname) 
         
-        box3 = layout.box()
-        row = box3.row()
-        row.prop(scene, "level_blocks")
+        column3 = layout.column()
+        column3.prop(scene, "level_blocks")
         layout.operator(BUTTON_OT_button_remesh_blocks.bl_idname) 
         layout.operator(BUTTON_OT_button_validate_blocks.bl_idname) 
            
@@ -471,6 +460,302 @@ class BUTTON_OT_button_generate_mold(Operator):
     bpy.ops.object.mode_set(mode='OBJECT')
     
     # Select all the faces below 89°
+    obj = bpy.context.active_object
+    matrix_new = obj.matrix_world.to_3x3()#.inverted().transposed()
+    for poly in obj.data.polygons:
+        no_world = matrix_new @ poly.normal
+        no_world.normalize()
+        
+        # Calculate the angle between the normal and the downward vector if the normal vector is no null
+        if no_world != mathutils.Vector((0,0,0)):
+            angle = mathutils.Vector(no_world).angle(mathutils.Vector((0,0,-1)))
+        else:
+            angle = 0
+        print(angle)   
+        if angle < radians(90):
+            poly.select = True
+
+    # Switch in edit mode 
+    bpy.ops.object.mode_set(mode='EDIT')
+    
+    # Separate the selected faces
+    bpy.ops.mesh.separate(type='SELECTED')
+
+    # Select the new copy
+    bpy.context.view_layer.objects.active = bpy.data.objects[nameCopy + '.002']
+    bpy.data.objects[nameCopy].select_set(False)
+    bpy.data.objects[nameCopy + '.002'].select_set(True)
+    
+    # Delete the copy
+    object_to_delete = bpy.data.objects[nameCopy]
+    bpy.data.objects.remove(object_to_delete, do_unlink=True)
+ 
+    # Get the active object
+    obj = bpy.context.active_object
+ 
+    # Rename the new copy
+    obj.name = nameCopy
+ 
+    # Switch in edit mode 
+    bpy.ops.object.mode_set(mode='EDIT')
+ 
+    # Select all
+    bpy.ops.mesh.select_all(action='SELECT') 
+ 
+    # Make all the face on the same plane
+    bpy.ops.transform.resize(value=(1, 1, 0), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(False, False, True), mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False)
+    
+    # Extrude the selected faces to the high 
+    bpy.ops.mesh.extrude_region_move(MESH_OT_extrude_region={"use_normal_flip":False, "use_dissolve_ortho_edges":False, "mirror":False}, TRANSFORM_OT_translate={"value":(0, 0, 20), "orient_type":'GLOBAL', "orient_matrix":((1, 0, 0), (0, 1, 0), (0, 0, 1)), "orient_matrix_type":'GLOBAL', "constraint_axis":(True, True, True), "mirror":False, "use_proportional_edit":False, "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "use_proportional_connected":False, "use_proportional_projected":False, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "cursor_transform":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False, "use_automerge_and_split":False})
+
+    # Switch in object mode 
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+    # Add the mold
+    bpy.ops.mesh.primitive_plane_add(size=1, enter_editmode=False, align='WORLD', location=(0, 0, 0),rotation=(3.14159, 0, 0), scale=(1, 1, 1))
+
+    # Resize the mold
+    bpy.data.objects["Plane"].dimensions = [bpy.data.objects[nameObject].dimensions[0], bpy.data.objects[nameObject].dimensions[1], 0]
+
+    # Align the mold in Z
+    bpy.ops.object.align(align_mode='OPT_3', relative_to='OPT_1', align_axis={'Z'})
+
+    # Select the object
+    bpy.context.view_layer.objects.active = bpy.data.objects[nameObject]
+    bpy.data.objects[nameObject].select_set(True)
+
+    # Align the mold in x and y
+    bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_4', align_axis={'X'})
+    bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_4', align_axis={'Y'})
+
+    # Margins x and y
+    bpy.data.objects["Plane"].dimensions = [bpy.data.objects[nameObject].dimensions[0]+margin, bpy.data.objects[nameObject].dimensions[1]+margin, 0]      
+
+    # Apply transformation of the mold
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    
+    # Get the position of the vertices of the plane
+    xMax = max(bpy.data.objects["Plane"].data.vertices[0].co.x, bpy.data.objects["Plane"].data.vertices[1].co.x, bpy.data.objects["Plane"].data.vertices[2].co.x, bpy.data.objects["Plane"].data.vertices[3].co.x)
+    xMin = min(bpy.data.objects["Plane"].data.vertices[0].co.x, bpy.data.objects["Plane"].data.vertices[1].co.x, bpy.data.objects["Plane"].data.vertices[2].co.x, bpy.data.objects["Plane"].data.vertices[3].co.x)
+    yMax = max(bpy.data.objects["Plane"].data.vertices[0].co.y, bpy.data.objects["Plane"].data.vertices[1].co.y, bpy.data.objects["Plane"].data.vertices[2].co.y, bpy.data.objects["Plane"].data.vertices[3].co.y)
+    yMin = min(bpy.data.objects["Plane"].data.vertices[0].co.y, bpy.data.objects["Plane"].data.vertices[1].co.y, bpy.data.objects["Plane"].data.vertices[2].co.y, bpy.data.objects["Plane"].data.vertices[3].co.y) 
+
+    # Select the copy and the mold
+    bpy.context.view_layer.objects.active = bpy.data.objects[nameCopy]
+    bpy.data.objects[nameCopy].select_set(True)
+    bpy.data.objects[nameObject].select_set(False) 
+    
+    # Join the outline and the mold
+    bpy.ops.object.join()
+
+    # Switch in edit mode 
+    bpy.ops.object.mode_set(mode='EDIT')
+    
+    # Intersect the outline and the mold
+    bpy.ops.mesh.intersect(mode='SELECT_UNSELECT', separate_mode='NONE', solver='EXACT')
+    
+    # Select all the faces
+    bpy.ops.mesh.select_all(action='SELECT')
+
+    # Only keep the faces on the plane xy
+    bpy.ops.mesh.bisect(plane_co=(0, 0, 0), plane_no=(0, 0, 1), clear_inner=True, clear_outer=True, xstart=1273, xend=2086, ystart=286, yend=287, flip=False)
+    
+    # Deselect all the faces
+    bpy.ops.mesh.select_all(action='DESELECT')
+
+    # Switch in object mode 
+    bpy.ops.object.mode_set(mode='OBJECT')
+    
+    # Get the active object
+    obj = bpy.context.active_object
+    
+    # Find the 4 vertices of the original plane
+    for v in obj.data.vertices:
+        if (v.co.x < xMax + 0.001 and v.co.x > xMax - 0.001) or (v.co.x < xMin + 0.001 and v.co.x > xMin - 0.001):
+            if (v.co.y < yMax + 0.001 and v.co.y > yMax - 0.001) or (v.co.y < yMin + 0.001 and v.co.y > yMin - 0.001):
+                v.select = True
+                
+    # Switch in edit mode 
+    bpy.ops.object.mode_set(mode='EDIT')
+    
+    # Load mesh
+    me = bpy.context.edit_object.data
+    bm = bmesh.from_edit_mesh(me)
+    # Ensure internal data needed for int subscription is initialized
+    bm.faces.ensure_lookup_table()
+    
+    # Select the faces connected to the 4 vertices of the plane
+    grow_faces = set(f for f in bm.verts if f.select for f in f.link_faces if not f.select)
+    for f in grow_faces:
+        f.select = True
+    
+    # Separate the selected faces
+    bpy.ops.mesh.separate(type='SELECTED')
+    
+    # Delete the unconvenient meshes
+    object_to_delete = bpy.data.objects[nameCopy]
+    bpy.data.objects.remove(object_to_delete, do_unlink=True)
+    
+    object_to_delete = bpy.data.objects[nameObject]
+    bpy.data.objects.remove(object_to_delete, do_unlink=True)
+    
+    # Select the mold and the face needed supports
+    bpy.context.view_layer.objects.active = bpy.data.objects[nameCopy + '.002']
+    bpy.data.objects[nameCopy + '.002'].select_set(True)
+    bpy.data.objects[nameCopy + '.001'].select_set(True)
+
+    # Join the mold and the face needed supports
+    bpy.ops.object.join()
+
+    # Get the active object
+    obj = bpy.context.active_object
+    
+    # Rename the copy
+    obj.name = nameCopy
+    
+    # Switch in edit mode 
+    bpy.ops.object.mode_set(mode='EDIT')
+    
+    # Select all the faces
+    bpy.ops.mesh.select_all(action='SELECT')
+    
+    # Extrude the support
+    bpy.ops.mesh.extrude_region_move(MESH_OT_extrude_region={"use_normal_flip":False, "use_dissolve_ortho_edges":False, "mirror":False}, TRANSFORM_OT_translate={"value":(0, 0, -20), "orient_type":'GLOBAL', "orient_matrix":((1, 0, 0), (0, 1, 0), (0, 0, 1)), "orient_matrix_type":'GLOBAL', "constraint_axis":(False, False, True), "mirror":False, "use_proportional_edit":False, "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "use_proportional_connected":False, "use_proportional_projected":False, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "cursor_transform":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False, "use_automerge_and_split":False})
+
+    # Select all
+    bpy.ops.mesh.select_all(action='SELECT')
+
+    # Bissect and delete the element under the mold
+    bpy.ops.mesh.bisect(plane_co=(0, 0, moldOffset), plane_no=(0, 0, 1), use_fill=False, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
+
+    # Switch in object mode
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+
+    # Add the bottom
+    bpy.ops.mesh.primitive_cube_add(size=1, enter_editmode=False, align='WORLD', location=(0, 0, moldOffset-(margin/2)), scale=(1,1,1))
+    bpy.data.objects["Cube"].dimensions = [bpy.data.objects[nameCopy].dimensions[0], bpy.data.objects[nameCopy].dimensions[1], margin]
+
+    # Select the mold
+    bpy.context.view_layer.objects.active = bpy.data.objects[nameCopy]
+    bpy.data.objects[nameCopy].select_set(True)
+
+    # Align the bottom in x and y
+    bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_4', align_axis={'X'})
+    bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_4', align_axis={'Y'})
+
+    # Join the bottom and the mold
+    bpy.ops.object.join()
+
+    # Rename the mold
+    bpy.context.active_object.name = nameObject + "_support"
+    
+    # Apply location
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True) 
+    
+    # init properties of angles
+    bpy.context.scene.angle_x = 0
+    bpy.context.scene.angle_y = 0
+    bpy.context.scene.angle_z = 0
+    bpy.context.scene.offset = 0
+    
+    date_2 = datetime.datetime.now()
+    time_delta = (date_2 - date_1)
+    total_seconds = time_delta.total_seconds()
+    print(total_seconds)
+
+    print("End Script")
+    
+####################################################################################################################################################    
+    '''
+    date_1 = datetime.datetime.now()
+
+    # Get the active object
+    obj = bpy.context.active_object
+    # Get the offset
+    moldOffset = bpy.context.scene.offset
+
+    # Name of the copy
+    nameCopy = "temp_copy"
+    
+    # Distance of the margin
+    margin = 0.1
+
+    # Get the name of the object
+    nameObject = bpy.context.active_object.name
+    
+    # Switch in object mode 
+    bpy.ops.object.mode_set(mode='OBJECT')
+    
+    # Apply location
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True) 
+    
+    # Make a copy of the object
+    new_obj = bpy.context.active_object.copy()
+    new_obj.data = bpy.context.active_object.data.copy()
+    new_obj.animation_data_clear()
+    bpy.context.collection.objects.link(new_obj)
+
+    # Rename the copy
+    new_obj.name = nameCopy
+
+    # Show the copy
+    new_obj.hide_viewport = True
+    new_obj.hide_viewport = False
+
+    # Select the copy
+    bpy.data.objects[nameObject].select_set(False)
+    bpy.data.objects[nameCopy].select_set(True)
+    bpy.context.view_layer.objects.active = bpy.data.objects[nameCopy]
+
+    # Switch in edit mode 
+    bpy.ops.object.mode_set(mode='EDIT')
+    
+    # Separate the selected faces
+    bpy.ops.mesh.separate(type='SELECTED')
+    
+    # Switch in object mode
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+
+    # Select the base object
+    bpy.context.view_layer.objects.active = bpy.data.objects[nameObject]
+    bpy.data.objects[nameCopy + ".001"].select_set(False)
+    bpy.data.objects[nameObject].select_set(True)
+    
+    # Delete the copy
+    object_to_delete = bpy.data.objects[nameCopy]
+    bpy.data.objects.remove(object_to_delete, do_unlink=True)
+    
+    # Make an other copy of the object
+    new_obj = bpy.context.active_object.copy()
+    new_obj.data = bpy.context.active_object.data.copy()
+    new_obj.animation_data_clear()
+    bpy.context.collection.objects.link(new_obj)
+
+    # Rename the copy
+    new_obj.name = nameCopy
+
+    # Show the copy
+    new_obj.hide_viewport = True
+    new_obj.hide_viewport = False
+
+    # Select the copy
+    bpy.data.objects[nameObject].select_set(False)
+    bpy.data.objects[nameCopy].select_set(True)
+    bpy.context.view_layer.objects.active = bpy.data.objects[nameCopy]
+
+    # Switch in edit mode 
+    bpy.ops.object.mode_set(mode='EDIT')
+
+    # Select all
+    bpy.ops.mesh.select_all(action='SELECT')
+
+    # Cut the faces above the xy plane
+    bpy.ops.mesh.bisect(plane_co=(0, 0, 0), plane_no=(0, 0, 1), clear_inner=False, clear_outer=True, xstart=60, xend=424, ystart=126, yend=224, flip=False)
+
+    # Switch in object mode 
+    bpy.ops.object.mode_set(mode='OBJECT')
+    
+    # Select all the faces below 89°
     Button_Operations.select_faces(radians(89))
 
     # Extrude the selected faces to the high 
@@ -536,7 +821,7 @@ class BUTTON_OT_button_generate_mold(Operator):
     
     # Switch in object mode 
     bpy.ops.object.mode_set(mode='OBJECT')
-    '''
+    
     # Join the object and the mold
     bpy.ops.object.join()
 
@@ -617,6 +902,7 @@ class BUTTON_OT_button_generate_mold(Operator):
     print(total_seconds)
 
     print("End Script")
+    
     '''
     self.report({'INFO'}, f"This is {self.bl_idname}")
     return {'FINISHED'}

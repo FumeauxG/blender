@@ -1,63 +1,76 @@
 #include <stdio.h>
 #include <math.h>
 
+// Prototypes of functions
 void select_faces(int *ptr, int max, float *normalX, float *normalY, float *normalZ, float maxAngle, float vecDirX, float vecDirY, float vecDirZ, int *faces, float *point1X, float *point1Y, float *point2X, float *point2Y, float *point3X, float *point3Y, float *point1Z, float *point2Z, float *point3Z);
 int point_inside_trigon(float sx, float sy, float ax, float ay, float bx, float by, float cx, float cy);
 
 void select_faces(int *ptr, int max, float *normalX, float *normalY, float *normalZ, float maxAngle, float vecDirX, float vecDirY, float vecDirZ, int *faces, float *point1X, float *point1Y, float *point2X, float *point2Y, float *point3X, float *point3Y, float *point1Z, float *point2Z, float *point3Z)
 {
+    // Variables of index
     int i;
     int j;
 
-    float dot;
-    float lenSq1;
-    float lenSq2;
-    float angle;
+    float dot;    // Scalar product between v1 and v2
+    float lenSq1; // Norme of v1 
+    float lenSq2; // Norme of v2
+    
+    float angle;  // Angle between v1 and v2
+    
+    // Coefficents of v2
     float x2 = vecDirX;
     float y2 = vecDirY;
     float z2 = vecDirZ;
     
-    float dist1;
-    float dist2;
-    float dist3;
+    float dist1;  // Distance between the first point and the plane
+    float dist2;  // Distance between the second point and the plane
+    float dist3;  // Distance between the third point and the plane
 
+    // For each faces
     for (i = 0; i < max; i++) 
     {
       //printf("%i\n", ptr[i]);
-
-      dot = normalX[i]*x2 + normalY[i]*y2 + normalZ[i]*z2;    //between [x1, y1, z1] and [x2, y2, z2]
+      
+      // Calculate the scalar product and the normes of v1 and v2
+      dot = normalX[i]*x2 + normalY[i]*y2 + normalZ[i]*z2;    // Between [x1, y1, z1] and [x2, y2, z2]
       lenSq1 = normalX[i]*normalX[i] + normalY[i]*normalY[i] + normalZ[i]*normalZ[i];
       lenSq2 = x2*x2 + y2*y2 + z2*z2;
+      // Calculate the angle between v1 and v2
       angle = acos(dot/sqrt(lenSq1 * lenSq2));
 
+      // Check if the angle is inferior to the maxAngle
       if(angle < maxAngle || ((dot > 0.9999) && (dot < 1.0001)))
       {
-        faces[i] = 1;
+        faces[i] = 1;   // Select the face
         
+        // For each other face
         for (j = 0; j < max; j++)       
         {
+          // Calculate the distance between the points of the faces from the plane of the other face
           dist1 = (point1X[i]-point1X[j])*normalX[j] + (point1Y[i]-point1Y[j])*normalY[j] + (point1Z[i]-point1Z[j])*normalZ[j]; // your perpendicular distance
           dist2 = (point2X[i]-point1X[j])*normalX[j] + (point2Y[i]-point1Y[j])*normalY[j] + (point2Z[i]-point1Z[j])*normalZ[j]; // your perpendicular distance
           dist3 = (point3X[i]-point1X[j])*normalX[j] + (point3Y[i]-point1Y[j])*normalY[j] + (point3Z[i]-point1Z[j])*normalZ[j]; // your perpendicular distance
 
+          // If the face is higher than the other face
           if(((dist1 >= 0) && (dist2 >= 0) && (dist3 >= 0) && normalZ[j] > 0.001) || ((dist1 <= 0) && (dist2 <= 0) && (dist3 <= 0) && normalZ[j] < -0.001))
           {
+            // Check if the points of the face are in the area of the other face
             if(point_inside_trigon(point1X[i],point1Y[i],point1X[j],point1Y[j],point2X[j],point2Y[j],point3X[j],point3Y[j]) == 1)
             {
-              faces[i] = 0;
-              break;
+              faces[i] = 0; // Deselect the face
+              break;        // Leave the loop
             }
 
             if(point_inside_trigon(point2X[i],point2Y[i],point1X[j],point1Y[j],point2X[j],point2Y[j],point3X[j],point3Y[j]) == 1)
             {
-              faces[i] = 0;
-              break;
+              faces[i] = 0; // Deselect the face
+              break;        // Leave the loop
             }
 
             if(point_inside_trigon(point3X[i],point3Y[i],point1X[j],point1Y[j],point2X[j],point2Y[j],point3X[j],point3Y[j]) == 1)
             {
-              faces[i] = 0;
-              break;
+              faces[i] = 0; // Deselect the face
+              break;        // Leave the loop
             }
           }
         }

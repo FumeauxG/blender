@@ -291,21 +291,7 @@ class Button_Operations():
 
         # Switch in edit mode
         bpy.ops.object.mode_set(mode = 'EDIT')
-        '''
-        # Create new edit mode bmesh to easily acces mesh data
-        me = bpy.context.object.data  # Get selected object's mesh
-        bm = bmesh.from_edit_mesh(me) 
 
-        # Select all vertices that have 1 or 2 links and deselect the others
-        for v in bm.verts:
-            v.select_set(len(v.link_edges) in (1,2))
-
-        # Transfer the data back to the object's mesh
-        bmesh.update_edit_mesh(me)
-        
-        # Delete the selected vertices
-        bpy.ops.mesh.delete(type='VERT')
-        '''
         # Select all the faces
         bpy.ops.mesh.select_all(action='SELECT')
         
@@ -542,7 +528,7 @@ class Button_Operations():
         obj = bpy.context.active_object
 
         # Find the mondial matrix of the mesh for the rotation of the mesh
-        matrix_new = obj.matrix_world.to_3x3().inverted().transposed()
+        matrix_new = obj.matrix_world.to_3x3()#.inverted().transposed()
 
         # Find and select all the vertical faces
         for poly in obj.data.polygons:

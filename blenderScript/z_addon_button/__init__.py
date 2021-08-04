@@ -50,18 +50,32 @@ class BUTTON_PT_import_export(Panel):
         scene = context.scene
         
         layout.operator(BUTTON_OT_button_m_to_mm.bl_idname)
-        layout.operator(BUTTON_OT_button_volume.bl_idname)
+        
+        column1 = layout.column()
+        column1.operator(BUTTON_OT_button_volume.bl_idname)
               
-        layout.label(text= ("Volume : " + '{:.2f}'.format(bpy.context.scene.volume) + " mm³"))             
+        column1.label(text= ("Volume : " + '{:.2f}'.format(bpy.context.scene.volume) + " mm³"))             
 
-        layout.operator(BUTTON_OT_button_import_object.bl_idname)
-        layout.operator(BUTTON_OT_button_export_object.bl_idname)
+        column2 = layout.column(align=True)
+        column2.operator(BUTTON_OT_button_import_object.bl_idname)
+        column2.operator(BUTTON_OT_button_export_object.bl_idname)
 
+        column3 = layout.column(align=True)
         if len(bpy.context.selected_objects) != 0:
-            layout.label(text= ("Number of faces : " + str(len(bpy.context.active_object.data.polygons))))
-            layout.label(text= ("Size of the stl file : ~" + str(int(len(bpy.context.active_object.data.polygons)/20.47)) + " Ko"))
+            column3.label(text= ("Number of faces : " + str(len(bpy.context.active_object.data.polygons))))
+            column3.label(text= ("Size of the stl file : ~" + str(int(len(bpy.context.active_object.data.polygons)/20.47)) + " Ko"))
+        else:
+            column3.label(text= ("Number of faces : "))
+            column3.label(text= ("Size of the stl file : "))
 
-        layout.operator(BUTTON_OT_button_triangulate.bl_idname)
+        column3.operator(BUTTON_OT_button_triangulate.bl_idname)
+        
+        if len(bpy.context.selected_objects) != 0:
+            column1.enabled = True
+            column3.enabled = True
+        else:
+            column1.enabled = False
+            column3.enabled = False
  
 class BUTTON_PT_rotation_offset(Panel):
     bl_idname = 'BUTTON_PT_rotation_offset'
@@ -74,13 +88,18 @@ class BUTTON_PT_rotation_offset(Panel):
         layout = self.layout
         scene = context.scene
         
-        row = layout.row()
-        row.prop(scene, "angle_x")  
-        row.prop(scene, "angle_y")
-        row.prop(scene, "angle_z") 
+        row = layout.row(align=True)
+        row.prop(data=scene, property="angle_x", slider=True)  
+        row.prop(data=scene, property="angle_y", slider=True)
+        row.prop(data=scene, property="angle_z", slider=True) 
 
         column = layout.column()
-        column.prop(context.scene, "offset")        
+        column.prop(data=scene, property="offset", slider=True) 
+
+        if len(bpy.context.selected_objects) != 0:
+            layout.enabled = True
+        else:
+            layout.enabled = False       
         
 class BUTTON_PT_generation(Panel):
     bl_idname = 'BUTTON_PT_generation'
@@ -90,24 +109,31 @@ class BUTTON_PT_generation(Panel):
     bl_category = 'Button'
  
     def draw(self, context): 
-        layout = self.layout   
-        
+        layout = self.layout          
         scene = context.scene
-        
-        column1 = layout.column()
-        column1.prop(scene, "max_angle")
-        
+
         layout.operator(BUTTON_OT_button_import_for_test.bl_idname)
-        layout.operator(BUTTON_OT_button_select_faces.bl_idname)
-        layout.operator(BUTTON_OT_button_generate_support.bl_idname)
-        layout.operator(BUTTON_OT_button_generate_mold.bl_idname)
-        layout.operator(BUTTON_OT_button_manifold.bl_idname)
-        layout.operator(BUTTON_OT_button_regenerate_bottom.bl_idname)
         
-        column2 = layout.column()
-        column2.prop(scene, "socle_size")
+        column1 = layout.column(align=True)
+        column1.prop(data=scene, property="max_angle", slider=True)        
+        column1.operator(BUTTON_OT_button_select_faces.bl_idname)
         
-        layout.operator(BUTTON_OT_button_generate_socle.bl_idname)
+        column2 = layout.column(align=True)
+        column2.operator(BUTTON_OT_button_generate_support.bl_idname)
+        column2.operator(BUTTON_OT_button_generate_mold.bl_idname)
+        
+        column3 = layout.column(align=True)
+        column3.operator(BUTTON_OT_button_manifold.bl_idname)
+        column3.operator(BUTTON_OT_button_regenerate_bottom.bl_idname)
+        
+        column4 = layout.column(align=True)
+        column4.prop(data=scene, property="socle_size", slider=True)    
+        column4.operator(BUTTON_OT_button_generate_socle.bl_idname)
+        
+        if len(bpy.context.selected_objects) != 0:
+            layout.enabled = True
+        else:
+            layout.enabled = False  
         
 class BUTTON_PT_area(Panel):
     bl_idname = 'BUTTON_PT_area'
@@ -120,12 +146,17 @@ class BUTTON_PT_area(Panel):
         layout = self.layout    
         scene = context.scene
         
-        column = layout.column()
-        column.prop(scene, "min_area")
+        column = layout.column(align=True)
+        column.prop(data=scene, property="min_area", slider=True)       
+        column.operator(BUTTON_OT_button_separate_faces.bl_idname)
+        column.operator(BUTTON_OT_button_select_area.bl_idname)
         
         layout.operator(BUTTON_OT_button_generate_area.bl_idname)
-        layout.operator(BUTTON_OT_button_separate_faces.bl_idname)
-        layout.operator(BUTTON_OT_button_select_area.bl_idname)
+        
+        if len(bpy.context.selected_objects) != 0:
+            layout.enabled = True
+        else:
+            layout.enabled = False  
         
 class BUTTON_PT_resize(Panel):
     bl_idname = 'BUTTON_PT_resize'
@@ -138,24 +169,45 @@ class BUTTON_PT_resize(Panel):
         layout = self.layout 
         scene = context.scene 
         
-        layout.operator(BUTTON_OT_button_select_resize_all.bl_idname)        
+        column1 = layout.column()
+        column1.operator(BUTTON_OT_button_select_resize_all.bl_idname)        
         
-        row = layout.row()
-        row.prop(scene, "min_angle_z")  
-        row.prop(scene, "max_angle_z")  
-        
-        layout.operator(BUTTON_OT_button_select_resize.bl_idname)          
+        column2 = layout.column(align=True)
+        row = column2.row(align=True)
+        row.prop(data=scene, property="min_angle_z", slider=True)  
+        row.prop(data=scene, property="max_angle_z", slider=True)          
+        column2.operator(BUTTON_OT_button_select_resize.bl_idname)          
 
-        column = layout.column()
-        column.prop(scene, "resize")  
-        layout.operator(BUTTON_OT_button_resize.bl_idname)  
-        
-        layout.separator()
-        
-        layout.operator(BUTTON_OT_button_invert_selection.bl_idname)
-        layout.operator(BUTTON_OT_button_delete_selection.bl_idname)
-        layout.operator(BUTTON_OT_button_fill.bl_idname)          
+        column3 = layout.column(align=True)
+        column3.prop(data=scene, property="resize", slider=True)  
+        column3.operator(BUTTON_OT_button_resize.bl_idname)  
 
+        column4 = layout.column(align=True)        
+        column4.operator(BUTTON_OT_button_invert_selection.bl_idname)
+        column4.operator(BUTTON_OT_button_delete_selection.bl_idname)
+        column4.operator(BUTTON_OT_button_fill.bl_idname)    
+
+        if len(bpy.context.selected_objects) != 0:
+            layout.enabled = True
+            if bpy.context.object.mode == 'OBJECT':
+                if True in [x.select for x in bpy.context.object.data.polygons]:                    
+                    column3.enabled = True
+                    column4.enabled = True
+                else:
+                    column3.enabled = False
+                    column4.enabled = False
+            else:
+                bm = bmesh.from_edit_mesh(bpy.context.edit_object.data)
+                selfaces = [f for f in bm.faces if f.select]
+                if selfaces:
+                    column3.enabled = True
+                    column4.enabled = True
+                else:
+                    column3.enabled = False
+                    column4.enabled = False
+        else:
+            layout.enabled = False
+        
 class BUTTON_PT_lattice(Panel):
     bl_idname = 'BUTTON_PT_lattice'
     bl_label = 'Lattice'
@@ -167,19 +219,42 @@ class BUTTON_PT_lattice(Panel):
         layout = self.layout 
         scene = context.scene 
 
-        layout.operator(BUTTON_OT_button_add_lattice.bl_idname) 
-        row1 = layout.row()
-        row1.prop(scene, "lattice_size_x")  
-        row1.prop(scene, "lattice_size_y")
-        row1.prop(scene, "lattice_size_z")  
+        column = layout.column(align=True)
         
-        row2 = layout.row()
-        row2.prop(scene, "lattice_offset_x")  
-        row2.prop(scene, "lattice_offset_y")
-        row2.prop(scene, "lattice_offset_z") 
+        column.operator(BUTTON_OT_button_add_lattice.bl_idname) 
         
-        layout.operator(BUTTON_OT_button_select_lattice.bl_idname) 
-        layout.operator(BUTTON_OT_button_delete_lattice.bl_idname) 
+        row1 = column.row(align=True)
+        row1.prop(data=scene, property="lattice_size_x", slider=True)  
+        row1.prop(data=scene, property="lattice_size_y", slider=True)
+        row1.prop(data=scene, property="lattice_size_z", slider=True)  
+        
+        row2 = column.row(align=True)
+        row2.prop(data=scene, property="lattice_offset_x", slider=True)  
+        row2.prop(data=scene, property="lattice_offset_y", slider=True)
+        row2.prop(data=scene, property="lattice_offset_z", slider=True) 
+        
+        row3 = column.column(align=True)
+        row3.operator(BUTTON_OT_button_select_lattice.bl_idname) 
+        
+        column.operator(BUTTON_OT_button_delete_lattice.bl_idname) 
+        
+        if len(bpy.context.selected_objects) != 0:
+            layout.enabled = True
+            # Check if there is a lattice object
+            flagLattice = False
+            for o in bpy.data.objects:
+                if o.type == 'LATTICE':
+                    flagLattice = True
+            if flagLattice:
+                row1.enabled = True
+                row2.enabled = True
+                row3.enabled = True
+            else:
+                row1.enabled = False
+                row2.enabled = False
+                row3.enabled = False        
+        else:
+            layout.enabled = False 
         
 class BUTTON_PT_remesh(Panel):
     bl_idname = 'BUTTON_PT_remesh'
@@ -192,20 +267,25 @@ class BUTTON_PT_remesh(Panel):
         layout = self.layout    
         scene = context.scene
         
-        column1 = layout.column()
-        column1.prop(scene, "voxel_size")
-        layout.operator(BUTTON_OT_button_voxel.bl_idname) 
-        layout.operator(BUTTON_OT_button_validate.bl_idname) 
+        column1 = layout.column(align=True)
+        column1.prop(data=scene, property="voxel_size", slider=True)
+        column1.operator(BUTTON_OT_button_voxel.bl_idname) 
+        column1.operator(BUTTON_OT_button_validate.bl_idname) 
         
-        column2 = layout.column()
-        column2.prop(scene, "decimate_ratio")
-        layout.operator(BUTTON_OT_button_decimate.bl_idname) 
-        layout.operator(BUTTON_OT_button_validate.bl_idname) 
+        column2 = layout.column(align=True)
+        column2.prop(data=scene, property="decimate_ratio", slider=True)
+        column2.operator(BUTTON_OT_button_decimate.bl_idname) 
+        column2.operator(BUTTON_OT_button_validate.bl_idname) 
         
-        column3 = layout.column()
-        column3.prop(scene, "level_blocks")
-        layout.operator(BUTTON_OT_button_remesh_blocks.bl_idname) 
-        layout.operator(BUTTON_OT_button_validate_blocks.bl_idname) 
+        column3 = layout.column(align=True)
+        column3.prop(data=scene, property="level_blocks", slider=True)
+        column3.operator(BUTTON_OT_button_remesh_blocks.bl_idname) 
+        column3.operator(BUTTON_OT_button_validate_blocks.bl_idname) 
+        
+        if len(bpy.context.selected_objects) != 0:
+            layout.enabled = True       
+        else:
+            layout.enabled = False 
            
 class BUTTON_PT_measure(Panel):
     bl_idname = 'BUTTON_PT_measure'
@@ -218,11 +298,17 @@ class BUTTON_PT_measure(Panel):
         layout = self.layout    
         scene = context.scene
         
-        layout.operator(BUTTON_OT_button_measure_distance.bl_idname) 
-        layout.label(text= ("X : " + '{:.2f}'.format(bpy.context.scene.distance[0]) + " mm"))
-        layout.label(text= ("Y : " + '{:.2f}'.format(bpy.context.scene.distance[1]) + " mm"))
-        layout.label(text= ("Z : " + '{:.2f}'.format(bpy.context.scene.distance[2]) + " mm"))
-        layout.label(text= ("Distance : " + '{:.2f}'.format(bpy.context.scene.distance[3]) + " mm"))
+        column = layout.column(align=True)
+        column.operator(BUTTON_OT_button_measure_distance.bl_idname) 
+        column.label(text= ("X : " + '{:.2f}'.format(bpy.context.scene.distance[0]) + " mm"))
+        column.label(text= ("Y : " + '{:.2f}'.format(bpy.context.scene.distance[1]) + " mm"))
+        column.label(text= ("Z : " + '{:.2f}'.format(bpy.context.scene.distance[2]) + " mm"))
+        column.label(text= ("Distance : " + '{:.2f}'.format(bpy.context.scene.distance[3]) + " mm"))
+        
+        if len(bpy.context.selected_objects) != 0:
+            layout.enabled = True       
+        else:
+            layout.enabled = False 
 
 
 #-------------------------------------------------------
@@ -233,6 +319,7 @@ class BUTTON_OT_button_m_to_mm(Operator):
   bl_idname = "btn.m_to_mm"
   bl_label = "m to mm"
   bl_description = 'Change the Blender scale from metre to milimetre'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     Button_Operations.m_to_mm()
@@ -243,6 +330,7 @@ class BUTTON_OT_button_volume(Operator):
   bl_idname = "btn.volume"
   bl_label = "Volume"
   bl_description = 'Calculate the volume of the selected mesh'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     Button_Operations.volume()
@@ -253,6 +341,7 @@ class BUTTON_OT_button_import_object(Operator):
   bl_idname = "btn.import_object"
   bl_label = "Import Object"
   bl_description = 'Open a file explorer to import a stl file'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     bpy.ops.stl_file.import_file('INVOKE_DEFAULT') 
@@ -263,6 +352,7 @@ class BUTTON_OT_button_export_object(Operator):
   bl_idname = "btn.export_object"
   bl_label = "Export Object"
   bl_description = 'Open a file explorer to export a stl file'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     bpy.ops.stl_file.export_file('INVOKE_DEFAULT') 
@@ -279,11 +369,11 @@ class BUTTON_OT_button_triangulate(Operator):
     self.report({'INFO'}, f"This is {self.bl_idname}")
     return {'FINISHED'}    
 
-
 class BUTTON_OT_button_import_for_test(Operator):
   bl_idname = "btn.import_for_test"
   bl_label = "Import for test"
   bl_description = 'Import the first stl of the specified file name'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     # init properties of angles and offset
@@ -348,6 +438,7 @@ class BUTTON_OT_button_select_faces(Operator):
   bl_idname = "btn.select_faces"
   bl_label = "Select faces"
   bl_description = 'Select the faces needed support'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     Button_Operations.select_faces(bpy.context.scene.max_angle)
@@ -358,6 +449,7 @@ class BUTTON_OT_button_generate_support(Operator):
   bl_idname = "btn.generate_support"
   bl_label = "Generate support"
   bl_description = 'Generate support for the selected faces'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     Button_Operations.generate_support()
@@ -368,542 +460,11 @@ class BUTTON_OT_button_generate_support(Operator):
 class BUTTON_OT_button_generate_mold(Operator):
   bl_idname = "btn.generate_mold"
   bl_label = "Generate mold"
-  bl_description = 'Generate mold for the selected faces (work in progress)'
+  bl_description = 'Generate mold for the selected faces'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
-    date_1 = datetime.datetime.now()
-
-    # Get the active object
-    obj = bpy.context.active_object
-    # Get the offset
-    moldOffset = bpy.context.scene.offset
-
-    # Name of the copy
-    nameCopy = "temp_copy"
-    
-    # Distance of the margin
-    margin = 0.1
-
-    # Get the name of the object
-    nameObject = bpy.context.active_object.name
-    
-    # Switch in object mode 
-    bpy.ops.object.mode_set(mode='OBJECT')
-    
-    # Apply location
-    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True) 
-    
-    # Make a copy of the object
-    new_obj = bpy.context.active_object.copy()
-    new_obj.data = bpy.context.active_object.data.copy()
-    new_obj.animation_data_clear()
-    bpy.context.collection.objects.link(new_obj)
-
-    # Rename the copy
-    new_obj.name = nameCopy
-
-    # Show the copy
-    new_obj.hide_viewport = True
-    new_obj.hide_viewport = False
-
-    # Select the copy
-    bpy.data.objects[nameObject].select_set(False)
-    bpy.data.objects[nameCopy].select_set(True)
-    bpy.context.view_layer.objects.active = bpy.data.objects[nameCopy]
-
-    # Switch in edit mode 
-    bpy.ops.object.mode_set(mode='EDIT')
-    
-    # Separate the selected faces
-    bpy.ops.mesh.separate(type='SELECTED')
-    
-    # Switch in object mode
-    bpy.ops.object.mode_set(mode = 'OBJECT')
-
-    # Select the base object
-    bpy.context.view_layer.objects.active = bpy.data.objects[nameObject]
-    bpy.data.objects[nameCopy + ".001"].select_set(False)
-    bpy.data.objects[nameObject].select_set(True)
-    
-    # Delete the copy
-    object_to_delete = bpy.data.objects[nameCopy]
-    bpy.data.objects.remove(object_to_delete, do_unlink=True)
-    
-    # Make an other copy of the object
-    new_obj = bpy.context.active_object.copy()
-    new_obj.data = bpy.context.active_object.data.copy()
-    new_obj.animation_data_clear()
-    bpy.context.collection.objects.link(new_obj)
-
-    # Rename the copy
-    new_obj.name = nameCopy
-
-    # Show the copy
-    new_obj.hide_viewport = True
-    new_obj.hide_viewport = False
-
-    # Select the copy
-    bpy.data.objects[nameObject].select_set(False)
-    bpy.data.objects[nameCopy].select_set(True)
-    bpy.context.view_layer.objects.active = bpy.data.objects[nameCopy]
-
-    # Switch in edit mode 
-    bpy.ops.object.mode_set(mode='EDIT')
-
-    # Select all
-    bpy.ops.mesh.select_all(action='SELECT')
-
-    # Cut the faces above the xy plane
-    bpy.ops.mesh.bisect(plane_co=(0, 0, 0), plane_no=(0, 0, 1), clear_inner=False, clear_outer=True, xstart=60, xend=424, ystart=126, yend=224, flip=False)
-
-    # Switch in object mode 
-    bpy.ops.object.mode_set(mode='OBJECT')
-    
-    # Select all the faces below 89°
-    obj = bpy.context.active_object
-    matrix_new = obj.matrix_world.to_3x3()#.inverted().transposed()
-    for poly in obj.data.polygons:
-        no_world = matrix_new @ poly.normal
-        no_world.normalize()
-        
-        # Calculate the angle between the normal and the downward vector if the normal vector is no null
-        if no_world != mathutils.Vector((0,0,0)):
-            angle = mathutils.Vector(no_world).angle(mathutils.Vector((0,0,-1)))
-        else:
-            angle = 0
-        print(angle)   
-        if angle < radians(90):
-            poly.select = True
-
-    # Switch in edit mode 
-    bpy.ops.object.mode_set(mode='EDIT')
-    
-    # Separate the selected faces
-    bpy.ops.mesh.separate(type='SELECTED')
-
-    # Select the new copy
-    bpy.context.view_layer.objects.active = bpy.data.objects[nameCopy + '.002']
-    bpy.data.objects[nameCopy].select_set(False)
-    bpy.data.objects[nameCopy + '.002'].select_set(True)
-    
-    # Delete the copy
-    object_to_delete = bpy.data.objects[nameCopy]
-    bpy.data.objects.remove(object_to_delete, do_unlink=True)
- 
-    # Get the active object
-    obj = bpy.context.active_object
- 
-    # Rename the new copy
-    obj.name = nameCopy
- 
-    # Switch in edit mode 
-    bpy.ops.object.mode_set(mode='EDIT')
- 
-    # Select all
-    bpy.ops.mesh.select_all(action='SELECT') 
- 
-    # Make all the face on the same plane
-    bpy.ops.transform.resize(value=(1, 1, 0), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(False, False, True), mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False)
-    
-    # Extrude the selected faces to the high 
-    bpy.ops.mesh.extrude_region_move(MESH_OT_extrude_region={"use_normal_flip":False, "use_dissolve_ortho_edges":False, "mirror":False}, TRANSFORM_OT_translate={"value":(0, 0, 20), "orient_type":'GLOBAL', "orient_matrix":((1, 0, 0), (0, 1, 0), (0, 0, 1)), "orient_matrix_type":'GLOBAL', "constraint_axis":(True, True, True), "mirror":False, "use_proportional_edit":False, "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "use_proportional_connected":False, "use_proportional_projected":False, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "cursor_transform":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False, "use_automerge_and_split":False})
-
-    # Switch in object mode 
-    bpy.ops.object.mode_set(mode='OBJECT')
-
-    # Add the mold
-    bpy.ops.mesh.primitive_plane_add(size=1, enter_editmode=False, align='WORLD', location=(0, 0, 0),rotation=(3.14159, 0, 0), scale=(1, 1, 1))
-
-    # Resize the mold
-    bpy.data.objects["Plane"].dimensions = [bpy.data.objects[nameObject].dimensions[0], bpy.data.objects[nameObject].dimensions[1], 0]
-
-    # Align the mold in Z
-    bpy.ops.object.align(align_mode='OPT_3', relative_to='OPT_1', align_axis={'Z'})
-
-    # Select the object
-    bpy.context.view_layer.objects.active = bpy.data.objects[nameObject]
-    bpy.data.objects[nameObject].select_set(True)
-
-    # Align the mold in x and y
-    bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_4', align_axis={'X'})
-    bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_4', align_axis={'Y'})
-
-    # Margins x and y
-    bpy.data.objects["Plane"].dimensions = [bpy.data.objects[nameObject].dimensions[0]+margin, bpy.data.objects[nameObject].dimensions[1]+margin, 0]      
-
-    # Apply transformation of the mold
-    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-    
-    # Get the position of the vertices of the plane
-    xMax = max(bpy.data.objects["Plane"].data.vertices[0].co.x, bpy.data.objects["Plane"].data.vertices[1].co.x, bpy.data.objects["Plane"].data.vertices[2].co.x, bpy.data.objects["Plane"].data.vertices[3].co.x)
-    xMin = min(bpy.data.objects["Plane"].data.vertices[0].co.x, bpy.data.objects["Plane"].data.vertices[1].co.x, bpy.data.objects["Plane"].data.vertices[2].co.x, bpy.data.objects["Plane"].data.vertices[3].co.x)
-    yMax = max(bpy.data.objects["Plane"].data.vertices[0].co.y, bpy.data.objects["Plane"].data.vertices[1].co.y, bpy.data.objects["Plane"].data.vertices[2].co.y, bpy.data.objects["Plane"].data.vertices[3].co.y)
-    yMin = min(bpy.data.objects["Plane"].data.vertices[0].co.y, bpy.data.objects["Plane"].data.vertices[1].co.y, bpy.data.objects["Plane"].data.vertices[2].co.y, bpy.data.objects["Plane"].data.vertices[3].co.y) 
-
-    # Select the copy and the mold
-    bpy.context.view_layer.objects.active = bpy.data.objects[nameCopy]
-    bpy.data.objects[nameCopy].select_set(True)
-    bpy.data.objects[nameObject].select_set(False) 
-    
-    # Join the outline and the mold
-    bpy.ops.object.join()
-
-    # Switch in edit mode 
-    bpy.ops.object.mode_set(mode='EDIT')
-    
-    # Intersect the outline and the mold
-    bpy.ops.mesh.intersect(mode='SELECT_UNSELECT', separate_mode='NONE', solver='EXACT')
-    
-    # Select all the faces
-    bpy.ops.mesh.select_all(action='SELECT')
-
-    # Only keep the faces on the plane xy
-    bpy.ops.mesh.bisect(plane_co=(0, 0, 0), plane_no=(0, 0, 1), clear_inner=True, clear_outer=True, xstart=1273, xend=2086, ystart=286, yend=287, flip=False)
-    
-    # Deselect all the faces
-    bpy.ops.mesh.select_all(action='DESELECT')
-
-    # Switch in object mode 
-    bpy.ops.object.mode_set(mode='OBJECT')
-    
-    # Get the active object
-    obj = bpy.context.active_object
-    
-    # Find the 4 vertices of the original plane
-    for v in obj.data.vertices:
-        if (v.co.x < xMax + 0.001 and v.co.x > xMax - 0.001) or (v.co.x < xMin + 0.001 and v.co.x > xMin - 0.001):
-            if (v.co.y < yMax + 0.001 and v.co.y > yMax - 0.001) or (v.co.y < yMin + 0.001 and v.co.y > yMin - 0.001):
-                v.select = True
-                
-    # Switch in edit mode 
-    bpy.ops.object.mode_set(mode='EDIT')
-    
-    # Load mesh
-    me = bpy.context.edit_object.data
-    bm = bmesh.from_edit_mesh(me)
-    # Ensure internal data needed for int subscription is initialized
-    bm.faces.ensure_lookup_table()
-    
-    # Select the faces connected to the 4 vertices of the plane
-    grow_faces = set(f for f in bm.verts if f.select for f in f.link_faces if not f.select)
-    for f in grow_faces:
-        f.select = True
-    
-    # Separate the selected faces
-    bpy.ops.mesh.separate(type='SELECTED')
-    
-    # Delete the unconvenient meshes
-    object_to_delete = bpy.data.objects[nameCopy]
-    bpy.data.objects.remove(object_to_delete, do_unlink=True)
-    
-    object_to_delete = bpy.data.objects[nameObject]
-    bpy.data.objects.remove(object_to_delete, do_unlink=True)
-    
-    # Select the mold and the face needed supports
-    bpy.context.view_layer.objects.active = bpy.data.objects[nameCopy + '.002']
-    bpy.data.objects[nameCopy + '.002'].select_set(True)
-    bpy.data.objects[nameCopy + '.001'].select_set(True)
-
-    # Join the mold and the face needed supports
-    bpy.ops.object.join()
-
-    # Get the active object
-    obj = bpy.context.active_object
-    
-    # Rename the copy
-    obj.name = nameCopy
-    
-    # Switch in edit mode 
-    bpy.ops.object.mode_set(mode='EDIT')
-    
-    # Select all the faces
-    bpy.ops.mesh.select_all(action='SELECT')
-    
-    # Extrude the support
-    bpy.ops.mesh.extrude_region_move(MESH_OT_extrude_region={"use_normal_flip":False, "use_dissolve_ortho_edges":False, "mirror":False}, TRANSFORM_OT_translate={"value":(0, 0, -20), "orient_type":'GLOBAL', "orient_matrix":((1, 0, 0), (0, 1, 0), (0, 0, 1)), "orient_matrix_type":'GLOBAL', "constraint_axis":(False, False, True), "mirror":False, "use_proportional_edit":False, "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "use_proportional_connected":False, "use_proportional_projected":False, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "cursor_transform":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False, "use_automerge_and_split":False})
-
-    # Select all
-    bpy.ops.mesh.select_all(action='SELECT')
-
-    # Bissect and delete the element under the mold
-    bpy.ops.mesh.bisect(plane_co=(0, 0, moldOffset), plane_no=(0, 0, 1), use_fill=False, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
-
-    # Switch in object mode
-    bpy.ops.object.mode_set(mode = 'OBJECT')
-
-    # Add the bottom
-    bpy.ops.mesh.primitive_cube_add(size=1, enter_editmode=False, align='WORLD', location=(0, 0, moldOffset-(margin/2)), scale=(1,1,1))
-    bpy.data.objects["Cube"].dimensions = [bpy.data.objects[nameCopy].dimensions[0], bpy.data.objects[nameCopy].dimensions[1], margin]
-
-    # Select the mold
-    bpy.context.view_layer.objects.active = bpy.data.objects[nameCopy]
-    bpy.data.objects[nameCopy].select_set(True)
-
-    # Align the bottom in x and y
-    bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_4', align_axis={'X'})
-    bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_4', align_axis={'Y'})
-
-    # Join the bottom and the mold
-    bpy.ops.object.join()
-
-    # Rename the mold
-    bpy.context.active_object.name = nameObject + "_support"
-    
-    # Apply location
-    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True) 
-    
-    # init properties of angles
-    bpy.context.scene.angle_x = 0
-    bpy.context.scene.angle_y = 0
-    bpy.context.scene.angle_z = 0
-    bpy.context.scene.offset = 0
-    
-    date_2 = datetime.datetime.now()
-    time_delta = (date_2 - date_1)
-    total_seconds = time_delta.total_seconds()
-    print(total_seconds)
-
-    print("End Script")
-    
-####################################################################################################################################################    
-    '''
-    date_1 = datetime.datetime.now()
-
-    # Get the active object
-    obj = bpy.context.active_object
-    # Get the offset
-    moldOffset = bpy.context.scene.offset
-
-    # Name of the copy
-    nameCopy = "temp_copy"
-    
-    # Distance of the margin
-    margin = 0.1
-
-    # Get the name of the object
-    nameObject = bpy.context.active_object.name
-    
-    # Switch in object mode 
-    bpy.ops.object.mode_set(mode='OBJECT')
-    
-    # Apply location
-    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True) 
-    
-    # Make a copy of the object
-    new_obj = bpy.context.active_object.copy()
-    new_obj.data = bpy.context.active_object.data.copy()
-    new_obj.animation_data_clear()
-    bpy.context.collection.objects.link(new_obj)
-
-    # Rename the copy
-    new_obj.name = nameCopy
-
-    # Show the copy
-    new_obj.hide_viewport = True
-    new_obj.hide_viewport = False
-
-    # Select the copy
-    bpy.data.objects[nameObject].select_set(False)
-    bpy.data.objects[nameCopy].select_set(True)
-    bpy.context.view_layer.objects.active = bpy.data.objects[nameCopy]
-
-    # Switch in edit mode 
-    bpy.ops.object.mode_set(mode='EDIT')
-    
-    # Separate the selected faces
-    bpy.ops.mesh.separate(type='SELECTED')
-    
-    # Switch in object mode
-    bpy.ops.object.mode_set(mode = 'OBJECT')
-
-    # Select the base object
-    bpy.context.view_layer.objects.active = bpy.data.objects[nameObject]
-    bpy.data.objects[nameCopy + ".001"].select_set(False)
-    bpy.data.objects[nameObject].select_set(True)
-    
-    # Delete the copy
-    object_to_delete = bpy.data.objects[nameCopy]
-    bpy.data.objects.remove(object_to_delete, do_unlink=True)
-    
-    # Make an other copy of the object
-    new_obj = bpy.context.active_object.copy()
-    new_obj.data = bpy.context.active_object.data.copy()
-    new_obj.animation_data_clear()
-    bpy.context.collection.objects.link(new_obj)
-
-    # Rename the copy
-    new_obj.name = nameCopy
-
-    # Show the copy
-    new_obj.hide_viewport = True
-    new_obj.hide_viewport = False
-
-    # Select the copy
-    bpy.data.objects[nameObject].select_set(False)
-    bpy.data.objects[nameCopy].select_set(True)
-    bpy.context.view_layer.objects.active = bpy.data.objects[nameCopy]
-
-    # Switch in edit mode 
-    bpy.ops.object.mode_set(mode='EDIT')
-
-    # Select all
-    bpy.ops.mesh.select_all(action='SELECT')
-
-    # Cut the faces above the xy plane
-    bpy.ops.mesh.bisect(plane_co=(0, 0, 0), plane_no=(0, 0, 1), clear_inner=False, clear_outer=True, xstart=60, xend=424, ystart=126, yend=224, flip=False)
-
-    # Switch in object mode 
-    bpy.ops.object.mode_set(mode='OBJECT')
-    
-    # Select all the faces below 89°
-    Button_Operations.select_faces(radians(89))
-
-    # Extrude the selected faces to the high 
-    bpy.ops.mesh.extrude_region_move(MESH_OT_extrude_region={"use_normal_flip":False, "use_dissolve_ortho_edges":False, "mirror":False}, TRANSFORM_OT_translate={"value":(0, 0, 20), "orient_type":'GLOBAL', "orient_matrix":((1, 0, 0), (0, 1, 0), (0, 0, 1)), "orient_matrix_type":'GLOBAL', "constraint_axis":(True, True, True), "mirror":False, "use_proportional_edit":False, "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "use_proportional_connected":False, "use_proportional_projected":False, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "cursor_transform":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False, "use_automerge_and_split":False})
-
-    # Switch in object mode 
-    bpy.ops.object.mode_set(mode='OBJECT')
-
-    # Add the mold
-    bpy.ops.mesh.primitive_plane_add(size=1, enter_editmode=False, align='WORLD', location=(0, 0, 0),rotation=(3.14159, 0, 0), scale=(1, 1, 1))
-
-    # Resize the mold
-    bpy.data.objects["Plane"].dimensions = [bpy.data.objects[nameObject].dimensions[0], bpy.data.objects[nameObject].dimensions[1], 0]
-
-    # Align the mold in Z
-    bpy.ops.object.align(align_mode='OPT_3', relative_to='OPT_1', align_axis={'Z'})
-
-    # Select the object
-    bpy.context.view_layer.objects.active = bpy.data.objects[nameObject]
-    bpy.data.objects[nameObject].select_set(True)
-
-    # Align the mold in x and y
-    bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_4', align_axis={'X'})
-    bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_4', align_axis={'Y'})
-
-    # Margins x and y
-    bpy.data.objects["Plane"].dimensions = [bpy.data.objects[nameObject].dimensions[0]+margin, bpy.data.objects[nameObject].dimensions[1]+margin, 0]
-
-    # Apply transformation of the mold
-    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-
-    # Select the copy and the mold
-    bpy.context.view_layer.objects.active = bpy.data.objects[nameCopy]
-    bpy.data.objects[nameCopy].select_set(True)
-    bpy.data.objects[nameObject].select_set(False)
-    
-    # Join the outline and the mold
-    bpy.ops.object.join()
-
-    # Switch in edit mode 
-    bpy.ops.object.mode_set(mode='EDIT')
-    
-    # Select all the faces
-    bpy.ops.mesh.select_all(action='SELECT')
-
-    # Cut the intersected faces
-    bpy.ops.mesh.intersect(mode='SELECT', separate_mode='NONE')
-
-    # Select all the faces
-    bpy.ops.mesh.select_all(action='SELECT')
-
-    # Only keep the faces on the plane xy
-    bpy.ops.mesh.bisect(plane_co=(0, 0, 0), plane_no=(0, 0, 1), clear_inner=True, clear_outer=True, xstart=1273, xend=2086, ystart=286, yend=287, flip=False)
-
-    # Select all the faces
-    bpy.ops.mesh.select_all(action='SELECT')
-
-    # Triangulate all the faces
-    bpy.ops.mesh.quads_convert_to_tris(quad_method='BEAUTY', ngon_method='BEAUTY')
-
-    # Select the object and the mold
-    bpy.data.objects[nameObject].select_set(True)
-    
-    # Switch in object mode 
-    bpy.ops.object.mode_set(mode='OBJECT')
-    
-    # Join the object and the mold
-    bpy.ops.object.join()
-
-    # Recover the name
-    obj = bpy.context.active_object
-    obj.name = nameObject
-    
-    # Select faces
-    Button_Operations.select_faces(radians(10))
-    
-    # Separate the selected faces
-    bpy.ops.mesh.separate(type='SELECTED')
-    
-    # Switch in object mode
-    bpy.ops.object.mode_set(mode = 'OBJECT')
-
-    # Select the support object
-    bpy.context.view_layer.objects.active = bpy.data.objects[nameObject + ".001"]
-    bpy.data.objects[nameObject + ".001"].select_set(True)
-    bpy.data.objects[nameCopy + ".001"].select_set(True)
-    bpy.data.objects[nameObject].select_set(False)
-    
-    # Delete the copy
-    object_to_delete = bpy.data.objects[nameObject]
-    bpy.data.objects.remove(object_to_delete, do_unlink=True)
-    
-    # Join the outline and the mold
-    bpy.ops.object.join()
-    
-    # Switch in edit mode
-    bpy.ops.object.mode_set(mode = 'EDIT')
-    
-    # Select all the faces
-    bpy.ops.mesh.select_all(action='SELECT')
-
-    # Extrude the support
-    bpy.ops.mesh.extrude_region_move(MESH_OT_extrude_region={"use_normal_flip":False, "use_dissolve_ortho_edges":False, "mirror":False}, TRANSFORM_OT_translate={"value":(0, 0, -20), "orient_type":'GLOBAL', "orient_matrix":((1, 0, 0), (0, 1, 0), (0, 0, 1)), "orient_matrix_type":'GLOBAL', "constraint_axis":(False, False, True), "mirror":False, "use_proportional_edit":False, "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "use_proportional_connected":False, "use_proportional_projected":False, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "cursor_transform":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False, "use_automerge_and_split":False})
-
-    # Select all
-    bpy.ops.mesh.select_all(action='SELECT')
-
-    # Bissect and delete the element under the xy plane
-    bpy.ops.mesh.bisect(plane_co=(0, 0, moldOffset), plane_no=(0, 0, 1), use_fill=False, clear_inner=True, xstart=942, xend=1489, ystart=872, yend=874, flip=False)
-
-    # Switch in object mode
-    bpy.ops.object.mode_set(mode = 'OBJECT')
-
-    # Add the bottom
-    bpy.ops.mesh.primitive_cube_add(size=1, enter_editmode=False, align='WORLD', location=(0, 0, moldOffset-(margin/2)), scale=(1,1,1))
-    bpy.data.objects["Cube"].dimensions = [bpy.data.objects[nameObject + ".001"].dimensions[0], bpy.data.objects[nameObject + ".001"].dimensions[1], margin]
-
-    # Select the object
-    bpy.context.view_layer.objects.active = bpy.data.objects[nameObject + ".001"]
-    bpy.data.objects[nameObject + ".001"].select_set(True)
-
-    # Align the mold in x and y
-    bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_4', align_axis={'X'})
-    bpy.ops.object.align(align_mode='OPT_1', relative_to='OPT_4', align_axis={'Y'})
-
-    # Join the bottom and the mold
-    bpy.ops.object.join()
-
-    # Rename the mold
-    bpy.context.active_object.name = nameObject + "_support"
-    
-    # Apply location
-    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True) 
-    
-    # init properties of angles
-    bpy.context.scene.angle_x = 0
-    bpy.context.scene.angle_y = 0
-    bpy.context.scene.angle_z = 0
-    bpy.context.scene.offset = 0
-    
-    date_2 = datetime.datetime.now()
-    time_delta = (date_2 - date_1)
-    total_seconds = time_delta.total_seconds()
-    print(total_seconds)
-
-    print("End Script")
-    
-    '''
+    Button_Operations.generate_mold()    
     self.report({'INFO'}, f"This is {self.bl_idname}")
     return {'FINISHED'}
 
@@ -911,6 +472,7 @@ class BUTTON_OT_button_manifold(Operator):
   bl_idname = "btn.manifold"
   bl_label = "Manifold"
   bl_description = 'Find the non manifold vertices and add edges and faces to fill the hole'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     Button_Operations.manifold()
@@ -921,6 +483,7 @@ class BUTTON_OT_button_regenerate_bottom(Operator):
   bl_idname = "btn.regenerate_bottom"
   bl_label = "Regenerate bottom"
   bl_description = 'Regenerate bottom if the bottom is bad generated'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     Button_Operations.regenerate_bottom()
@@ -931,6 +494,7 @@ class BUTTON_OT_button_generate_socle(Operator):
   bl_idname = "btn.generate_socle"
   bl_label = "Generate socle"
   bl_description = 'Generate a socle to the selected mesh'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     Button_Operations.generate_socle(bpy.context.scene.socle_size)
@@ -942,6 +506,7 @@ class BUTTON_OT_button_generate_area(Operator):
   bl_idname = "btn.generate_area"
   bl_label = "Generate support (area)"
   bl_description = 'Generate support for the selected faces with the area min parameter'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     Button_Operations.separate_faces()
@@ -955,6 +520,7 @@ class BUTTON_OT_button_separate_faces(Operator):
   bl_idname = "btn.separate_faces"
   bl_label = "Separate faces"
   bl_description = 'Separate selected faces in a new mesh and delete the base object'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     Button_Operations.separate_faces()
@@ -965,6 +531,7 @@ class BUTTON_OT_button_select_area(Operator):
   bl_idname = "btn.select_area"
   bl_label = "Select area"
   bl_description = 'Find all the separated pieces of the mesh and select the pieces where the area is higher than the minimum area value'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     Button_Operations.select_area(bpy.context.scene.min_area)
@@ -976,6 +543,7 @@ class BUTTON_OT_button_select_resize_all(Operator):
   bl_idname = "btn.select_resize_all"
   bl_label = "Select resize all"
   bl_description = 'Select all the faces connected to the selected faces'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     Button_Operations.select_resize_all()
@@ -986,6 +554,7 @@ class BUTTON_OT_button_select_resize(Operator):
   bl_idname = "btn.select_resize"
   bl_label = "Select resize"
   bl_description = 'Select all the faces connected to the selected faces between a min and max angle between the normal and the downward vector'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     Button_Operations.select_resize(bpy.context.scene.min_angle_z, bpy.context.scene.max_angle_z)
@@ -996,6 +565,7 @@ class BUTTON_OT_button_resize(Operator):
   bl_idname = "btn.resize"
   bl_label = "Resize"
   bl_description = 'Resize the selection'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     Button_Operations.resize()
@@ -1006,6 +576,7 @@ class BUTTON_OT_button_invert_selection(Operator):
   bl_idname = "btn.invert_selection"
   bl_label = "Invert selection"
   bl_description = 'Invert the selection'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     Button_Operations.invert_selection()
@@ -1016,6 +587,7 @@ class BUTTON_OT_button_delete_selection(Operator):
   bl_idname = "btn.delete_selection"
   bl_label = "Delete selection"
   bl_description = 'Delete the selection'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     Button_Operations.delete_selection()
@@ -1026,6 +598,7 @@ class BUTTON_OT_button_fill(Operator):
   bl_idname = "btn.fill"
   bl_label = "Fill"
   bl_description = 'Fill hole for the selection'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     Button_Operations.fill()
@@ -1037,6 +610,7 @@ class BUTTON_OT_button_add_lattice(Operator):
   bl_idname = "btn.add_lattice"
   bl_label = "Add lattice"
   bl_description = 'Add a lattice object with the size and location of the selected mesh'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     Button_Operations.add_lattice()
@@ -1047,6 +621,7 @@ class BUTTON_OT_button_select_lattice(Operator):
   bl_idname = "btn.select_lattice"
   bl_label = "Select lattice"
   bl_description = 'Select faces in the lattice of the selected mesh'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     Button_Operations.select_lattice()
@@ -1057,6 +632,7 @@ class BUTTON_OT_button_delete_lattice(Operator):
   bl_idname = "btn.delete_lattice"
   bl_label = "Delete lattice"
   bl_description = 'Delete the existing lattice'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     Button_Operations.delete_lattice()
@@ -1068,6 +644,7 @@ class BUTTON_OT_button_voxel(Operator):
   bl_idname = "btn.voxel"
   bl_label = "Add Voxel"
   bl_description = 'Add a voxel remesh to the selected mesh'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     Button_Operations.voxel()
@@ -1078,6 +655,7 @@ class BUTTON_OT_button_decimate(Operator):
   bl_idname = "btn.decimate"
   bl_label = "Add Decimate"
   bl_description = 'Decrease the number of the faces to the selected mesh'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     Button_Operations.decimate()
@@ -1088,6 +666,7 @@ class BUTTON_OT_button_validate(Operator):
   bl_idname = "btn.validate"
   bl_label = "Validate"
   bl_description = 'Apply modifier to the selected mesh'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     Button_Operations.validate()
@@ -1098,6 +677,7 @@ class BUTTON_OT_button_remesh_blocks(Operator):
   bl_idname = "btn.remesh_blocks"
   bl_label = "Remesh Blocks"
   bl_description = 'Add a blocks remesh to the selected mesh and make an intersection with the mesh to keep the same occupied surface'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     Button_Operations.remesh_blocks()
@@ -1108,6 +688,7 @@ class BUTTON_OT_button_validate_blocks(Operator):
   bl_idname = "btn.validate_blocks"
   bl_label = "Validate Blocks"
   bl_description = 'Apply blocks modifier to the selected mesh and extrude the bottom on the xy plane'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     Button_Operations.validate_blocks()
@@ -1119,6 +700,7 @@ class BUTTON_OT_button_measure_distance(Operator):
   bl_idname = "btn.measure_distance"
   bl_label = "Measure distance"
   bl_description = 'Calculate the distance between two selected vertices'
+  bl_options = {'REGISTER', 'UNDO'}
  
   def execute(self, context):
     Button_Operations.measure_distance()

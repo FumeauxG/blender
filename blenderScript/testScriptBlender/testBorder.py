@@ -47,10 +47,11 @@ print(loops)
 
 bpy.ops.mesh.reveal(select = False) # unhide all faces
 
-for i in range(len(loops[1])):
+n = 0
+for i in range(len(loops[n])):
     print(i)
-    print("Salut",loops[0][i])
-    bm.edges[loops[1][i]].select = True
+    print("Salut",loops[n][i])
+    bm.edges[loops[n][i]].select = True
    
 
 #bpy.ops.mesh.select_mode(type="FACE")

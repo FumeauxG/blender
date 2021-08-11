@@ -2,10 +2,43 @@
 #include <math.h>
 
 // Prototypes of functions
-void select_faces(int *ptr, int max, float *normalX, float *normalY, float *normalZ, float maxAngle, float vecDirX, float vecDirY, float vecDirZ, int *faces, float *point1X, float *point1Y, float *point2X, float *point2Y, float *point3X, float *point3Y, float *point1Z, float *point2Z, float *point3Z);
+void select_faces(int *ptr, int max, float *normalX, float *normalY, float *normalZ, float maxAngle, float vecDirX, float vecDirY, float vecDirZ, int *faces, 
+                  float *point1X, float *point1Y, float *point2X, float *point2Y, float *point3X, float *point3Y, float *point1Z, float *point2Z, float *point3Z);
 int point_inside_trigon(float sx, float sy, float ax, float ay, float bx, float by, float cx, float cy);
 
-void select_faces(int *ptr, int max, float *normalX, float *normalY, float *normalZ, float maxAngle, float vecDirX, float vecDirY, float vecDirZ, int *faces, float *point1X, float *point1Y, float *point2X, float *point2Y, float *point3X, float *point3Y, float *point1Z, float *point2Z, float *point3Z)
+/*---------------------------------------------------------
+  But : 
+    This method selects all the faces where the angle 
+    between the face and the downward vector is less than 
+    the maxAngle and then the selected faces don't have
+    other faces under.
+  ---------------------------------------------------------
+  Parameters :
+    ptr : index of the faces
+    max : number of the faces
+    normalX : x component of the normal
+    normalY : y component of the normal    
+    normalZ : z component of the normal
+    maxAngle : value of the angle maximum in radians
+    vecDirX : x component of the downward vector
+    vecDirY : y component of the downward vector
+    vecDirZ : z component of the downward vector
+    faces : result of the selected faces
+    point1X : x component of the first point of the faces
+    point1Y : y component of the first point of the faces
+    point1Z : z component of the first point of the faces
+    point2X : x component of the second point of the faces
+    point2Y : y component of the second point of the faces
+    point2Z : z component of the second point of the faces
+    point3X : x component of the third point of the faces
+    point3Y : y component of the third point of the faces
+    point3Z : z component of the third point of the faces
+  Return : 
+    void (the information to know if a face is selected
+          is in the parameter faces)
+---------------------------------------------------------*/
+void select_faces(int *ptr, int max, float *normalX, float *normalY, float *normalZ, float maxAngle, float vecDirX, float vecDirY, float vecDirZ, int *faces, 
+                  float *point1X, float *point1Y, float *point2X, float *point2Y, float *point3X, float *point3Y, float *point1Z, float *point2Z, float *point3Z)
 {
     // Variables of index
     int i;
@@ -80,6 +113,25 @@ void select_faces(int *ptr, int max, float *normalX, float *normalY, float *norm
     return;
 }
 
+
+/*---------------------------------------------------------
+  But : 
+    This method determine if a point is in the area of
+    a triangle in 2D.
+  ---------------------------------------------------------
+  Parameters :
+    sx : x component of point
+    sy : x component of point
+    ax : x component of the first vertix of the triangle
+    ay : y component of the first vertix of the triangle
+    bx : x component of the second vertix of the triangle
+    by : y component of the second vertix of the triangle
+    cx : x component of the third vertix of the triangle
+    cy : y component of the third vertix of the triangle
+  Return : 
+    int : 1 if the point is inside the triangée
+          0 if the point is not inside the triangée
+---------------------------------------------------------*/
 int point_inside_trigon(float sx, float sy, float ax, float ay, float bx, float by, float cx, float cy)
 {
     float as_x = sx-ax;
@@ -97,20 +149,3 @@ int point_inside_trigon(float sx, float sy, float ax, float ay, float bx, float 
 
     return 1;
 }
-
-
-/*
-bool intpoint_inside_trigon(intPoint s, intPoint a, intPoint b, intPoint c)
-{
-    int as_x = s.x-a.x;
-    int as_y = s.y-a.y;
-
-    bool s_ab = (b.x-a.x)*as_y-(b.y-a.y)*as_x > 0;
-
-    if((c.x-a.x)*as_y-(c.y-a.y)*as_x > 0 == s_ab) return false;
-
-    if((c.x-b.x)*(s.y-b.y)-(c.y-b.y)*(s.x-b.x) > 0 != s_ab) return false;
-
-    return true;
-}
-*/

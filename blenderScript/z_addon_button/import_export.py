@@ -26,8 +26,6 @@ class STL_FILE_import(Operator, ImportHelper):
     )
  
     def invoke(self, context, event):
-        # Set the filepath
-        #self.filepath = name_filepath
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'} 
  
@@ -86,7 +84,7 @@ class STL_FILE_export(Operator, ExportHelper):
             nameSupport = "support"
         
         # Set the filepath
-        self.filepath = name_filepath + nameSupport + ".stl"
+        self.filepath = nameSupport + ".stl"
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
         

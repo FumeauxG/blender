@@ -132,6 +132,18 @@ class BUTTON_PT_generation(Panel):
         
         if len(bpy.context.selected_objects) != 0:
             layout.enabled = True
+            if bpy.context.object.mode == 'OBJECT':
+                if True in [x.select for x in bpy.context.object.data.polygons]:                    
+                    column2.enabled = True
+                else:
+                    column2.enabled = False
+            else:
+                bm = bmesh.from_edit_mesh(bpy.context.edit_object.data)
+                selfaces = [f for f in bm.faces if f.select]
+                if selfaces:
+                    column2.enabled = True
+                else:
+                    column2.enabled = False
         else:
             layout.enabled = False  
         
@@ -146,15 +158,33 @@ class BUTTON_PT_area(Panel):
         layout = self.layout    
         scene = context.scene
         
-        column = layout.column(align=True)
-        column.prop(data=scene, property="min_area", slider=True)       
-        column.operator(BUTTON_OT_button_separate_faces.bl_idname)
-        column.operator(BUTTON_OT_button_select_area.bl_idname)
+        column1 = layout.column(align=True)
+        column1.prop(data=scene, property="min_area", slider=True)  
+        row = column1.column(align=True)
+        row.operator(BUTTON_OT_button_separate_faces.bl_idname)
+        column1.operator(BUTTON_OT_button_select_area.bl_idname)
         
-        layout.operator(BUTTON_OT_button_generate_area.bl_idname)
+        column2 = layout.column(align=True)
+        column2.operator(BUTTON_OT_button_generate_area.bl_idname)
         
         if len(bpy.context.selected_objects) != 0:
             layout.enabled = True
+            if bpy.context.object.mode == 'OBJECT':
+                if True in [x.select for x in bpy.context.object.data.polygons]:                    
+                    row.enabled = True
+                    column2.enabled = True
+                else:
+                    row.enabled = False
+                    column2.enabled = False
+            else:
+                bm = bmesh.from_edit_mesh(bpy.context.edit_object.data)
+                selfaces = [f for f in bm.faces if f.select]
+                if selfaces:
+                    row.enabled = False
+                    column2.enabled = False
+                else:
+                    row.enabled = False
+                    column2.enabled = False
         else:
             layout.enabled = False  
         
@@ -805,7 +835,7 @@ def register():
     bpy.types.Scene.lattice_offset_y = bpy.props.FloatProperty(name = "Offset Y", description="Offfset y of the lattice", default = 0, step = 10, unit = 'LENGTH')
     bpy.types.Scene.lattice_offset_z = bpy.props.FloatProperty(name = "Offset Z", description="Offfset z of the lattice", default = 0, step = 10, unit = 'LENGTH')
     
-    bpy.types.Scene.voxel_size = bpy.props.FloatProperty(name="Voxel Size", description="Size of the voxel in object space used for volume evaluation", default = 0.01, options={'SKIP_SAVE'}, min = 0.01, max = 0.1,soft_min = 0.01, soft_max = 0.1, step = 1, unit = 'LENGTH')
+    bpy.types.Scene.voxel_size = bpy.props.FloatProperty(name="Voxel Size", description="Size of the voxel in object space used for volume evaluation", default = 0.01, options={'SKIP_SAVE'}, min = 0.001, max = 0.1,soft_min = 0.001, soft_max = 0.1, step = 1, unit = 'LENGTH')
     bpy.types.Scene.decimate_ratio = bpy.props.FloatProperty(name="Decimate Ratio", description="Ratio of triangles to reduce to", default = 0.01, options={'SKIP_SAVE'}, min = 0, max = 1,soft_min = 0, soft_max = 1, step = 1)
     bpy.types.Scene.level_blocks = bpy.props.IntProperty(name="Level Blocks", description="Resolution of the blocks", default = 5, options={'SKIP_SAVE'}, min = 1, max = 9,soft_min = 1, soft_max = 9, step = 1)
     

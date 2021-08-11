@@ -342,7 +342,8 @@ class Button_Operations():
             None
         Returns:
             None
-        """    
+        """ 
+                
         date_1 = datetime.datetime.now()
 
         # Get the active object
@@ -639,9 +640,9 @@ class Button_Operations():
         print(total_seconds)
 
         print("End Script")
-        
+        '''        
     ####################################################################################################################################################    
-        '''
+
         date_1 = datetime.datetime.now()
 
         # Get the active object
